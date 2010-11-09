@@ -1,86 +1,187 @@
 package cz.vutbr.fit.pdb03;
 
-import java.awt.Color;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Vector;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.NodeChangeListener;
+import java.util.prefs.PreferenceChangeListener;
+import java.util.prefs.Preferences;
 
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 
 import org.openstreetmap.gui.jmapviewer.JMapViewer;
 import org.openstreetmap.gui.jmapviewer.OsmTileLoader;
 import org.openstreetmap.gui.jmapviewer.OsmTileSource;
 
-public class AnimalsDatabase extends JFrame {
+import cz.vutbr.fit.pdb03.map.MapMarkerPoint;
+import cz.vutbr.fit.pdb03.map.MapMouseListener;
 
+/**
+ * Hlavni trida zajistujici vykreselni hlavniho okna, rozdeleneho do tri
+ * panelu.
+ *
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
+ *
+ */
+public class AnimalsDatabase extends JFrame implements ActionListener{
+
+	private static final long serialVersionUID = 1L;
+
+	// komponenty jednotlivych casti hlavniho okna
+	JComponent rightPanel, leftTopPanel, leftBottomPanel;
+
+	// map items
+	JMapViewer map;
+
+	// application preferences
+	Preferences prefs = Preferences.userNodeForPackage(this.getClass());
+
+	// menu items
+	private JMenuBar menuBar;
+	private JMenu menuMap;
+	private JMenuItem menuAbout;
+	private JCheckBoxMenuItem menuMapShowMarkers;
+
+	/**
+	 * Zakladni konstruktor, ktery naplni hlavni okno
+	 * @param title titulek hlavniho okna
+	 */
 	public AnimalsDatabase(String title) {
 		super(title);
 
 		// set window properties
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setExtendedState(MAXIMIZED_BOTH);
-		setLayout(new GridBagLayout());
+		setMinimumSize(new Dimension(500, 500));
 
-		// create constrains for layour
-		GridBagConstraints c = new GridBagConstraints();
+		// pridani rozdeleni do jednotlivych podoken
+		// TODO dodelat nejak poradne vahy pri resize oknu a pri prvnim spusteni
+		JSplitPane splitHorizontal = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, getTopLeftPanel() , getTopRightPanel());
+		splitHorizontal.setResizeWeight(0.5);
+		splitHorizontal.setBorder(null);
+		JSplitPane splitVertical= new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitHorizontal, getBottomPanel());
+		add(splitVertical);
 
-		// few help panels
-		JPanel redPanel = new JPanel();
-		redPanel.setBackground(Color.RED);
-		redPanel.add(new JLabel("Picture panel"));
+		//pridani hlavniho menu
 
-		JPanel bluePanel = new JPanel();
-		bluePanel.setBackground(Color.BLUE);
+		menuBar = new JMenuBar();
 
-		JPanel greenPanel = new JPanel();
-		greenPanel.setBackground(Color.GREEN);
+		menuMap = new JMenu("Mapa");
+		menuMap.addActionListener(this);
+		menuBar.add(menuMap);
 
-		JPanel yellowPanel = new JPanel();
-		yellowPanel.setBackground(Color.YELLOW);
+		menuMapShowMarkers = new JCheckBoxMenuItem("Zobraz body", true);
+		menuMapShowMarkers.addActionListener(this);
+		menuMap.add(menuMapShowMarkers);
 
-		JPanel cyanPanel = new JPanel();
-		cyanPanel.setBackground(Color.CYAN);
-		cyanPanel.add(new JLabel("Info panel"));
+		menuAbout = new JMenuItem("O aplikaci");
+		menuAbout.addActionListener(this);
+		menuBar.add(menuAbout);
 
-		// main three panels
-
-		// picture panel
-		JTabbedPane picturesPanel = new JTabbedPane();
-		picturesPanel.addTab("Red", redPanel);
-		picturesPanel.addTab("Blue", bluePanel);
-		picturesPanel.addTab("Green", greenPanel);
-
-		c.gridx = 0;
-		c.gridy = 0;
-		c.weightx = 0.6;
-		c.weighty = 0.5;
-		c.fill = GridBagConstraints.BOTH;
-		add(picturesPanel, c);
-
-		// map panel
-		JMapViewer map = new JMapViewer();
-		map.setPreferredSize(null);
-		map.setTileSource(new OsmTileSource.CycleMap());
-		map.setTileLoader(new OsmTileLoader(map));
-		c.gridy = 1;
-		add(map, c);
-
-		// info panel
-		c.gridx = 1;
-		c.gridy = 0;
-		c.weightx = 0.3;
-		c.weighty = 1;
-		c.gridheight = GridBagConstraints.REMAINDER;
-		add(cyanPanel, c);
-
+		setJMenuBar(menuBar);
 
 	}
 
+	/**
+	 * Metoda pro ziskani panelu pro spodni cast okna
+	 * @return komponenta vyplnena mapou
+	 */
+	public JComponent getBottomPanel() {
+
+		// map panel
+		map = new JMapViewer();
+		map.setPreferredSize(null);
+		map.setTileSource(new OsmTileSource.CycleMap());
+		map.setTileLoader(new OsmTileLoader(map));
+
+//		map.addMapRectangle(new MapRectangle(49.81, 8.6, 49.82, 8.2));
+//		map.addMapMarker(new MapMarkerPoint(49.123, 8.456, 1));
+//		map.addMapMarker(new MapMarkerPoint(49.321, 7.456, 2));
+//		map.addMapMarker(new MapMarkerPoint(49.456, 7.123, 3));
+
+
+		map.addMouseListener(new MapMouseListener(map));
+
+		return map;
+	}
+
+	/**
+	 * Metoda pro ziskani panelu pro levou horni cast okna
+	 * @return komponenta vyplnena JTabbedPane pro obrazky
+	 */
+	public JComponent getTopLeftPanel() {
+
+		// picture panel
+		JTabbedPane picturesPanel = new JTabbedPane();
+		picturesPanel.addTab("Fotky", new JLabel("Red panel", JLabel.CENTER));
+		picturesPanel.addTab("Stopy", new JLabel("Blue panel", JLabel.CENTER));
+		picturesPanel.addTab("Trus", new JLabel("Green panel", JLabel.CENTER));
+
+		return new JScrollPane(picturesPanel);
+
+	}
+
+	/**
+	 * Metoda pro ziskani panelu pro pravou horni cast okna
+	 * @return komponenta se seznamem zvirat v databazi
+	 */
+	public JComponent getTopRightPanel() {
+
+		Vector<String> properties = new Vector<String>();
+		properties.add("Prase domácí");
+		properties.add("Tygr usurijský");
+		properties.add("Kachna blátotlačka");
+		properties.add("Slon indický");
+		properties.add("Lev mandžuský");
+		properties.add("Kráva domácí");
+		JList list = new JList(properties);
+
+
+		JScrollPane scroll = new JScrollPane(list);
+
+		scroll.setPreferredSize(new Dimension(300, 500));
+
+		return scroll;
+	}
+
+	/**
+	 * Hlavni main pro spusteni aplikace
+	 * @param args argumenty z prikazove radky
+	 */
 	public static void main(String[] args) {
 		AnimalsDatabase aDb = new AnimalsDatabase("Animals database");
 		aDb.setVisible(true);
 	}
+
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+
+		if(e.getSource() == menuMapShowMarkers){
+			map.setMapMarkerVisible(!map.getMapMarkersVisible());
+			menuMapShowMarkers.setState(map.getMapMarkersVisible());
+		}
+
+		if(e.getSource() == menuAbout){
+			JOptionPane.showMessageDialog(this, "Projekt do předmětu Pokročilé databáze");
+		}
+
+	}
+
 
 }
