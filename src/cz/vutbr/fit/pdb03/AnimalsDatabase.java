@@ -3,12 +3,11 @@ package cz.vutbr.fit.pdb03;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Vector;
-import java.util.prefs.BackingStoreException;
-import java.util.prefs.NodeChangeListener;
-import java.util.prefs.PreferenceChangeListener;
 import java.util.prefs.Preferences;
 
 import javax.swing.JCheckBoxMenuItem;
@@ -28,7 +27,6 @@ import org.openstreetmap.gui.jmapviewer.JMapViewer;
 import org.openstreetmap.gui.jmapviewer.OsmTileLoader;
 import org.openstreetmap.gui.jmapviewer.OsmTileSource;
 
-import cz.vutbr.fit.pdb03.map.MapMarkerPoint;
 import cz.vutbr.fit.pdb03.map.MapMouseListener;
 
 /**
@@ -57,6 +55,14 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 	private JMenuItem menuAbout;
 	private JCheckBoxMenuItem menuMapShowMarkers;
 
+	private JMenu menuDatabase;
+
+	private JMenuItem menuDatabaseDisconnect;
+
+	private DataBase db;
+
+	private ConnectDialog conDialog;
+
 	/**
 	 * Zakladni konstruktor, ktery naplni hlavni okno
 	 * @param title titulek hlavniho okna
@@ -64,8 +70,27 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 	public AnimalsDatabase(String title) {
 		super(title);
 
-		// set window properties
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		// nastaveni pri zavirani okna
+		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent event) {
+
+				try {
+					db.disconnect();
+
+					// DEBUG
+					System.out.println("Disconnected !!");
+				} catch (SQLException e) {
+					System.err.println("Error while disconnection from DB: " + e.getMessage());
+				}
+
+				setVisible(false);
+				dispose();
+			}
+		});
+
+		// nastaveni velikosti okna
 		setExtendedState(MAXIMIZED_BOTH);
 		setMinimumSize(new Dimension(500, 500));
 
@@ -81,6 +106,13 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 
 		menuBar = new JMenuBar();
 
+		menuDatabase = new JMenu("Databáze");
+		menuBar.add(menuDatabase);
+
+		menuDatabaseDisconnect = new JMenuItem("Odpojit od DB");
+		menuDatabaseDisconnect.addActionListener(this);
+		menuDatabase.add(menuDatabaseDisconnect);
+
 		menuMap = new JMenu("Mapa");
 		menuMap.addActionListener(this);
 		menuBar.add(menuMap);
@@ -94,6 +126,12 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 		menuBar.add(menuAbout);
 
 		setJMenuBar(menuBar);
+
+		// databaze a dialog pro pripojeni
+
+		db = new DataBase();
+		conDialog = new ConnectDialog(this, db);
+		conDialog.setVisible(true);
 
 	}
 
@@ -170,15 +208,32 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void actionPerformed(ActionEvent event) {
 
-		if(e.getSource() == menuMapShowMarkers){
+		// zobrazeni/skryti markeru na mape
+		if(event.getSource() == menuMapShowMarkers){
 			map.setMapMarkerVisible(!map.getMapMarkersVisible());
 			menuMapShowMarkers.setState(map.getMapMarkersVisible());
 		}
 
-		if(e.getSource() == menuAbout){
+		// informacni dialog
+		if(event.getSource() == menuAbout){
 			JOptionPane.showMessageDialog(this, "Projekt do předmětu Pokročilé databáze");
+		}
+
+		// odpojeni od databaze
+		if(event.getSource() == menuDatabaseDisconnect){
+			try {
+				db.disconnect();
+
+				// DEBUG
+				System.out.println("Disconnected !!!");
+
+				conDialog.setVisible(true);
+			} catch (SQLException e){
+				// DEBUG
+				System.err.println("Error while disconnection from DB: " + e.getMessage());
+			}
 		}
 
 	}

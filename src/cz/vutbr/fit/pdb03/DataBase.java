@@ -54,36 +54,20 @@ public class DataBase {
 	 *            password for database connection
          * @throws Exception
 	 */
-	public void connect(String username, String password) throws Exception {
-		try {
-			Class.forName("sun.jdbc.odbc.JdbcOdbcDriver");
-		} catch (java.lang.ClassNotFoundException e) {
-			throw new Exception("ClassNotFoundException: " + e.getMessage());
-		}
+	public void connect(String username, String password) throws SQLException, ClassNotFoundException, Exception  {
 
-		try {
-			con = DriverManager.getConnection("jdbc:oracle:thin:" + username
+		con = DriverManager.getConnection("jdbc:oracle:thin:" + username
 					+ "/" + password + connectionString);
-		} catch (SQLException ex) {
-			throw new Exception("SQLException: " + ex.getMessage());
-		}
-
-		if (!isConnected()) {
-			throw new Exception("Could not connect");
-		}
 		con.setAutoCommit(true);
 	}
 
 	/**
 	 * Function for disconnecting from database
+	 * @throws SQLException
 	 */
-	public void disconnect() {
+	public void disconnect() throws SQLException {
 		if (con != null) {
-			try {
 				con.close();
-			} catch (SQLException ex) {
-				// System.out.println("Could not disconnect");
-			}
 			// System.out.println("Disconnected");
 		}
 	}
