@@ -1,11 +1,14 @@
 package cz.vutbr.fit.pdb03;
 
+import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.DriverManager;
 import java.sql.Statement;
 //import ojdbc6.jar from oraclelib.zip/oraclelib/jdbc located in WIS
+import java.text.NumberFormat;
+import java.util.Locale;
 import oracle.jdbc.OracleResultSet;
 import oracle.jdbc.OraclePreparedStatement;
 //import ordim.jar from oraclelib.zip/oraclelib/ord located in WIS
@@ -47,6 +50,7 @@ public class DataBase {
 	 *            username for database connection
 	 * @param password
 	 *            password for database connection
+         * @throws Exception
 	 */
 	public void connect(String username, String password) throws Exception {
 		try {
@@ -207,4 +211,33 @@ public class DataBase {
 		con.commit();
 		con.setAutoCommit(true);
 	}
+        public int savePoint(int animal_id, Point2D point){
+            NumberFormat nf = NumberFormat.getInstance(Locale.ENGLISH);
+            int id=0;
+            try {
+                con.setAutoCommit(false);
+                Statement stat = con.createStatement();
+                String SQLquery = ("SELECT animal_movement_seq.nextval FROM dual");
+		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
+		rset.next();
+		id = rset.getInt("nextval");
+                SQLquery = "INSERT INTO animal_movement (id,animal_id,point) VALUES ("+Integer.toString(id)+","+Integer.toString(animal_id)+",SDO_GEOMETRY(2001,"+nf.format(point.getX())+","+nf.format(point.getY())+"))";
+                stat.execute(SQLquery);
+                con.commit();
+                con.setAutoCommit(true);
+            } catch(SQLException a) {
+                id=0;
+            }
+          return id;
+        }
+        public boolean deletePoint(int id){
+            try{
+                Statement stat = con.createStatement();
+                String SQLquery = ("DELETE FROM animal_movement WHERE id="+Integer.toString(id));
+                stat.executeQuery(SQLquery);
+            } catch (SQLException e){
+                return false;
+            }
+            return true;
+        }
 }
