@@ -147,8 +147,6 @@ public class DataBase {
 	/**
 	 * Uploads image into choosen table
 	 *
-	 * TO DO: implement parameter for choosen table
-	 *
 	 * @param animal_id
 	 *            ID of an animal
 	 * @param choosen_table
@@ -157,21 +155,21 @@ public class DataBase {
 	 * @throws SQLException
 	 * @throws IOException
 	 */
-	public void uploadImage(int animal_id, int choosen_table, String filename)
+	public void uploadImage(int animal_id, String choosen_table, String filename)
 			throws SQLException, IOException {
 		con.setAutoCommit(false);
 		Statement stat = con.createStatement();
-		String SQLquery = ("SELECT animal_photo_seq.nextval FROM dual");
+		String SQLquery = ("SELECT "+choosen_table+"_seq.nextval FROM dual");
 		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
 		rset.next();
 		int nextval = rset.getInt("nextval");
-		SQLquery = "INSERT INTO animal_photo (animal_id, photo_id, photo, photo_sig) VALUES ("
+		SQLquery = "INSERT INTO "+choosen_table+" (animal_id, photo_id, photo, photo_sig) VALUES ("
 				+ nextval
 				+ ", "
 				+ animal_id
 				+ ", ordsys.ordimage.init(), ordsys.ordimagesignature.init())";
 		stat.execute(SQLquery);
-		SQLquery = "SELECT image, signature FROM animal_photo WHERE animal_id = "
+		SQLquery = "SELECT image, signature FROM "+choosen_table+" WHERE animal_id = "
 				+ nextval + " FOR UPDATE";
 		rset = (OracleResultSet) stat.executeQuery(SQLquery);
 		rset.next();
@@ -183,7 +181,7 @@ public class DataBase {
 		imageProxy.loadDataFromFile(filename);
 		imageProxy.setProperties();
 		signatureProxy.generateSignature(imageProxy);
-		SQLquery = "UPDATE animal_photo SET photo=?, photo_sig=? where animal_id=?";
+		SQLquery = "UPDATE "+choosen_table+" SET photo=?, photo_sig=? where animal_id=?";
 		OraclePreparedStatement opstmt = (OraclePreparedStatement) con
 				.prepareStatement(SQLquery);
 		opstmt.setCustomDatum(1, imageProxy);
