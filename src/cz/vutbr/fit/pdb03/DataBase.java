@@ -20,7 +20,7 @@ import oracle.ord.im.OrdImageSignature;
 /**
  * Knihovna pro práci s databází
  *
- * @author xizakt00 Tomáš Ižák
+ * @author Tomáš Ižák <xizakt00@stud.fit.vutbr.cz>
  */
 public class DataBase {
 
@@ -35,7 +35,7 @@ public class DataBase {
 	private static String connectionString = "@berta.fit.vutbr.cz:1521:stud";
 
 	/**
-	 *
+	 * SIMPLE function if needed to determine, if system is connected.
 	 * @return true if connection is alive, 0 if not connected
 	 */
 	public boolean isConnected() {
@@ -55,9 +55,7 @@ public class DataBase {
          * @throws Exception
 	 */
 	public void connect(String username, String password) throws SQLException, ClassNotFoundException, Exception  {
-
-		con = DriverManager.getConnection("jdbc:oracle:thin:" + username
-					+ "/" + password + connectionString);
+		con = DriverManager.getConnection("jdbc:oracle:thin:" + username + "/" + password + connectionString);
 		con.setAutoCommit(true);
 	}
 
@@ -260,5 +258,71 @@ public class DataBase {
             }
             stat.close();
             return data;
+        }
+        /**
+         * Function for deleting objects in database - important before creating a new database
+         * @throws SQLException
+         */
+        private void deleteDatabase() throws SQLException{
+            Statement stat = con.createStatement();
+            try{
+                stat.executeQuery("DROP TABLE animals");
+            } catch(SQLException e) {}
+            try{
+                stat.executeQuery("DROP SEQUENCE animals_seq");
+            } catch(SQLException e) {}
+            try{
+                stat.executeQuery("DROP TABLE animal_photo");
+            } catch(SQLException e) {}
+            try{
+                stat.executeQuery("DROP SEQUENCE animal_photo_seq");
+            } catch(SQLException e) {}
+            try{
+                stat.executeQuery("DROP TABLE excrement_photo");
+            } catch(SQLException e) {}
+            try{
+                stat.executeQuery("DROP SEQUENCE excrement_photo_seq");
+            } catch(SQLException e) {}
+            try{
+                stat.executeQuery("DROP TABLE footprint");
+            } catch(SQLException e) {}
+            try{
+                stat.executeQuery("DROP SEQUENCE footprint_seq");
+            } catch(SQLException e) {}
+            try{
+                stat.executeQuery("DROP TABLE animal_movement");
+            } catch(SQLException e) {}
+            try{
+                stat.executeQuery("DROP SEQUENCE animal_movement_seq");
+            } catch(SQLException e) {}
+            stat.close();
+        }
+        /**
+         * Function for creating sequences in database - all starts with 1 and are incremented by 1
+         * @throws SQLException
+         */
+        private void createSequences() throws SQLException{
+            Statement stat = con.createStatement();
+            stat.executeQuery("CREATE SEQUENCE animal_movement_seq START WITH 1 INCREMENT BY 1");
+            stat.executeQuery("CREATE SEQUENCE footprint_seq START WITH 1 INCREMENT BY 1");
+            stat.executeQuery("CREATE SEQUENCE excrement_photo_seq START WITH 1 INCREMENT BY 1");
+            stat.executeQuery("CREATE SEQUENCE animal_photo_seq START WITH 1 INCREMENT BY 1");
+            stat.executeQuery("CREATE SEQUENCE animals_seq START WITH 1 INCREMENT BY 1");
+            stat.close();
+        }
+        /**
+         * Function for creating dabase - no need to destroy previous database objects - this function cares of that.
+         * @throws SQLException
+         */
+        public void createDatabase() throws SQLException{
+            deleteDatabase();
+            Statement stat = con.createStatement();
+            stat.executeQuery("CREATE TABLE animals (animal_id NUMBER PRIMARY KEY, genus VARCHAR(20), family VARCHAR(20), genus_lat VARCHAR(20), family_lat VARCHAR(20), description VARCHAR(500))");
+            stat.executeQuery("CREATE TABLE animal_photo (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+            stat.executeQuery("CREATE TABLE excrement_photo (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+            stat.executeQuery("CREATE TABLE footprint (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+            stat.executeQuery("CREATE TABLE animal_movement (move_id NUMBER PRIMARY KEY, animal_id NUMBER, move MDSYS.SDO_GEOMETRY)");
+            stat.close();
+            createSequences();
         }
 }
