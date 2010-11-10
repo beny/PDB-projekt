@@ -8,7 +8,9 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 //import ojdbc6.jar from oraclelib.zip/oraclelib/jdbc located in WIS
 import java.text.NumberFormat;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import oracle.jdbc.OracleResultSet;
 import oracle.jdbc.OraclePreparedStatement;
 //import ordim.jar from oraclelib.zip/oraclelib/ord located in WIS
@@ -210,7 +212,14 @@ public class DataBase {
 
 		con.commit();
 		con.setAutoCommit(true);
+                stat.close();
 	}
+        /**
+         * Saves point into database
+         * @param animal_id ID of concrete animal
+         * @param point point for save into database
+         * @return id of a concrete point - 0 if something bad happened
+         */
         public int savePoint(int animal_id, Point2D point){
             NumberFormat nf = NumberFormat.getInstance(Locale.ENGLISH);
             int id=0;
@@ -225,19 +234,47 @@ public class DataBase {
                 stat.execute(SQLquery);
                 con.commit();
                 con.setAutoCommit(true);
+                stat.close();
             } catch(SQLException a) {
                 id=0;
             }
           return id;
         }
+        /**
+         * Deletes point from database
+         *
+         * @param id id of point
+         * @return false if something bad happened :(
+         */
         public boolean deletePoint(int id){
             try{
                 Statement stat = con.createStatement();
                 String SQLquery = ("DELETE FROM animal_movement WHERE id="+Integer.toString(id));
                 stat.executeQuery(SQLquery);
+                stat.close();
             } catch (SQLException e){
                 return false;
             }
             return true;
+        }
+        /**
+         * Returns points which belongs to a current animal
+         *
+         * @param animal_id id of current animal
+         * @return HashMap<Integer,Point2D> list of points belongs to current animal
+         * @throws SQLException
+         */
+        public Map<Integer,Point2D> selectPoints(int animal_id) throws SQLException{
+            Statement stat = con.createStatement();
+            String SQLquery = "SELECT point.x, point.y, id FROM animal_movement WHERE animal_id="+Integer.toString(animal_id);
+            OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
+            HashMap<Integer,Point2D> data = new HashMap<Integer,Point2D>();
+            Point2D point=new Point2D.Double();
+            while (rset.next()) {
+                point.setLocation(rset.getDouble("point.x"), rset.getDouble("point.y"));
+                data.put(animal_id, point);
+            }
+            stat.close();
+            return data;
         }
 }
