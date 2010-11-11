@@ -19,6 +19,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu.Separator;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -51,17 +52,15 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 
 	// menu items
 	private JMenuBar menuBar;
-	private JMenu menuMap;
-	private JMenuItem menuAbout;
+	private JMenu menuMap, menuDatabase, menuAbout;
+	private JMenuItem menuAboutInfo, menuDatabaseDisconnect, menuDatabaseCreate;
 	private JCheckBoxMenuItem menuMapShowMarkers;
 
-	private JMenu menuDatabase;
-
-	private JMenuItem menuDatabaseDisconnect;
-
+	// database items
 	private DataBase db;
 
-	private ConnectDialog conDialog;
+	// dialogs
+	private ConnectDialog connectDialog;
 
 	/**
 	 * Zakladni konstruktor, ktery naplni hlavni okno
@@ -70,19 +69,25 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 	public AnimalsDatabase(String title) {
 		super(title);
 
+		// databaze
+		db = new DataBase();
+
 		// nastaveni pri zavirani okna
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent event) {
 
-				try {
-					db.disconnect();
+				if (db.isConnected()) {
+					try {
+						db.disconnect();
 
-					// DEBUG
-					System.out.println("Disconnected !!");
-				} catch (SQLException e) {
-					System.err.println("Error while disconnection from DB: " + e.getMessage());
+						// DEBUG
+						System.out.println("Disconnected");
+					} catch (SQLException e) {
+						System.err
+								.println("Error while disconnection from DB: " + e.getMessage());
+					}
 				}
 
 				setVisible(false);
@@ -91,28 +96,37 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 		});
 
 		// nastaveni velikosti okna
-		setExtendedState(MAXIMIZED_BOTH);
-		setMinimumSize(new Dimension(500, 500));
+//		setExtendedState(MAXIMIZED_BOTH);
+		setMinimumSize(new Dimension(800, 600));
 
 		// pridani rozdeleni do jednotlivych podoken
 		// TODO dodelat nejak poradne vahy pri resize oknu a pri prvnim spusteni
-		JSplitPane splitHorizontal = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, getTopLeftPanel() , getTopRightPanel());
-		splitHorizontal.setResizeWeight(0.5);
-		splitHorizontal.setBorder(null);
-		JSplitPane splitVertical= new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitHorizontal, getBottomPanel());
-		add(splitVertical);
+		JSplitPane splitPaneH = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, getTopLeftPanel() , getTopRightPanel());
+		splitPaneH.setResizeWeight(0.5);
+		splitPaneH.setDividerLocation(600);
+		splitPaneH.setBorder(null);
 
-		//pridani hlavniho menu
+		JSplitPane splitPaneV= new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPaneH, getBottomPanel());
+		splitPaneV.setResizeWeight(0.3);
+		splitPaneV.setDividerLocation(200);
+		add(splitPaneV);
 
+		// hlavniho menu
 		menuBar = new JMenuBar();
 
+		// menu databaze
 		menuDatabase = new JMenu("Databáze");
 		menuBar.add(menuDatabase);
 
-		menuDatabaseDisconnect = new JMenuItem("Odpojit od DB");
+		menuDatabaseDisconnect = new JMenuItem("Odpojit od databáze");
 		menuDatabaseDisconnect.addActionListener(this);
 		menuDatabase.add(menuDatabaseDisconnect);
 
+		menuDatabaseCreate = new JMenuItem("Vytvořit databázi");
+		menuDatabaseCreate.addActionListener(this);
+		menuDatabase.add(menuDatabaseCreate);
+
+		// menu mapa
 		menuMap = new JMenu("Mapa");
 		menuMap.addActionListener(this);
 		menuBar.add(menuMap);
@@ -121,17 +135,19 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 		menuMapShowMarkers.addActionListener(this);
 		menuMap.add(menuMapShowMarkers);
 
-		menuAbout = new JMenuItem("O aplikaci");
-		menuAbout.addActionListener(this);
+		// menu about
+		menuAbout = new JMenu("About");
 		menuBar.add(menuAbout);
+
+		menuAboutInfo = new JMenuItem("O aplikaci");
+		menuAboutInfo.addActionListener(this);
+		menuAbout.add(menuAboutInfo);
 
 		setJMenuBar(menuBar);
 
-		// databaze a dialog pro pripojeni
-
-		db = new DataBase();
-		conDialog = new ConnectDialog(this, db);
-		conDialog.setVisible(true);
+		// dialog pro pripojeni
+		connectDialog = new ConnectDialog(this, db);
+		connectDialog.setVisible(true);
 
 	}
 
@@ -189,9 +205,7 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 		properties.add("Kráva domácí");
 		JList list = new JList(properties);
 
-
 		JScrollPane scroll = new JScrollPane(list);
-
 		scroll.setPreferredSize(new Dimension(300, 500));
 
 		return scroll;
@@ -217,23 +231,32 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 		}
 
 		// informacni dialog
-		if(event.getSource() == menuAbout){
+		if(event.getSource() == menuAboutInfo){
 			JOptionPane.showMessageDialog(this, "Projekt do předmětu Pokročilé databáze");
 		}
 
 		// odpojeni od databaze
 		if(event.getSource() == menuDatabaseDisconnect){
 			try {
+				System.out.println("Disconnected"); // DEBUG
 				db.disconnect();
-
-				// DEBUG
-				System.out.println("Disconnected !!!");
-
-				conDialog.setVisible(true);
+				connectDialog.setVisible(true);
 			} catch (SQLException e){
-				// DEBUG
 				System.err.println("Error while disconnection from DB: " + e.getMessage());
 			}
+		}
+
+		// vytvoreni tabulek v DB
+		if(event.getSource() == menuDatabaseCreate){
+			if(db.isConnected()){
+				try{
+					System.out.println("Creating empty database"); // DEBUG
+					db.createDatabase();
+				} catch (SQLException e){
+					System.err.println("Chyba pri vytvareni DB: " + e.getMessage());
+				}
+			}
+
 		}
 
 	}

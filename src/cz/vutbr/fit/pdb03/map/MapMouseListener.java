@@ -43,7 +43,6 @@ public class MapMouseListener extends MouseAdapter implements MouseListener {
 			}
 		}
 		// pro prave tlacitko mysi
-		// TODO hazi nejakou vyjimku pri mazani bodu ze seznamu
 		else if (e.getButton() == MouseEvent.BUTTON3) {
 
 			// spocita maximalni vzdalenost bodu od stredu kliknuti kdy jeste
@@ -63,7 +62,9 @@ public class MapMouseListener extends MouseAdapter implements MouseListener {
 						markerPoint.x, markerPoint.y);
 
 				// pridej bod mezi body do kterych se klik trefil
+				// TODO smaze to bod a pak neni mozne jit na dalsi v seznamu
 				if (dist <= maxDist) {
+//					mapMarker = markers.get(markers.indexOf(mapMarker) + 1);
 					markers.remove(mapMarker);
 				}
 			}

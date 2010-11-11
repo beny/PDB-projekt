@@ -1,10 +1,20 @@
 package cz.vutbr.fit.pdb03;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
@@ -17,23 +27,13 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
 
-public class ConnectDialog extends JDialog implements ActionListener {
+public class ConnectDialog extends JDialog implements ActionListener{
 
-	private JLabel titleLabel;
-	private JPanel textPanel;
-	private JLabel usernameLabel;
-	private JLabel passwordLabel;
-	private JPanel panelForTextFields;
+	private JLabel usernameLabel, passwordLabel, statusLabel;
 	private JTextField usernameField;
-	private JTextField loginField;
-	private JPanel completionPanel;
-	private JLabel userLabel;
-	private JLabel passLabel;
 	private JButton loginButton;
-	private JLabel databaseLabel;
-	private JTextField databaseField;
-	private JLabel checkLabel;
 	private JPasswordField passwordField;
 	private DataBase db;
 	private JFrame parent;
@@ -46,47 +46,68 @@ public class ConnectDialog extends JDialog implements ActionListener {
 
 		// hlavni panel
 		JPanel contentPane = new JPanel();
-		contentPane.setLayout(new BorderLayout(10, 10));
+		contentPane.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
 
-		// panel s labely
-		textPanel = new JPanel();
-		textPanel.setPreferredSize(new Dimension(70, 80));
-		contentPane.add(textPanel, BorderLayout.LINE_START);
+		c.gridx = 0;
+		c.gridy = 0;
+		c.insets = new Insets(5, 5, 5, 5);
 
 		usernameLabel = new JLabel("Username");
-		usernameLabel.setPreferredSize(new Dimension(70, 30));
-		usernameLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		textPanel.add(usernameLabel);
+		contentPane.add(usernameLabel, c);
 
+		c.gridy = 1;
 		passwordLabel = new JLabel("Password");
-		passwordLabel.setPreferredSize(new Dimension(70, 30));
-		passwordLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-		textPanel.add(passwordLabel);
+		contentPane.add(passwordLabel, c);
 
-		// panel s input fieldy
-		panelForTextFields = new JPanel();
-		panelForTextFields.setPreferredSize(new Dimension(100, 70));
-		contentPane.add(panelForTextFields, BorderLayout.CENTER);
-
+		c.gridx = 1;
+		c.gridy = 0;
 		usernameField = new JTextField(8);
-		usernameField.setPreferredSize(new Dimension(100, 30));
-		panelForTextFields.add(usernameField);
+		contentPane.add(usernameField, c);
 
+		c.gridy = 1;
 		passwordField = new JPasswordField(8);
-		passwordField.setPreferredSize(new Dimension(100, 30));
-		panelForTextFields.add(passwordField);
+		contentPane.add(passwordField, c);
 
-		// login tlacitko
+		c.gridx = 0;
+		c.gridy = 2;
+		c.gridwidth = GridBagConstraints.REMAINDER;
+
 		loginButton = new JButton("Login");
+		getRootPane().setDefaultButton(loginButton);
 		loginButton.addActionListener(this);
-		contentPane.add(loginButton, BorderLayout.PAGE_END);
+		contentPane.add(loginButton, c);
+
+
+		c.gridy = 3;
+		statusLabel = new JLabel();
+		statusLabel.setForeground(Color.RED);
+		contentPane.add(statusLabel, c);
 
 		// nastaveni dialogu
 		setContentPane(contentPane);
 		setModal(true);
-		setLocationRelativeTo(parent);
 		setResizable(false);
-		pack();
+
+		// nastaveni pozice a velikosti
+		Toolkit tk = Toolkit.getDefaultToolkit();
+	    Dimension screenSize = tk.getScreenSize();
+	    int screenHeight = screenSize.height;
+	    int screenWidth = screenSize.width;
+	    setLocation(screenWidth / 3, screenHeight / 3);
+	    setSize(300,200);
+
+	    // odchytavani klavesy Enter
+	    addKeyListener(new KeyAdapter() {
+	    	@Override
+	    	public void keyPressed(KeyEvent e) {
+
+	    		if(e.getKeyCode() == KeyEvent.VK_ENTER){
+	    			System.out.println("Zmacknuty Enter");
+	    		}
+
+	    	}
+		});
 
 		// uzavirani dialogu
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -94,14 +115,12 @@ public class ConnectDialog extends JDialog implements ActionListener {
 
 			@Override
 			public void windowClosing(WindowEvent e) {
-				ConnectDialog dialog = (ConnectDialog)e.getSource();
+				ConnectDialog dialog = (ConnectDialog) e.getSource();
 				dialog.setVisible(false);
 				dialog.dispose();
 
-				JFrame parent = dialog.parent;
-				parent.setVisible(false);
-				parent.dispose();
-
+				dialog.parent.setVisible(false);
+				dialog.parent.dispose();
 			}
 		});
 
@@ -113,23 +132,18 @@ public class ConnectDialog extends JDialog implements ActionListener {
 		// zkouska loginu
 		if (event.getSource() == loginButton) {
 			try {
-				// DEBUG
-				System.out.println("Connection to DB");
-				db.connect(usernameField.getText(),
-						String.copyValueOf(passwordField.getPassword()));
-			} catch (ClassNotFoundException e) {
-				System.err.println("ClassNotFoundException: " + e.getMessage());
-			} catch (SQLException e) {
-				loginButton.setText("Problem with DB, try again later");
+				System.out.println("Connecting to database"); // DEBUG
+				db.connect(usernameField.getText(),	String.copyValueOf(passwordField.getPassword()));
 			} catch (Exception e) {
-				loginButton.setText("Problem with login, try again");
+				statusLabel.setText("Problem with login, try again");
 			}
 
+			// kontrola pripojeni
 			if (db.isConnected()) {
-				// DEBUG
-				System.out.println("Connected !!!	");
+				System.out.println("Connected");// DEBUG
 				setVisible(false);
 			}
 		}
 	}
+
 }
