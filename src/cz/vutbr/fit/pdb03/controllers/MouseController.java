@@ -1,31 +1,36 @@
-package cz.vutbr.fit.pdb03.map;
+package cz.vutbr.fit.pdb03.controllers;
 
 import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.openstreetmap.gui.jmapviewer.Coordinate;
-import org.openstreetmap.gui.jmapviewer.JMapViewer;
-import org.openstreetmap.gui.jmapviewer.MapMarkerDot;
 import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
+
+import cz.vutbr.fit.pdb03.AnimalsDatabase;
+import cz.vutbr.fit.pdb03.map.JMapPane;
+import cz.vutbr.fit.pdb03.map.MapPoint;
 
 /**
  * Trida zajistujici odchyceni klikani do mapy
  * @author Ondřej Beneš <ondra.benes@gmail.com>
  *
  */
-public class MapMouseListener extends MouseAdapter {
+public class MouseController extends MouseAdapter {
 
 	/**
 	 * Reference na mapu (pro funkce pocitani pozice a pod)
 	 */
 	JMapPane map;
+	AnimalsDatabase frame;
 
-	public MapMouseListener(JMapPane map) {
-		this.map = map;
+	public MouseController(AnimalsDatabase frame) {
+		this.frame = frame;
+
+		// pridani listeneru
+		map = frame.getMap();
+		map.addMouseListener(this);
 	}
 
 	@Override

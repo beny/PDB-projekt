@@ -26,8 +26,11 @@ import org.openstreetmap.gui.jmapviewer.JMapViewer;
 import org.openstreetmap.gui.jmapviewer.OsmTileLoader;
 import org.openstreetmap.gui.jmapviewer.OsmTileSource;
 
+import cz.vutbr.fit.pdb03.controllers.MenuController;
+import cz.vutbr.fit.pdb03.controllers.MouseController;
+import cz.vutbr.fit.pdb03.controllers.WindowController;
+import cz.vutbr.fit.pdb03.dialogs.ConnectDialog;
 import cz.vutbr.fit.pdb03.map.JMapPane;
-import cz.vutbr.fit.pdb03.map.MapMouseListener;
 
 /**
  * Hlavni trida zajistujici vykreselni hlavniho okna, rozdeleneho do tri
@@ -36,7 +39,7 @@ import cz.vutbr.fit.pdb03.map.MapMouseListener;
  * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
-public class AnimalsDatabase extends JFrame implements ActionListener{
+public class AnimalsDatabase extends JFrame{
 
 	private static final long serialVersionUID = 1L;
 
@@ -45,15 +48,6 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 
 	// map items
 	JMapPane map;
-
-	// application preferences
-	Preferences prefs = Preferences.userNodeForPackage(this.getClass());
-
-	// menu items
-	private JMenuBar menuBar;
-	private JMenu menuMap, menuDatabase, menuAbout;
-	private JMenuItem menuAboutInfo, menuDatabaseDisconnect, menuDatabaseCreate;
-	private JCheckBoxMenuItem menuMapShowMarkers;
 
 	// database items
 	private DataBase db;
@@ -71,32 +65,13 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 		// databaze
 		db = new DataBase();
 
-		// nastaveni pri zavirani okna
-		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-		addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent event) {
+		// mapa
+		map = new JMapPane(this);
 
-				if (db.isConnected()) {
-					try {
-						db.disconnect();
-
-						// DEBUG
-						System.out.println("Disconnected");
-					} catch (SQLException e) {
-						System.err
-								.println("Error while disconnection from DB: " + e.getMessage());
-					}
-				}
-
-				setVisible(false);
-				dispose();
-			}
-		});
-
-		// nastaveni velikosti okna
-//		setExtendedState(MAXIMIZED_BOTH);
-		setMinimumSize(new Dimension(800, 600));
+		// nastaveni kontroleru
+		new MouseController(this);
+		new WindowController(this);
+		new MenuController(this);
 
 		// pridani rozdeleni do jednotlivych podoken
 		// TODO dodelat nejak poradne vahy pri resize oknu a pri prvnim spusteni
@@ -105,73 +80,15 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 		splitPaneH.setDividerLocation(600);
 		splitPaneH.setBorder(null);
 
-		JSplitPane splitPaneV= new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPaneH, getBottomPanel());
+		JSplitPane splitPaneV= new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPaneH, map);
 		splitPaneV.setResizeWeight(0.3);
 		splitPaneV.setDividerLocation(200);
 		add(splitPaneV);
-
-		// hlavniho menu
-		menuBar = new JMenuBar();
-
-		// menu databaze
-		menuDatabase = new JMenu("Databáze");
-		menuBar.add(menuDatabase);
-
-		menuDatabaseDisconnect = new JMenuItem("Odpojit od databáze");
-		menuDatabaseDisconnect.addActionListener(this);
-		menuDatabase.add(menuDatabaseDisconnect);
-
-		menuDatabaseCreate = new JMenuItem("Vytvořit databázi");
-		menuDatabaseCreate.addActionListener(this);
-		menuDatabase.add(menuDatabaseCreate);
-
-		// menu mapa
-		menuMap = new JMenu("Mapa");
-		menuMap.addActionListener(this);
-		menuBar.add(menuMap);
-
-		menuMapShowMarkers = new JCheckBoxMenuItem("Zobraz body", true);
-		menuMapShowMarkers.addActionListener(this);
-		menuMap.add(menuMapShowMarkers);
-
-		// menu about
-		menuAbout = new JMenu("About");
-		menuBar.add(menuAbout);
-
-		menuAboutInfo = new JMenuItem("O aplikaci");
-		menuAboutInfo.addActionListener(this);
-		menuAbout.add(menuAboutInfo);
-
-		setJMenuBar(menuBar);
 
 		// dialog pro pripojeni
 		connectDialog = new ConnectDialog(this, db);
 		connectDialog.setVisible(true);
 
-	}
-
-	/**
-	 * Metoda pro ziskani panelu pro spodni cast okna
-	 * @return komponenta vyplnena mapou
-	 */
-	public JComponent getBottomPanel() {
-
-		// map panel
-		map = new JMapPane();
-		setPreferredSize(null);
-		map.setTileSource(new OsmTileSource.CycleMap());
-		map.setTileLoader(new OsmTileLoader(map));
-		map.setDatabase(db);
-
-//		map.addMapRectangle(new MapRectangle(49.81, 8.6, 49.82, 8.2));
-//		map.addMapMarker(new MapMarkerPoint(49.123, 8.456, 1));
-//		map.addMapMarker(new MapMarkerPoint(49.321, 7.456, 2));
-//		map.addMapMarker(new MapMarkerPoint(49.456, 7.123, 3));
-
-
-		map.addMouseListener(new MapMouseListener(map));
-
-		return map;
 	}
 
 	/**
@@ -211,6 +128,30 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 		return scroll;
 	}
 
+	public JMapPane getMap() {
+		return map;
+	}
+
+	public void setMap(JMapPane map) {
+		this.map = map;
+	}
+
+	public DataBase getDb() {
+		return db;
+	}
+
+	public void setDb(DataBase db) {
+		this.db = db;
+	}
+
+	public ConnectDialog getConnectDialog() {
+		return connectDialog;
+	}
+
+	public void setConnectDialog(ConnectDialog connectDialog) {
+		this.connectDialog = connectDialog;
+	}
+
 	/**
 	 * Hlavni main pro spusteni aplikace
 	 * @param args argumenty z prikazove radky
@@ -219,47 +160,5 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 		AnimalsDatabase aDb = new AnimalsDatabase("Animals database");
 		aDb.setVisible(true);
 	}
-
-
-	@Override
-	public void actionPerformed(ActionEvent event) {
-
-		// zobrazeni/skryti markeru na mape
-		if(event.getSource() == menuMapShowMarkers){
-			map.setMapMarkerVisible(!map.getMapMarkersVisible());
-			menuMapShowMarkers.setState(map.getMapMarkersVisible());
-		}
-
-		// informacni dialog
-		if(event.getSource() == menuAboutInfo){
-			JOptionPane.showMessageDialog(this, "Projekt do předmětu Pokročilé databáze");
-		}
-
-		// odpojeni od databaze
-		if(event.getSource() == menuDatabaseDisconnect){
-			try {
-				System.out.println("Disconnected"); // DEBUG
-				db.disconnect();
-				connectDialog.setVisible(true);
-			} catch (SQLException e){
-				System.err.println("Error while disconnection from DB: " + e.getMessage());
-			}
-		}
-
-		// vytvoreni tabulek v DB
-		if(event.getSource() == menuDatabaseCreate){
-			if(db.isConnected()){
-				try{
-					System.out.println("Creating empty database"); // DEBUG
-					db.createDatabase();
-				} catch (SQLException e){
-					System.err.println("Chyba pri vytvareni DB: " + e.getMessage());
-				}
-			}
-
-		}
-
-	}
-
 
 }
