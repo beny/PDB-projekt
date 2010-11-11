@@ -6,7 +6,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Vector;
 import java.util.prefs.Preferences;
 
@@ -19,7 +18,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu.Separator;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -28,6 +26,7 @@ import org.openstreetmap.gui.jmapviewer.JMapViewer;
 import org.openstreetmap.gui.jmapviewer.OsmTileLoader;
 import org.openstreetmap.gui.jmapviewer.OsmTileSource;
 
+import cz.vutbr.fit.pdb03.map.JMapPane;
 import cz.vutbr.fit.pdb03.map.MapMouseListener;
 
 /**
@@ -45,7 +44,7 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 	JComponent rightPanel, leftTopPanel, leftBottomPanel;
 
 	// map items
-	JMapViewer map;
+	JMapPane map;
 
 	// application preferences
 	Preferences prefs = Preferences.userNodeForPackage(this.getClass());
@@ -158,10 +157,11 @@ public class AnimalsDatabase extends JFrame implements ActionListener{
 	public JComponent getBottomPanel() {
 
 		// map panel
-		map = new JMapViewer();
-		map.setPreferredSize(null);
+		map = new JMapPane();
+		setPreferredSize(null);
 		map.setTileSource(new OsmTileSource.CycleMap());
 		map.setTileLoader(new OsmTileLoader(map));
+		map.setDatabase(db);
 
 //		map.addMapRectangle(new MapRectangle(49.81, 8.6, 49.82, 8.2));
 //		map.addMapMarker(new MapMarkerPoint(49.123, 8.456, 1));

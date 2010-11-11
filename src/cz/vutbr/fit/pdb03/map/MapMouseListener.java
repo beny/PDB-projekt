@@ -17,14 +17,14 @@ import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
  * @author Ondřej Beneš <ondra.benes@gmail.com>
  *
  */
-public class MapMouseListener extends MouseAdapter implements MouseListener {
+public class MapMouseListener extends MouseAdapter {
 
 	/**
 	 * Reference na mapu (pro funkce pocitani pozice a pod)
 	 */
-	JMapViewer map;
+	JMapPane map;
 
-	public MapMouseListener(JMapViewer map) {
+	public MapMouseListener(JMapPane map) {
 		this.map = map;
 	}
 
@@ -37,9 +37,9 @@ public class MapMouseListener extends MouseAdapter implements MouseListener {
 
 			// nakresli pouze bod pokud jsou body viditelne
 			if (map.getMapMarkersVisible()) {
-				MapMarkerPoint.counter = MapMarkerPoint.counter + 1;
-				map.addMapMarker(new MapMarkerPoint(pointClicked.getLat(),
-						pointClicked.getLon(), MapMarkerPoint.counter));
+				MapPoint.counter = MapPoint.counter + 1;
+				map.addMapMarker(new MapPoint(pointClicked.getLat(),
+						pointClicked.getLon(), MapPoint.counter));
 			}
 		}
 		// pro prave tlacitko mysi
@@ -47,7 +47,7 @@ public class MapMouseListener extends MouseAdapter implements MouseListener {
 
 			// spocita maximalni vzdalenost bodu od stredu kliknuti kdy jeste
 			// spada do bodu
-			double maxDist = MapMarkerPoint.getPointSize() / 2;
+			double maxDist = MapPoint.getPointSize() / 2;
 
 			// ziskani vsech bodu
 			List<MapMarker> markers = map.getMapMarkerList();

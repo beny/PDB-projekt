@@ -13,7 +13,7 @@ import org.openstreetmap.gui.jmapviewer.MapMarkerDot;
  * @author Ondřej Beneš <ondra.benes@gmail.com>
  *
  */
-public class MapMarkerPoint extends MapMarkerDot {
+public class MapPoint extends MapMarkerDot {
 
 	private int id;
 	private static int pointSize = 50;
@@ -21,7 +21,7 @@ public class MapMarkerPoint extends MapMarkerDot {
 
 	public static int counter = 0;
 
-	public MapMarkerPoint(double lat, double lon, int id) {
+	public MapPoint(double lat, double lon, int id) {
 		super(lat, lon);
 
 		setId(id);
