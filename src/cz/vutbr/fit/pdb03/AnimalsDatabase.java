@@ -91,6 +91,7 @@ public class AnimalsDatabase extends JFrame{
 
 	}
 
+
 	/**
 	 * Metoda pro ziskani panelu pro levou horni cast okna
 	 * @return komponenta vyplnena JTabbedPane pro obrazky
