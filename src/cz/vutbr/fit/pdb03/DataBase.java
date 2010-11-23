@@ -11,6 +11,8 @@ import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Collection;
+import java.util.ArrayList;
 import oracle.jdbc.OracleResultSet;
 import oracle.jdbc.OraclePreparedStatement;
 //import ordim.jar from oraclelib.zip/oraclelib/ord located in WIS
@@ -33,6 +35,22 @@ public class DataBase {
 	 * private variable to store database connection
 	 */
 	private Connection con = null;
+
+        /**
+         * use this string for accesing to table with photos of animals
+         */
+        public static String animalPhoto = "animal_photo";
+        /**
+         * use this string for accesing to table with photos of excrements of animals
+         */
+        public static String excrementPhoto = "excrement_photo";
+
+        /**
+         * use this string for accesing to table with photos of foot of animals
+         */
+        public static String feetPhoto = "footprint";
+
+        public Collection<AnimalObject> searchResult=new ArrayList<AnimalObject>();
 
 	/**
 	 * Function for connectin to Oracle database
@@ -62,6 +80,29 @@ public class DataBase {
 		}
 	}
 
+        /**
+         * Function for receiving animal description from database
+         *
+         * @param animal_id
+         *           ID of an animal
+         * @return String with description
+         * @throws SQLException
+         */
+        public String getDescription(int animal_id) throws SQLException{
+            Statement stat = con.createStatement();
+            String SQLquery = "SELECT description FROM animals WHERE animal_id="+Integer.toString(animal_id);
+            OracleResultSet rset = null;
+            rset = (OracleResultSet) stat.executeQuery(SQLquery);
+            SQLquery="";
+            while (rset.next()) {
+                SQLquery= rset.getString("genus_lat");
+                break;
+            }
+            rset.close();
+            stat.close();
+	    return SQLquery;
+        }
+
 	/**
 	 * SIMPLE function if needed to determine, if system is connected.
 	 *
@@ -84,9 +125,9 @@ public class DataBase {
 		deleteDatabase();
 		Statement stat = con.createStatement();
 		stat.executeQuery("CREATE TABLE animals (animal_id NUMBER PRIMARY KEY, genus VARCHAR(20), family VARCHAR(20), genus_lat VARCHAR(20), family_lat VARCHAR(20), description VARCHAR(500))");
-		stat.executeQuery("CREATE TABLE animal_photo (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
-		stat.executeQuery("CREATE TABLE excrement_photo (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
-		stat.executeQuery("CREATE TABLE footprint (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+		stat.executeQuery("CREATE TABLE "+animalPhoto+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+		stat.executeQuery("CREATE TABLE "+excrementPhoto+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+		stat.executeQuery("CREATE TABLE "+feetPhoto+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
 		stat.executeQuery("CREATE TABLE animal_movement (move_id NUMBER PRIMARY KEY, animal_id NUMBER, move MDSYS.SDO_GEOMETRY)");
 		stat.close();
 		createSequences();
@@ -96,8 +137,6 @@ public class DataBase {
 	 * Function for searching animals by their names - choose one notation -
 	 * latin or other language - do not blend! No need to fill both params,
 	 * replace blank param by null or "".
-	 *
-	 * TO DO: return gained data
 	 *
 	 * @param genus
 	 *            genus name of an animal
@@ -129,9 +168,18 @@ public class DataBase {
 						+ genus + "')");
 			}
 		}
+                searchResult.clear();
 		while (rset.next()) {
-			selectPicture(rset.getInt("animal_id"), false);
+                    AnimalObject temp=new AnimalObject();
+                    selectPicture(rset.getInt("animal_id"), false,animalPhoto);
+                    temp.animal_id=rset.getInt("animal_id");
+                    temp.family=rset.getString("family");
+                    temp.family_lat=rset.getString("family_lat");
+                    temp.genus=rset.getString("genus");
+                    temp.genus_lat=rset.getString("genus_lat");
+                    searchResult.add(temp);
 		}
+                rset.close();
 		stat.close();
 		return;
 	}
@@ -218,6 +266,7 @@ public class DataBase {
 			stat.execute(SQLquery);
 			con.commit();
 			con.setAutoCommit(true);
+                        rset.close();
 			stat.close();
 		} catch (SQLException a) {
 			id = 0;
@@ -266,6 +315,7 @@ public class DataBase {
 					rset.getDouble("point.y"));
 			data.put(animal_id, point);
 		}
+                rset.close();
 		stat.close();
 		return data;
 	}
@@ -287,27 +337,27 @@ public class DataBase {
 		} catch (SQLException e) {
 		}
 		try {
-			stat.executeQuery("DROP TABLE animal_photo");
+			stat.executeQuery("DROP TABLE "+animalPhoto);
 		} catch (SQLException e) {
 		}
 		try {
-			stat.executeQuery("DROP SEQUENCE animal_photo_seq");
+			stat.executeQuery("DROP SEQUENCE "+animalPhoto+"_seq");
 		} catch (SQLException e) {
 		}
 		try {
-			stat.executeQuery("DROP TABLE excrement_photo");
+			stat.executeQuery("DROP TABLE "+excrementPhoto);
 		} catch (SQLException e) {
 		}
 		try {
-			stat.executeQuery("DROP SEQUENCE excrement_photo_seq");
+			stat.executeQuery("DROP SEQUENCE "+excrementPhoto+"_seq");
 		} catch (SQLException e) {
 		}
 		try {
-			stat.executeQuery("DROP TABLE footprint");
+			stat.executeQuery("DROP TABLE "+feetPhoto);
 		} catch (SQLException e) {
 		}
 		try {
-			stat.executeQuery("DROP SEQUENCE footprint_seq");
+			stat.executeQuery("DROP SEQUENCE "+feetPhoto+"_seq");
 		} catch (SQLException e) {
 		}
 		try {
@@ -330,9 +380,9 @@ public class DataBase {
 	private void createSequences() throws SQLException {
 		Statement stat = con.createStatement();
 		stat.executeQuery("CREATE SEQUENCE animal_movement_seq START WITH 1 INCREMENT BY 1");
-		stat.executeQuery("CREATE SEQUENCE footprint_seq START WITH 1 INCREMENT BY 1");
-		stat.executeQuery("CREATE SEQUENCE excrement_photo_seq START WITH 1 INCREMENT BY 1");
-		stat.executeQuery("CREATE SEQUENCE animal_photo_seq START WITH 1 INCREMENT BY 1");
+		stat.executeQuery("CREATE SEQUENCE "+feetPhoto+"_seq START WITH 1 INCREMENT BY 1");
+		stat.executeQuery("CREATE SEQUENCE "+excrementPhoto+"_seq START WITH 1 INCREMENT BY 1");
+		stat.executeQuery("CREATE SEQUENCE "+animalPhoto+"_seq START WITH 1 INCREMENT BY 1");
 		stat.executeQuery("CREATE SEQUENCE animals_seq START WITH 1 INCREMENT BY 1");
 		stat.close();
 	}
@@ -348,22 +398,28 @@ public class DataBase {
 	 * @param all
 	 *            true if return all pictures of an animal, false if return only
 	 *            one thumbnail
+         * @param choosen_table
+         *              from which table we want pictures
+         * @return HashMap<Integer photo_id,OrdImage photo>
 	 * @throws SQLException
 	 */
-	private void selectPicture(int id, boolean all) throws SQLException {
+	private Map<Integer,OrdImage> selectPicture(int id, boolean all, String choosen_table) throws SQLException {
 		Statement stat = con.createStatement();
 		String SQLquery;
 		if (all) {
-			SQLquery = "SELECT animal_photo FROM animal_photo WHERE animal_id="
+			SQLquery = "SELECT photo, photo_id FROM "+choosen_table+" WHERE animal_id="
 					+ Integer.toString(id);
 		} else {
-			SQLquery = "SELECT TOP 1 animal_photo FROM animal_photo WHERE animal_id="
+			SQLquery = "SELECT TOP 1 photo, photo_id FROM "+choosen_table+" WHERE animal_id="
 					+ Integer.toString(id);
 		}
 		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
-		rset.next();
-		rset.getInt("animal_id");
+                HashMap<Integer,OrdImage> result = new HashMap<Integer,OrdImage>();
+		while (rset.next()) {
+                    result.put(rset.getInt("photo_id"),(OrdImage) rset.getORAData("photo",OrdImage.getORADataFactory()));
+		}
+                rset.close();
 		stat.close();
-		return;
+		return result;
 	}
 }
