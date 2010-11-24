@@ -13,6 +13,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Collection;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import oracle.jdbc.OracleResultSet;
 import oracle.jdbc.OraclePreparedStatement;
 //import ordim.jar from oraclelib.zip/oraclelib/ord located in WIS
@@ -48,8 +50,21 @@ public class DataBase {
         /**
          * use this string for accesing to table with photos of foot of animals
          */
-        public static String FEET_PHOTO = "footprint";
+        public final static String FEET_PHOTO = "footprint";
 
+         /**
+         * use this string for accesing to table for searching according pictures
+         */
+        public final static String SEARCH_PHOTO = "search_photo";
+
+        /**
+         * Number of maximum search results
+         */
+        private final static int MAX_SEARCH_RESULTS=25;
+
+        /**
+         * Data are here after searching
+         */
         public Collection<AnimalObject> searchResult=new ArrayList<AnimalObject>();
 
 	/**
@@ -95,7 +110,7 @@ public class DataBase {
             rset = (OracleResultSet) stat.executeQuery(SQLquery);
             SQLquery="";
             while (rset.next()) {
-                SQLquery= rset.getString("genus_lat");
+                SQLquery= rset.getString("description");
                 break;
             }
             rset.close();
@@ -128,6 +143,7 @@ public class DataBase {
 		stat.executeQuery("CREATE TABLE "+ANIMAL_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
 		stat.executeQuery("CREATE TABLE "+EXCREMENT_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
 		stat.executeQuery("CREATE TABLE "+FEET_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+                stat.executeQuery("CREATE TABLE "+SEARCH_PHOTO+" (photo_id NUMBER PRIMARY KEY, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
 		stat.executeQuery("CREATE TABLE animal_movement (move_id NUMBER PRIMARY KEY, animal_id NUMBER, move MDSYS.SDO_GEOMETRY, valid_from DATE, valid_to DATE)");
 		stat.close();
 		createSequences();
@@ -147,7 +163,7 @@ public class DataBase {
 	 */
 	public void searchAnimals(String genus, String family) throws SQLException {
 		Statement stat = con.createStatement();
-		String SQLquery = "SELECT animal_id,genus,family,genus_lat,family_lat FROM animals WHERE ";
+		String SQLquery = "SELECT TOP "+Integer.toString(MAX_SEARCH_RESULTS)+" animal_id,genus,family,genus_lat,family_lat FROM animals WHERE ";
 		OracleResultSet rset = null;
 		if (genus == null ? "" == null : genus.equals("")) {
 			if (family == null ? "" == null : family.equals("")) {
@@ -220,10 +236,11 @@ public class DataBase {
 	 * @param choosen_table
 	 * @param filename
 	 *            Filename of a picture for upload
+         * @return integer with new photo_id
 	 * @throws SQLException
 	 * @throws IOException
 	 */
-	public void uploadImage(int animal_id, String choosen_table, String filename)
+	public int uploadImage(int animal_id, String choosen_table, String filename)
 			throws SQLException, IOException {
 		con.setAutoCommit(false);
 		Statement stat = con.createStatement();
@@ -231,11 +248,17 @@ public class DataBase {
 		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
 		rset.next();
 		int nextval = rset.getInt("nextval");
-		SQLquery = "INSERT INTO " + choosen_table
-				+ " (animal_id, photo_id, photo, photo_sig) VALUES (" + nextval
+                if (choosen_table.equals(SEARCH_PHOTO)){
+                    SQLquery = "INSERT INTO " + choosen_table
+				+ " (photo_id, photo, photo_sig) VALUES (" + nextval
+				+ ", ordsys.ordimage.init(), ordsys.ordimagesignature.init())";
+                } else {
+                    SQLquery = "INSERT INTO " + choosen_table
+				+ " (photo_id, animal_id, photo, photo_sig) VALUES (" + nextval
 				+ ", " + animal_id
 				+ ", ordsys.ordimage.init(), ordsys.ordimagesignature.init())";
-		stat.execute(SQLquery);
+                }
+                stat.execute(SQLquery);
 		SQLquery = "SELECT image, signature FROM " + choosen_table
 				+ " WHERE animal_id = " + nextval + " FOR UPDATE";
 		rset = (OracleResultSet) stat.executeQuery(SQLquery);
@@ -249,7 +272,7 @@ public class DataBase {
 		imageProxy.setProperties();
 		signatureProxy.generateSignature(imageProxy);
 		SQLquery = "UPDATE " + choosen_table
-				+ " SET photo=?, photo_sig=? where animal_id=?";
+				+ " SET photo=?, photo_sig=? where photo_id=?";
 		OraclePreparedStatement opstmt = (OraclePreparedStatement) con
 				.prepareStatement(SQLquery);
 		opstmt.setCustomDatum(1, imageProxy);
@@ -261,6 +284,8 @@ public class DataBase {
 		con.commit();
 		con.setAutoCommit(true);
 		stat.close();
+                createIndex(choosen_table);
+                return nextval;
 	}
 
 	/**
@@ -340,7 +365,7 @@ public class DataBase {
          */
         public void insertAnimal(String genus, String family, String genus_lat, String family_lat, String description) throws SQLException{
             Statement stat = con.createStatement();
-            String SQLquery = "INSERT INTO animals (genus, family, genus, genus_lat, decsription) VALUES (?,?,?,?,?) ";
+            String SQLquery = "INSERT INTO animals (genus, family, genus, genus_lat, description) VALUES (?,?,?,?,?) ";
             OraclePreparedStatement opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
             opstmt.setString(1, genus);
             opstmt.setString(2, family);
@@ -400,64 +425,60 @@ public class DataBase {
 	 * @throws SQLException
 	 */
 	private void deleteDatabase() throws SQLException {
-		Statement stat = con.createStatement();
-		try {
-			stat.executeQuery("DROP TABLE animals");
-		} catch (SQLException e) {
-		}
-		try {
-			stat.executeQuery("DROP SEQUENCE animals_seq");
-		} catch (SQLException e) {
-		}
-		try {
-			stat.executeQuery("DROP TABLE "+ANIMAL_PHOTO);
-		} catch (SQLException e) {
-		}
-		try {
-			stat.executeQuery("DROP SEQUENCE "+ANIMAL_PHOTO+"_seq");
-		} catch (SQLException e) {
-		}
-		try {
-			stat.executeQuery("DROP TABLE "+EXCREMENT_PHOTO);
-		} catch (SQLException e) {
-		}
-		try {
-			stat.executeQuery("DROP SEQUENCE "+EXCREMENT_PHOTO+"_seq");
-		} catch (SQLException e) {
-		}
-		try {
-			stat.executeQuery("DROP TABLE "+FEET_PHOTO);
-		} catch (SQLException e) {
-		}
-		try {
-			stat.executeQuery("DROP SEQUENCE "+FEET_PHOTO+"_seq");
-		} catch (SQLException e) {
-		}
-		try {
-			stat.executeQuery("DROP TABLE animal_movement");
-		} catch (SQLException e) {
-		}
-		try {
-			stat.executeQuery("DROP SEQUENCE animal_movement_seq");
-		} catch (SQLException e) {
-		}
-                try {
-			stat.executeQuery("DROP TRIGGER animals_trigger");
-		} catch (SQLException e) {
-		}
-                try {
-			stat.executeQuery("DROP TRIGGER animal_movement_trigger_i");
-		} catch (SQLException e) {
-		}
-                try {
-			stat.executeQuery("DROP PROCEDURE animal_movement_delete");
-		} catch (SQLException e) {
-		}
-                try {
-			stat.executeQuery("DROP PROCEDURE animal_movement_update");
-		} catch (SQLException e) {
-		}
-		stat.close();
+            deleteIndex(ANIMAL_PHOTO);
+            deleteIndex(FEET_PHOTO);
+            deleteIndex(EXCREMENT_PHOTO);
+            deleteIndex(SEARCH_PHOTO);
+            Statement stat = con.createStatement();
+            try {
+            	stat.executeQuery("DROP TABLE animals");
+            } catch (SQLException e) {}
+            try {
+		stat.executeQuery("DROP SEQUENCE animals_seq");
+            } catch (SQLException e) {}
+            try {
+		stat.executeQuery("DROP TABLE "+ANIMAL_PHOTO);
+            } catch (SQLException e) {}
+            try {
+		stat.executeQuery("DROP SEQUENCE "+ANIMAL_PHOTO+"_seq");
+            } catch (SQLException e) {}
+            try {
+		stat.executeQuery("DROP TABLE "+EXCREMENT_PHOTO);
+            } catch (SQLException e) {}
+            try {
+		stat.executeQuery("DROP SEQUENCE "+EXCREMENT_PHOTO+"_seq");
+            } catch (SQLException e) {}
+            try {
+            	stat.executeQuery("DROP TABLE "+FEET_PHOTO);
+            } catch (SQLException e) {}
+            try {
+            	stat.executeQuery("DROP SEQUENCE "+FEET_PHOTO+"_seq");
+            } catch (SQLException e) {}
+            try {
+            	stat.executeQuery("DROP TABLE animal_movement");
+            } catch (SQLException e) {}
+            try {
+            	stat.executeQuery("DROP SEQUENCE animal_movement_seq");
+            } catch (SQLException e) {}
+            try {
+		stat.executeQuery("DROP TABLE "+SEARCH_PHOTO);
+            } catch (SQLException e) {}
+            try {
+		stat.executeQuery("DROP SEQUENCE "+SEARCH_PHOTO+"_seq");
+            } catch (SQLException e) {}
+            try {
+            	stat.executeQuery("DROP TRIGGER animals_trigger");
+            } catch (SQLException e) {}
+            try {
+		stat.executeQuery("DROP TRIGGER animal_movement_trigger_i");
+            } catch (SQLException e) {}
+            try {
+            	stat.executeQuery("DROP PROCEDURE animal_movement_delete");
+            } catch (SQLException e) {}
+            try {
+		stat.executeQuery("DROP PROCEDURE animal_movement_update");
+            } catch (SQLException e) {}
+            stat.close();
 	}
 
 	/**
@@ -524,10 +545,9 @@ public class DataBase {
                               "  IF INSERTING THEN "+
                               "    SELECT animals_seq.nextval INTO :NEW.animal_id FROM dual; "+
                               "  ELSIF DELETING THEN "+
-                              "    DELETE FROM animal_photo WHERE animal_id=:old.animal_id; "+
-                              "    DELETE FROM excrement_photo WHERE animal_id=:old.animal_id; "+
-                              "    DELETE FROM footprint WHERE animal_id=:old.animal_id; "+
-                              "    DELETE FROM animal_movement WHERE animal_id=:old.animal_id; "+
+                              "    DELETE FROM "+ANIMAL_PHOTO+" WHERE animal_id=:old.animal_id; "+
+                              "    DELETE FROM "+EXCREMENT_PHOTO+" WHERE animal_id=:old.animal_id; "+
+                              "    DELETE FROM "+FEET_PHOTO+" WHERE animal_id=:old.animal_id; "+
                               "  END IF; END;");
             stat.executeQuery("CREATE OR REPLACE TRIGGER animal_movement_trigger_i "+
                               "BEFORE INSERT ON animal_movement FOR EACH ROW "+
@@ -551,7 +571,63 @@ public class DataBase {
                               "    INSERT INTO animal_movement (move_id,animal_id,move) VALUES (cislo,my_animal_id,my_move); "+
                               "  END; "+
                               "END animal_movement_update;");
-            //stat.executeQuery("");
             stat.close();
+        }
+
+        /**
+         * Function for creating picture index
+         * @param tablename
+         */
+        private void createIndex(String tablename){
+        try {
+            Statement stat = con.createStatement();
+            stat.executeQuery("CREATE INDEX " + tablename + "_idx ON " + tablename + " (photo_sig) INDEXTYPE IS ordsys.ordimageindex;");
+            stat.close();
+        } catch (SQLException ex) {
+        }
+        }
+
+        /**
+         * Function for deleting picture index
+         * @param tablename
+         */
+        private void deleteIndex(String tablename){
+        try {
+            Statement stat = con.createStatement();
+            stat.executeQuery("DROP INDEX " + tablename + "_idx;");
+            stat.close();
+        } catch (SQLException ex) {
+        }
+        }
+
+        /**
+         * Function using for searching animals according their photos
+         * @param filename
+         * @param tablename
+         * @throws SQLException
+         * @throws IOException
+         */
+        public void searchAnimal(String filename, String tablename) throws SQLException, IOException{
+            Statement stat = con.createStatement();
+            int nextval=uploadImage(0,SEARCH_PHOTO,filename);
+            String SQLquery = "SELECT TOP "+Integer.toString(MAX_SEARCH_RESULTS)+" DISTINCT animal.animal_id,animal.genus,animal.family,animal.genus_lat,animal.family_lat FROM "+
+                    SEARCH_PHOTO+" fp, "+tablename+" photodb, animals animal "+
+                    "WHERE ordsys.IMGSimilar(fp.photo_sig, photodb.photo_sig, 'color=0.3, texture=0.3, shape=0.3, location=0.1',100 ,123)=1 "+
+                    "AND photodb.photo_id="+Integer.toString(nextval)+" AND animal.animal_id=photodb.animal_id "+
+                    "ORDER BY ordsys.IMGScore(123) ASC;";
+            OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
+            searchResult.clear();
+            while (rset.next()) {
+                AnimalObject temp=new AnimalObject();
+                temp.animal_id=rset.getInt("animal_id");
+                temp.family=rset.getString("family");
+                temp.family_lat=rset.getString("family_lat");
+                temp.genus=rset.getString("genus");
+                temp.genus_lat=rset.getString("genus_lat");
+                searchResult.add(temp);
+            }
+            rset.close();
+            stat.close();
+            return;
         }
 }
