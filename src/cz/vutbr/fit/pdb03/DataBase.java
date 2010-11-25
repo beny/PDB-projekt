@@ -207,11 +207,11 @@ public class DataBase {
             searchResult.clear();
             while (rset.next()) {
                 Animal temp=new Animal();
-                temp.animal_id=rset.getInt("animal_id");
-                temp.family=rset.getString("family");
-                temp.family_lat=rset.getString("family_lat");
-                temp.genus=rset.getString("genus");
-                temp.genus_lat=rset.getString("genus_lat");
+                temp.setId(rset.getInt("animal_id"));
+                temp.setFamily(rset.getString("family"));
+                temp.setFamily_lat(rset.getString("family_lat"));
+                temp.setGenus(rset.getString("genus"));
+                temp.setGenus_lat(rset.getString("genus_lat"));
                 searchResult.add(temp);
             }
             rset.close();
@@ -254,18 +254,18 @@ public class DataBase {
 		while (rset.next()) {
                     Animal temp=new Animal();
                     //selectPicture(rset.getInt("animal_id"), false,animalPhoto);
-                    temp.animal_id=rset.getInt("animal_id");
-                    temp.family=rset.getString("family");
-                    temp.family_lat=rset.getString("family_lat");
-                    temp.genus=rset.getString("genus");
-                    temp.genus_lat=rset.getString("genus_lat");
+                    temp.setId(rset.getInt("animal_id"));
+                    temp.setFamily(rset.getString("family"));
+                    temp.setFamily_lat(rset.getString("family_lat"));
+                    temp.setGenus(rset.getString("genus"));
+                    temp.setGenus_lat(rset.getString("genus_lat"));
                     searchResult.add(temp);
 		}
                 rset.close();
 		stat.close();
 		return;
 	}
-        
+
         /**
 	 * Returns points which belongs to a current animal
 	 *
@@ -631,7 +631,7 @@ public class DataBase {
             stat.close();
         } catch (SQLException ex) {}
         }
-        
+
 	/**
 	 * Selects a random thumbnail or all photos of an animal, it's used for an
 	 * illustrating found results
@@ -666,5 +666,5 @@ public class DataBase {
                 rset.close();
 		stat.close();
 		return result;
-	}        
+	}
 }

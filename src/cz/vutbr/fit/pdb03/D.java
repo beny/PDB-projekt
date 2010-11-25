@@ -10,9 +10,9 @@ public class D {
 
 	private final static boolean ENABLE = true;
 
+	// TODO nejak vymyslet aby slo tyhle parametry predavat v externich tridach metode nize
 	private final static int OUTPUT = 0;
 	private final static int ERROR = 1;
-
 
 	public static void log(String message){
 

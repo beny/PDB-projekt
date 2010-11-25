@@ -11,14 +11,74 @@ import java.awt.geom.Point2D;
 public class Animal {
 
 	// basic informations about animal
-	public int animal_id = 0;
-	public String genus = "";
-	public String family = "";
-	public String genus_lat = "";
-	public String family_lat = "";
+	private int id = 0;
+	private String genus = "";
+	private String family = "";
+	private String genus_lat = "";
+	private String family_lat = "";
 	private String description = "";
 	private Double nearest_appareance = -1.0;
 	private Double appareance_area = -1.0;
+
+	public int getId() {
+		return id;
+	}
+
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+
+	public String getGenus() {
+		return genus;
+	}
+
+
+	public void setGenus(String genus) {
+		this.genus = genus;
+	}
+
+
+	public String getFamily() {
+		return family;
+	}
+
+
+	public void setFamily(String family) {
+		this.family = family;
+	}
+
+
+	public String getGenus_lat() {
+		return genus_lat;
+	}
+
+
+	public void setGenus_lat(String genus_lat) {
+		this.genus_lat = genus_lat;
+	}
+
+
+	public String getFamily_lat() {
+		return family_lat;
+	}
+
+
+	public void setFamily_lat(String family_lat) {
+		this.family_lat = family_lat;
+	}
+
+
+	public String getDescription() {
+		return description;
+	}
+
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
 
 	/**
 	 * Returns description of current animal
@@ -30,7 +90,7 @@ public class Animal {
 	 */
 	public String getDescription(DataBase data) throws SQLException {
 		if (description.equals(""))
-			description = data.getDescription(animal_id);
+			description = data.getDescription(id);
 		return description;
 	}
 
@@ -47,7 +107,7 @@ public class Animal {
 	public Double getNearestAppareance(DataBase data, Point2D location)
 			throws SQLException {
 		if (nearest_appareance == -1.0)
-			nearest_appareance = data.getNearestAppareance(animal_id, location);
+			nearest_appareance = data.getNearestAppareance(id, location);
 		return nearest_appareance;
 	}
 
@@ -61,7 +121,7 @@ public class Animal {
 	 */
 	public Double getAppareanceArea(DataBase data) throws SQLException {
 		if (appareance_area == -1.0)
-			appareance_area = data.getAppareanceArea(animal_id);
+			appareance_area = data.getAppareanceArea(id);
 		return appareance_area;
 	}
 

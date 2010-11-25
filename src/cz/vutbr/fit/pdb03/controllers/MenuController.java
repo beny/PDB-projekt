@@ -9,17 +9,18 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
+import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
-import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.D;
+import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.map.JMapPane;
 
 public class MenuController implements ActionListener{
 
 	// menu items
 	private JMenuBar menuBar;
-	private JMenu menuMap, menuDatabase, menuAbout;
-	private JMenuItem menuAboutInfo, menuDatabaseDisconnect, menuDatabaseCreate;
+	private JMenu menuMap, menuDatabase, menuAbout, menuAnimal;
+	private JMenuItem menuAboutInfo, menuDatabaseDisconnect, menuDatabaseCreate, menuAnimalSample;
 	private JCheckBoxMenuItem menuMapShowMarkers;
 
 	// databaze
@@ -61,6 +62,15 @@ public class MenuController implements ActionListener{
 		menuMapShowMarkers = new JCheckBoxMenuItem("Zobraz body", true);
 		menuMapShowMarkers.addActionListener(this);
 		menuMap.add(menuMapShowMarkers);
+
+		// menu zvire
+		menuAnimal = new JMenu("Zvíře");
+		menuBar.add(menuAnimal);
+
+		// FIXME menu polozka pro pridani testovaciho zvirete
+		menuAnimalSample = new JMenuItem("Vlož testovací zvíře");
+		menuAnimalSample.addActionListener(this);
+		menuAnimal.add(menuAnimalSample);
 
 		// menu about
 		menuAbout = new JMenu("About");
@@ -108,7 +118,25 @@ public class MenuController implements ActionListener{
 					System.err.println("Chyba pri vytvareni DB: " + e.getMessage());
 				}
 			}
+		}
 
+		// vytvoreni testovaciho zvirete
+		if(event.getSource() == menuAnimalSample){
+
+			// testovaci zvire
+			Animal testAnimal = new Animal();
+			testAnimal.setGenus("test animal");
+			testAnimal.setFamily("test family");
+
+			try{
+				D.log("Vkladani zvirete do DB");
+				// TODO kontrola zda uz zvire v DB neni
+				db.searchAnimals(testAnimal.getGenus(), testAnimal.getFamily());
+
+				// TODO pokud neni tak jej uloz
+			} catch(SQLException e){
+				D.log("Chyba pri vytvareni testovaciho zvirete", 1); // FIXME odstranit magickou konstantu
+			}
 		}
 
 	}
