@@ -13,8 +13,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Collection;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import oracle.jdbc.OracleResultSet;
 import oracle.jdbc.OraclePreparedStatement;
 //import ordim.jar from oraclelib.zip/oraclelib/ord located in WIS
@@ -27,7 +25,7 @@ import oracle.ord.im.OrdImageSignature;
  * @author Tomáš Ižák <xizakt00@stud.fit.vutbr.cz>
  */
 public class DataBase {
-
+/////////Constants and variables
 	/**
 	 * private string to store url of database connection
 	 */
@@ -67,6 +65,8 @@ public class DataBase {
          */
         public Collection<AnimalObject> searchResult=new ArrayList<AnimalObject>();
 
+/////////PUBLIC FUNCTIONS///////////////////////////////////////////////////////
+/////////Functions for creating database
 	/**
 	 * Function for connectin to Oracle database
 	 *
@@ -96,6 +96,44 @@ public class DataBase {
 	}
 
         /**
+	 * Function for creating dabase - no need to destroy previous database
+	 * objects - this function cares of that.
+	 *
+	 * @throws SQLException
+	 */
+	public void createDatabase() throws SQLException {
+		deleteDatabase();
+		Statement stat = con.createStatement();
+		stat.executeQuery("CREATE TABLE animals (animal_id NUMBER PRIMARY KEY, genus VARCHAR(20), family VARCHAR(20), genus_lat VARCHAR(20), family_lat VARCHAR(20), description VARCHAR(500))");
+		stat.executeQuery("CREATE TABLE "+ANIMAL_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+		stat.executeQuery("CREATE TABLE "+EXCREMENT_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+		stat.executeQuery("CREATE TABLE "+FEET_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+                stat.executeQuery("CREATE TABLE "+SEARCH_PHOTO+" (photo_id NUMBER PRIMARY KEY, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+		stat.executeQuery("CREATE TABLE animal_movement (move_id NUMBER PRIMARY KEY, animal_id NUMBER, geometry MDSYS.SDO_GEOMETRY, valid_from DATE, valid_to DATE)");
+                try{
+                  stat.executeQuery("INSERT INTO USER_SDO_GEOM_METADATA VALUES ('animal_movement','geometry',SDO_DIM_ARRAY(SDO_DIM_ELEMENT('LONGITUDE',-180,180,100),SDO_DIM_ELEMENT('LATITUDE',-90, 90,100)),8307)");
+                }catch(SQLException e){}
+		stat.executeQuery("CREATE INDEX animal_movement_sidx ON animal_movement (geometry) indextype is MDSYS.SPATIAL_INDEX");
+                stat.close();
+		createSequences();
+                createTriggersAndProcedures();
+	}
+
+        /**
+	 * SIMPLE function if needed to determine, if system is connected.
+	 *
+	 * @return true if connection is alive, 0 if not connected
+	 */
+	public boolean isConnected() {
+		if (con == null)
+			return false;
+		else
+			return true;
+	}
+
+/////////Functions for queriing databse
+//-------SELECT functions
+        /**
          * Function for receiving animal description from database
          *
          * @param animal_id
@@ -118,37 +156,68 @@ public class DataBase {
 	    return SQLquery;
         }
 
-	/**
-	 * SIMPLE function if needed to determine, if system is connected.
-	 *
-	 * @return true if connection is alive, 0 if not connected
-	 */
-	public boolean isConnected() {
-		if (con == null)
-			return false;
-		else
-			return true;
-	}
+        public Double getNearestAppareance(int animal_id,Point2D location) throws SQLException{
+            Statement stat = con.createStatement();
+            NumberFormat nf = NumberFormat.getInstance(Locale.ENGLISH);
+            String SQLquery = "SELECT TOP 1 SDO_NN_DISTANCE(1) AS distance FROM animal_movement WHERE animal_id="+
+                    Integer.toString(animal_id)+" AND SDO_NN(SDO_GEOMETRY(2001,4156,SDO_POINT_TYPE("+nf.format(location.getX())+","+
+                    nf.format(location.getY()) +",NULL),NULL,NULL), geometry,'SDO_NUM_RES=5 UNIT=kilometer',1)='TRUE' ORDER BY distance";
+            OracleResultSet rset = null;
+            rset = (OracleResultSet) stat.executeQuery(SQLquery);
+            Double result=0.0;
+            while (rset.next()) {
+                result= rset.getDouble("distance");
+                break;
+            }
+            rset.close();
+            stat.close();
+	    return result;
+        }
 
-	/**
-	 * Function for creating dabase - no need to destroy previous database
-	 * objects - this function cares of that.
-	 *
-	 * @throws SQLException
-	 */
-	public void createDatabase() throws SQLException {
-		deleteDatabase();
-		Statement stat = con.createStatement();
-		stat.executeQuery("CREATE TABLE animals (animal_id NUMBER PRIMARY KEY, genus VARCHAR(20), family VARCHAR(20), genus_lat VARCHAR(20), family_lat VARCHAR(20), description VARCHAR(500))");
-		stat.executeQuery("CREATE TABLE "+ANIMAL_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
-		stat.executeQuery("CREATE TABLE "+EXCREMENT_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
-		stat.executeQuery("CREATE TABLE "+FEET_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
-                stat.executeQuery("CREATE TABLE "+SEARCH_PHOTO+" (photo_id NUMBER PRIMARY KEY, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
-		stat.executeQuery("CREATE TABLE animal_movement (move_id NUMBER PRIMARY KEY, animal_id NUMBER, move MDSYS.SDO_GEOMETRY, valid_from DATE, valid_to DATE)");
-		stat.close();
-		createSequences();
-                createTriggersAndProcedures();
-	}
+        public Double getAppareanceArea(int animal_id) throws SQLException{
+            Statement stat = con.createStatement();
+            String SQLquery = "SELECT SDO_GEOM.SDO_AREA(geometry,KILOMETER,0.1) AS area FROM animal_movement WHERE animal_id="+Integer.toString(animal_id);
+            OracleResultSet rset = null;
+            rset = (OracleResultSet) stat.executeQuery(SQLquery);
+            Double result=0.0;
+            while (rset.next()) {
+                result=result+rset.getDouble("area");
+            }
+            rset.close();
+            stat.close();
+	    return result;
+        }
+
+        /**
+         * Function using for searching animals according their photos
+         * @param filename
+         * @param tablename
+         * @throws SQLException
+         * @throws IOException
+         */
+        public void searchAnimal(String filename, String tablename) throws SQLException, IOException{
+            Statement stat = con.createStatement();
+            int nextval=uploadImage(0,SEARCH_PHOTO,filename);
+            String SQLquery = "SELECT TOP "+Integer.toString(MAX_SEARCH_RESULTS)+" DISTINCT animal.animal_id,animal.genus,animal.family,animal.genus_lat,animal.family_lat FROM "+
+                    SEARCH_PHOTO+" fp, "+tablename+" photodb, animals animal "+
+                    "WHERE ordsys.IMGSimilar(fp.photo_sig, photodb.photo_sig, 'color=0.3, texture=0.3, shape=0.3, location=0.1',100 ,123)=1 "+
+                    "AND photodb.photo_id="+Integer.toString(nextval)+" AND animal.animal_id=photodb.animal_id "+
+                    "ORDER BY ordsys.IMGScore(123) ASC;";
+            OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
+            searchResult.clear();
+            while (rset.next()) {
+                AnimalObject temp=new AnimalObject();
+                temp.animal_id=rset.getInt("animal_id");
+                temp.family=rset.getString("family");
+                temp.family_lat=rset.getString("family_lat");
+                temp.genus=rset.getString("genus");
+                temp.genus_lat=rset.getString("genus_lat");
+                searchResult.add(temp);
+            }
+            rset.close();
+            stat.close();
+            return;
+        }
 
 	/**
 	 * Function for searching animals by their names - choose one notation -
@@ -170,19 +239,14 @@ public class DataBase {
 				stat.close();
 				return;
 			} else {
-				rset = (OracleResultSet) stat.executeQuery(SQLquery
-						+ "family='" + family + "' or family_lat='" + family
-						+ "'");
+				rset = (OracleResultSet) stat.executeQuery(SQLquery+"family='" + family + "' or family_lat='" + family+ "'");
 			}
 		} else {
 			if (family == null ? "" == null : family.equals("")) {
-				rset = (OracleResultSet) stat.executeQuery(SQLquery + "genus='"
-						+ genus + "' or genus_lat='" + genus + "'");
+				rset = (OracleResultSet) stat.executeQuery(SQLquery + "genus='"	+ genus + "' or genus_lat='" + genus + "'");
 			} else {
-				rset = (OracleResultSet) stat.executeQuery(SQLquery
-						+ "(family='" + family + "' and genus='" + genus
-						+ "') or (family_lat='" + family + "' and genus_lat='"
-						+ genus + "')");
+				rset = (OracleResultSet) stat.executeQuery(SQLquery+ "(family='" + family +
+                                        "' and genus='" + genus+ "') or (family_lat='" + family + "' and genus_lat='"+ genus + "')");
 			}
 		}
                 searchResult.clear();
@@ -200,6 +264,33 @@ public class DataBase {
 		stat.close();
 		return;
 	}
+        
+        /**
+	 * Returns points which belongs to a current animal
+	 *
+	 * @param animal_id
+	 *            id of current animal
+	 * @return HashMap<Integer,Point2D> list of points belongs to current animal
+	 * @throws SQLException
+	 */
+	public Map<Integer, Point2D> selectPoints(int animal_id)
+			throws SQLException {
+		Statement stat = con.createStatement();
+		String SQLquery = "SELECT geometry.SDO_POINT.x AS x, geometry.SDO_POINT.y AS y, id FROM animal_movement WHERE .SDO_POINT<>NULL animal_id="
+				+ Integer.toString(animal_id);
+		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
+		HashMap<Integer, Point2D> data = new HashMap<Integer, Point2D>();
+		Point2D point = new Point2D.Double();
+		while (rset.next()) {
+			point.setLocation(rset.getDouble("x"),rset.getDouble("y"));
+			data.put(animal_id, point);
+		}
+                rset.close();
+		stat.close();
+		return data;
+	}
+
+//----------UPDATE functions
 
         /**
          * Function for updating spatial data (invalidating old data and inserting and validating new data)
@@ -216,6 +307,34 @@ public class DataBase {
         }
 
         /**
+         * Function for updating selected animal
+         * TODO: jestli nedat jako vstupní parametr AnimalObject....???
+         * @param animal_id
+         * @param genus
+         * @param family
+         * @param genus_lat
+         * @param family_lat
+         * @param description
+         * @throws SQLException
+         */
+        public void updateAnimal(int animal_id, String genus, String family, String genus_lat, String family_lat, String description) throws SQLException{
+            Statement stat = con.createStatement();
+            String SQLquery = "UPDATE animals SET (genus=?, family=?, genus=?, genus_lat=?, decsription=?) WHERE animal_id=? ";
+            OraclePreparedStatement opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
+            opstmt.setString(1, genus);
+            opstmt.setString(2, family);
+            opstmt.setString(3, genus_lat);
+            opstmt.setString(4, family_lat);
+            opstmt.setString(5, description);
+            opstmt.setInt(6, animal_id);
+            opstmt.execute();
+            opstmt.close();
+            stat.close();
+        }
+
+//---------DELETE functions
+
+        /**
          * Function for deleting (invalidating) spatial object
          * @param move_id
          *          ID of a spatial object
@@ -227,6 +346,23 @@ public class DataBase {
             stat.close();
 
         }
+
+        /**
+         * Function for deleting an animal (with it's pictures and movemets - trigger)
+         * @param animal_id
+         * @throws SQLException
+         */
+        public void deleteAnimal(int animal_id) throws SQLException{
+            Statement stat = con.createStatement();
+            String SQLquery = "DELETE FROM animals WHERE animal_id=?";
+            OraclePreparedStatement opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
+            opstmt.setInt(1, animal_id);
+            opstmt.execute();
+            opstmt.close();
+            stat.close();
+        }
+
+//----------INSERT functions
 
 	/**
 	 * Uploads image into choosen table
@@ -259,22 +395,17 @@ public class DataBase {
 				+ ", ordsys.ordimage.init(), ordsys.ordimagesignature.init())";
                 }
                 stat.execute(SQLquery);
-		SQLquery = "SELECT image, signature FROM " + choosen_table
-				+ " WHERE animal_id = " + nextval + " FOR UPDATE";
+		SQLquery = "SELECT image, signature FROM " + choosen_table + " WHERE animal_id = " + nextval + " FOR UPDATE";
 		rset = (OracleResultSet) stat.executeQuery(SQLquery);
 		rset.next();
-		OrdImage imageProxy = (OrdImage) rset.getORAData("photo",
-				OrdImage.getORADataFactory());
-		OrdImageSignature signatureProxy = (OrdImageSignature) rset
-				.getCustomDatum("photo_sig", OrdImageSignature.getFactory());
+		OrdImage imageProxy = (OrdImage) rset.getORAData("photo",OrdImage.getORADataFactory());
+		OrdImageSignature signatureProxy = (OrdImageSignature) rset.getCustomDatum("photo_sig", OrdImageSignature.getFactory());
 		rset.close();
 		imageProxy.loadDataFromFile(filename);
 		imageProxy.setProperties();
 		signatureProxy.generateSignature(imageProxy);
-		SQLquery = "UPDATE " + choosen_table
-				+ " SET photo=?, photo_sig=? where photo_id=?";
-		OraclePreparedStatement opstmt = (OraclePreparedStatement) con
-				.prepareStatement(SQLquery);
+		SQLquery = "UPDATE " + choosen_table + " SET photo=?, photo_sig=? where photo_id=?";
+		OraclePreparedStatement opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
 		opstmt.setCustomDatum(1, imageProxy);
 		opstmt.setCustomDatum(2, signatureProxy);
 		opstmt.setInt(3, nextval);
@@ -308,14 +439,14 @@ public class DataBase {
 					.executeQuery(SQLquery);
 			rset.next();
 			id = rset.getInt("nextval");
-			SQLquery = "INSERT INTO animal_movement (id,animal_id,point) VALUES ("
+			SQLquery = "INSERT INTO animal_movement (id,animal_id,geometry) VALUES ("
 					+ Integer.toString(id)
 					+ ","
 					+ Integer.toString(animal_id)
-					+ ",SDO_GEOMETRY(2001,"
+					+ ",SDO_GEOMETRY(2001,4156,SDO_POINT_TYPE("
 					+ nf.format(point.getX())
 					+ ","
-					+ nf.format(point.getY()) + "))";
+					+ nf.format(point.getY()) + ",NULL)NULL,NULL))";
 			stat.execute(SQLquery);
 			con.commit();
 			con.setAutoCommit(true);
@@ -325,33 +456,6 @@ public class DataBase {
 			id = 0;
 		}
 		return id;
-	}
-
-
-	/**
-	 * Returns points which belongs to a current animal
-	 *
-	 * @param animal_id
-	 *            id of current animal
-	 * @return HashMap<Integer,Point2D> list of points belongs to current animal
-	 * @throws SQLException
-	 */
-	public Map<Integer, Point2D> selectPoints(int animal_id)
-			throws SQLException {
-		Statement stat = con.createStatement();
-		String SQLquery = "SELECT point.x, point.y, id FROM animal_movement WHERE animal_id="
-				+ Integer.toString(animal_id);
-		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
-		HashMap<Integer, Point2D> data = new HashMap<Integer, Point2D>();
-		Point2D point = new Point2D.Double();
-		while (rset.next()) {
-			point.setLocation(rset.getDouble("point.x"),
-					rset.getDouble("point.y"));
-			data.put(animal_id, point);
-		}
-                rset.close();
-		stat.close();
-		return data;
 	}
 
         /**
@@ -377,47 +481,7 @@ public class DataBase {
             stat.close();
         }
 
-        /**
-         * Function for updating selected animal
-         * TODO: jestli nedat jako vstupní parametr AnimalObject....???
-         * @param animal_id
-         * @param genus
-         * @param family
-         * @param genus_lat
-         * @param family_lat
-         * @param description
-         * @throws SQLException
-         */
-        public void updateAnimal(int animal_id, String genus, String family, String genus_lat, String family_lat, String description) throws SQLException{
-            Statement stat = con.createStatement();
-            String SQLquery = "UPDATE animals SET (genus=?, family=?, genus=?, genus_lat=?, decsription=?) WHERE animal_id=? ";
-            OraclePreparedStatement opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
-            opstmt.setString(1, genus);
-            opstmt.setString(2, family);
-            opstmt.setString(3, genus_lat);
-            opstmt.setString(4, family_lat);
-            opstmt.setString(5, description);
-            opstmt.setInt(6, animal_id);
-            opstmt.execute();
-            opstmt.close();
-            stat.close();
-        }
-
-        /**
-         * Function for deleting an animal (with it's pictures and movemets - trigger)
-         * @param animal_id
-         * @throws SQLException
-         */
-        public void deleteAnimal(int animal_id) throws SQLException{
-            Statement stat = con.createStatement();
-            String SQLquery = "DELETE FROM animals WHERE animal_id=?";
-            OraclePreparedStatement opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
-            opstmt.setInt(1, animal_id);
-            opstmt.execute();
-            opstmt.close();
-            stat.close();
-        }
-
+/////////PRIVATE FUNCTIONS//////////////////////////////////////////////////////
 	/**
 	 * Function for deleting objects in database - important before creating a
 	 * new database
@@ -430,6 +494,9 @@ public class DataBase {
             deleteIndex(EXCREMENT_PHOTO);
             deleteIndex(SEARCH_PHOTO);
             Statement stat = con.createStatement();
+            try {
+            	stat.executeQuery("DROP INDEX animal_movement_sidx;");
+            } catch (SQLException e) {}
             try {
             	stat.executeQuery("DROP TABLE animals");
             } catch (SQLException e) {}
@@ -497,42 +564,6 @@ public class DataBase {
 		stat.close();
 	}
 
-	/**
-	 * Selects a random thumbnail or all photos of an animal, it's used for an
-	 * illustrating found results
-	 *
-	 * TO DO: return gained data
-	 *
-	 * @param id
-	 *            ID of an animal
-	 * @param all
-	 *            true if return all pictures of an animal, false if return only
-	 *            one thumbnail
-         * @param choosen_table
-         *              from which table we want pictures
-         * @return HashMap<Integer photo_id,OrdImage photo>
-	 * @throws SQLException
-	 */
-	private Map<Integer,OrdImage> selectPicture(int id, boolean all, String choosen_table) throws SQLException {
-		Statement stat = con.createStatement();
-		String SQLquery;
-		if (all) {
-			SQLquery = "SELECT photo, photo_id FROM "+choosen_table+" WHERE animal_id="
-					+ Integer.toString(id);
-		} else {
-			SQLquery = "SELECT TOP 1 photo, photo_id FROM "+choosen_table+" WHERE animal_id="
-					+ Integer.toString(id);
-		}
-		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
-                HashMap<Integer,OrdImage> result = new HashMap<Integer,OrdImage>();
-		while (rset.next()) {
-                    result.put(rset.getInt("photo_id"),(OrdImage) rset.getORAData("photo",OrdImage.getORADataFactory()));
-		}
-                rset.close();
-		stat.close();
-		return result;
-	}
-
         /**
          * Function for creating stored procedures and triggers in database.
          * @throws SQLException
@@ -568,7 +599,7 @@ public class DataBase {
                               "  BEGIN "+
                               "    UPDATE animal_movement SET valid_to=sysdate WHERE move_id=my_move_id; "+
                               "    SELECT animal_movement_seq.nextval INTO cislo FROM dual; "+
-                              "    INSERT INTO animal_movement (move_id,animal_id,move) VALUES (cislo,my_animal_id,my_move); "+
+                              "    INSERT INTO animal_movement (move_id,animal_id,geometry) VALUES (cislo,my_animal_id,my_move); "+
                               "  END; "+
                               "END animal_movement_update;");
             stat.close();
@@ -596,38 +627,42 @@ public class DataBase {
             Statement stat = con.createStatement();
             stat.executeQuery("DROP INDEX " + tablename + "_idx;");
             stat.close();
-        } catch (SQLException ex) {
+        } catch (SQLException ex) {}
         }
-        }
-
-        /**
-         * Function using for searching animals according their photos
-         * @param filename
-         * @param tablename
-         * @throws SQLException
-         * @throws IOException
-         */
-        public void searchAnimal(String filename, String tablename) throws SQLException, IOException{
-            Statement stat = con.createStatement();
-            int nextval=uploadImage(0,SEARCH_PHOTO,filename);
-            String SQLquery = "SELECT TOP "+Integer.toString(MAX_SEARCH_RESULTS)+" DISTINCT animal.animal_id,animal.genus,animal.family,animal.genus_lat,animal.family_lat FROM "+
-                    SEARCH_PHOTO+" fp, "+tablename+" photodb, animals animal "+
-                    "WHERE ordsys.IMGSimilar(fp.photo_sig, photodb.photo_sig, 'color=0.3, texture=0.3, shape=0.3, location=0.1',100 ,123)=1 "+
-                    "AND photodb.photo_id="+Integer.toString(nextval)+" AND animal.animal_id=photodb.animal_id "+
-                    "ORDER BY ordsys.IMGScore(123) ASC;";
-            OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
-            searchResult.clear();
-            while (rset.next()) {
-                AnimalObject temp=new AnimalObject();
-                temp.animal_id=rset.getInt("animal_id");
-                temp.family=rset.getString("family");
-                temp.family_lat=rset.getString("family_lat");
-                temp.genus=rset.getString("genus");
-                temp.genus_lat=rset.getString("genus_lat");
-                searchResult.add(temp);
-            }
-            rset.close();
-            stat.close();
-            return;
-        }
+        
+	/**
+	 * Selects a random thumbnail or all photos of an animal, it's used for an
+	 * illustrating found results
+	 *
+	 * TO DO: return gained data
+	 *
+	 * @param id
+	 *            ID of an animal
+	 * @param all
+	 *            true if return all pictures of an animal, false if return only
+	 *            one thumbnail
+         * @param choosen_table
+         *              from which table we want pictures
+         * @return HashMap<Integer photo_id,OrdImage photo>
+	 * @throws SQLException
+	 */
+	private Map<Integer,OrdImage> selectPicture(int id, boolean all, String choosen_table) throws SQLException {
+		Statement stat = con.createStatement();
+		String SQLquery;
+		if (all) {
+			SQLquery = "SELECT photo, photo_id FROM "+choosen_table+" WHERE animal_id="
+					+ Integer.toString(id);
+		} else {
+			SQLquery = "SELECT TOP 1 photo, photo_id FROM "+choosen_table+" WHERE animal_id="
+					+ Integer.toString(id);
+		}
+		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
+                HashMap<Integer,OrdImage> result = new HashMap<Integer,OrdImage>();
+		while (rset.next()) {
+                    result.put(rset.getInt("photo_id"),(OrdImage) rset.getORAData("photo",OrdImage.getORADataFactory()));
+		}
+                rset.close();
+		stat.close();
+		return result;
+	}        
 }
