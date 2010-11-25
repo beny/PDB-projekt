@@ -23,8 +23,13 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 import cz.vutbr.fit.pdb03.DataBase;
+import cz.vutbr.fit.pdb03.D;
 
 public class ConnectDialog extends JDialog implements ActionListener{
+
+	public final static String PAVEL = "xsrnec01";
+	public final static String TOMAS = "xizakt00";
+	public final static String ONDRA = "xbenes00";
 
 	private JLabel usernameLabel, passwordLabel, statusLabel;
 	private JTextField usernameField;
@@ -127,7 +132,7 @@ public class ConnectDialog extends JDialog implements ActionListener{
 		// zkouska loginu
 		if (event.getSource() == loginButton) {
 			try {
-				System.out.println("Connecting to database"); // DEBUG
+				D.log("Connecting to database");
 				db.connect(usernameField.getText(),	String.copyValueOf(passwordField.getPassword()));
 			} catch (Exception e) {
 				statusLabel.setText("Problem with login, try again");
@@ -135,10 +140,19 @@ public class ConnectDialog extends JDialog implements ActionListener{
 
 			// kontrola pripojeni
 			if (db.isConnected()) {
-				System.out.println("Connected");// DEBUG
+				D.log("Connected");
 				setVisible(false);
 			}
 		}
+	}
+
+	/**
+	 * Metoda ktera predvyplni formular pro rychlejsi testovani
+	 * @param user
+	 */
+	public void fillDialog(String user){
+		usernameField.setText(user);
+		passwordField.setText(user);
 	}
 
 }

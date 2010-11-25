@@ -63,7 +63,7 @@ public class DataBase {
         /**
          * Data are here after searching
          */
-        public Collection<AnimalObject> searchResult=new ArrayList<AnimalObject>();
+        public Collection<Animal> searchResult=new ArrayList<Animal>();
 
 /////////PUBLIC FUNCTIONS///////////////////////////////////////////////////////
 /////////Functions for creating database
@@ -206,7 +206,7 @@ public class DataBase {
             OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
             searchResult.clear();
             while (rset.next()) {
-                AnimalObject temp=new AnimalObject();
+                Animal temp=new Animal();
                 temp.animal_id=rset.getInt("animal_id");
                 temp.family=rset.getString("family");
                 temp.family_lat=rset.getString("family_lat");
@@ -252,7 +252,7 @@ public class DataBase {
 		}
                 searchResult.clear();
 		while (rset.next()) {
-                    AnimalObject temp=new AnimalObject();
+                    Animal temp=new Animal();
                     //selectPicture(rset.getInt("animal_id"), false,animalPhoto);
                     temp.animal_id=rset.getInt("animal_id");
                     temp.family=rset.getString("family");

@@ -3,12 +3,14 @@ package cz.vutbr.fit.pdb03.controllers;
 import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.openstreetmap.gui.jmapviewer.Coordinate;
 import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
 
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
+import cz.vutbr.fit.pdb03.D;
 import cz.vutbr.fit.pdb03.map.JMapPane;
 import cz.vutbr.fit.pdb03.map.MapPoint;
 
@@ -45,6 +47,8 @@ public class MouseController extends MouseAdapter {
 				MapPoint.counter = MapPoint.counter + 1;
 				map.addMapMarker(new MapPoint(pointClicked.getLat(),
 						pointClicked.getLon(), MapPoint.counter));
+
+				D.log("Pridavam bod do mapy na souradnice: " + pointClicked);
 			}
 		}
 		// pro prave tlacitko mysi
@@ -56,6 +60,7 @@ public class MouseController extends MouseAdapter {
 
 			// ziskani vsech bodu
 			List<MapMarker> markers = map.getMapMarkerList();
+			List<MapMarker> toDelete = new ArrayList<MapMarker>();
 
 			// overeni zda nejaky bod neni vzdalen min jak maximalni mozna
 			// vzdalenost kliku
@@ -69,9 +74,17 @@ public class MouseController extends MouseAdapter {
 				// pridej bod mezi body do kterych se klik trefil
 				// TODO smaze to bod a pak neni mozne jit na dalsi v seznamu
 				if (dist <= maxDist) {
-//					mapMarker = markers.get(markers.indexOf(mapMarker) + 1);
-					markers.remove(mapMarker);
+
+					// pridani bodu do bodu, ktere se maji smazat
+					toDelete.add(mapMarker);
 				}
+			}
+
+			// smazani prislusnych bodu
+			for (MapMarker mapMarker : toDelete) {
+				D.log("Mazu bod: " + mapMarker);
+
+				markers.remove(mapMarker);
 			}
 
 			// repaint map

@@ -87,8 +87,8 @@ public class AnimalsDatabase extends JFrame{
 
 		// dialog pro pripojeni
 		connectDialog = new ConnectDialog(this, db);
+		connectDialog.fillDialog(ConnectDialog.ONDRA);
 		connectDialog.setVisible(true);
-
 	}
 
 

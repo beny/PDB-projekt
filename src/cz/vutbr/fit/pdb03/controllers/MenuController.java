@@ -11,6 +11,7 @@ import javax.swing.JMenuItem;
 
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.DataBase;
+import cz.vutbr.fit.pdb03.D;
 import cz.vutbr.fit.pdb03.map.JMapPane;
 
 public class MenuController implements ActionListener{
@@ -89,7 +90,7 @@ public class MenuController implements ActionListener{
 		// odpojeni od databaze
 		if(event.getSource() == menuDatabaseDisconnect){
 			try {
-				System.out.println("Disconnected"); // DEBUG
+				D.log("Disconnected");
 				db.disconnect();
 				frame.getConnectDialog().setVisible(true);
 			} catch (SQLException e){
@@ -101,7 +102,7 @@ public class MenuController implements ActionListener{
 		if(event.getSource() == menuDatabaseCreate){
 			if(db.isConnected()){
 				try{
-					System.out.println("Creating empty database"); // DEBUG
+					D.log("Creating empty database");
 					db.createDatabase();
 				} catch (SQLException e){
 					System.err.println("Chyba pri vytvareni DB: " + e.getMessage());

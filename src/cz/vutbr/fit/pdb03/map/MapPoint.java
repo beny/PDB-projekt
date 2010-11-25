@@ -16,7 +16,7 @@ import org.openstreetmap.gui.jmapviewer.MapMarkerDot;
 public class MapPoint extends MapMarkerDot {
 
 	private int id;
-	private static int pointSize = 50;
+	private static int pointSize = 15;
 	private static Color color = Color.YELLOW;
 
 	public static int counter = 0;

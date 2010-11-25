@@ -16,6 +16,5 @@ public class MapController extends DefaultMapController{
 	public void mouseClicked(MouseEvent e) {
 		super.mouseClicked(e);
 
-		System.out.println("Kliknuto do mapy"); // DEBUG
 	}
 }
