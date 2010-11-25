@@ -176,7 +176,7 @@ public class DataBase {
 
         public Double getAppareanceArea(int animal_id) throws SQLException{
             Statement stat = con.createStatement();
-            String SQLquery = "SELECT SDO_GEOM.SDO_AREA(geometry,KILOMETER,0.1) AS area FROM animal_movement WHERE animal_id="+Integer.toString(animal_id);
+            String SQLquery = "SELECT SUM(SDO_GEOM.SDO_AREA(geometry,KILOMETER,0.1)) AS area FROM animal_movement WHERE animal_id="+Integer.toString(animal_id);
             OracleResultSet rset = null;
             rset = (OracleResultSet) stat.executeQuery(SQLquery);
             Double result=0.0;
@@ -215,6 +215,7 @@ public class DataBase {
                 searchResult.add(temp);
             }
             rset.close();
+            stat.executeQuery("DELETE FROM "+SEARCH_PHOTO+" WHERE photo_id="+Integer.toString(nextval));
             stat.close();
             return;
         }
@@ -276,14 +277,14 @@ public class DataBase {
 	public Map<Integer, Point2D> selectPoints(int animal_id)
 			throws SQLException {
 		Statement stat = con.createStatement();
-		String SQLquery = "SELECT geometry.SDO_POINT.x AS x, geometry.SDO_POINT.y AS y, id FROM animal_movement WHERE .SDO_POINT<>NULL animal_id="
-				+ Integer.toString(animal_id);
-		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
+		String SQLquery = "SELECT geometry.SDO_POINT.x AS x, geometry.SDO_POINT.y AS y, move_id FROM animal_movement"+
+                        "WHERE geometry.SDO_POINT<>NULL AND animal_id="+ Integer.toString(animal_id);
+		OracleResultSet rset = (OracleResultSet) stat.executeQuery(T2SQL.temporal(SQLquery));//stat.executeQuery(SQLquery);
 		HashMap<Integer, Point2D> data = new HashMap<Integer, Point2D>();
 		Point2D point = new Point2D.Double();
 		while (rset.next()) {
 			point.setLocation(rset.getDouble("x"),rset.getDouble("y"));
-			data.put(animal_id, point);
+			data.put(rset.getInt("move_id"), point);
 		}
                 rset.close();
 		stat.close();
@@ -579,6 +580,7 @@ public class DataBase {
                               "    DELETE FROM "+ANIMAL_PHOTO+" WHERE animal_id=:old.animal_id; "+
                               "    DELETE FROM "+EXCREMENT_PHOTO+" WHERE animal_id=:old.animal_id; "+
                               "    DELETE FROM "+FEET_PHOTO+" WHERE animal_id=:old.animal_id; "+
+                              "    DELETE FROM animal_movement WHERE animal_id=:old.animal_id; "+
                               "  END IF; END;");
             stat.executeQuery("CREATE OR REPLACE TRIGGER animal_movement_trigger_i "+
                               "BEFORE INSERT ON animal_movement FOR EACH ROW "+
