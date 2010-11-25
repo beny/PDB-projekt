@@ -2,6 +2,7 @@ package cz.vutbr.fit.pdb03;
 
 import java.util.Date;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
 /**
@@ -15,17 +16,31 @@ public final class T2SQL {
         if (T2SQLString.startsWith("NONSEQUENCED VALIDTIME ")){
             SQLString=T2SQLString.substring(23);
         } else if (T2SQLString.startsWith("VALIDTIME PERIOD [")){
-            //extract dates, delete prefix
-            Date day_from=new Date();
-            Date day_to=new Date();
-            SQLString=(T2SQLString.substring(0)).replace(" WHERE ", " WHERE (valid_from <= "+dateFormat.format(day_from)+") AND (valid_to > "+dateFormat.format(day_to)+" OR valid_to=NULL) AND ");
+            int point1=T2SQLString.indexOf('[');
+            int point2=T2SQLString.indexOf('-',point1);
+            int point3=T2SQLString.indexOf(')',point2);
+            Date day_from = null;
+            Date day_to=null;
+            try{
+                day_from=dateFormat.parse(T2SQLString.substring(point1+1, point2-1));
+                day_to=dateFormat.parse(T2SQLString.substring(point2+1, point3-1));
+            } catch(ParseException e){ }
+            SQLString=(T2SQLString.substring(point2+1)).replace(" WHERE ", " WHERE (valid_from <= "+dateFormat.format(day_from)+") AND (valid_to > "+dateFormat.format(day_to)+" OR valid_to=NULL) AND ");
         } else if (T2SQLString.startsWith("VALIDTIME DATE ")){
-            //extract date, delete prefix
-            Date day=new Date();
-            SQLString=(T2SQLString.substring(0)).replace(" WHERE ", " WHERE (valid_from <= "+dateFormat.format(day)+") AND (valid_to >= "+dateFormat.format(day)+" OR valid_to=NULL) AND ");
+            int point1=15;
+            while (T2SQLString.charAt(point1)==' '){
+                point1++;
+            }
+            int point2=T2SQLString.indexOf(' ',point1);
+            Date day=null;
+            try{
+                day=dateFormat.parse(T2SQLString.substring(point1, point2-1));
+            } catch(ParseException e){ }
+            SQLString=(T2SQLString.substring(point2+1)).replace(" WHERE ", " WHERE (valid_from <= "+dateFormat.format(day)+") AND (valid_to >= "+dateFormat.format(day)+" OR valid_to=NULL) AND ");
         } else {
             SQLString=T2SQLString.replace(" WHERE ", " WHERE (valid_from <= sysdate) AND (valid_to >= sysdate OR valid_to=NULL) AND ");
         }
+        D.log(SQLString);
         return SQLString;
     }
 }

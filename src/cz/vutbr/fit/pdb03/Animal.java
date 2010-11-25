@@ -20,6 +20,22 @@ public class Animal {
 	private Double nearest_appareance = -1.0;
 	private Double appareance_area = -1.0;
 
+        /**
+         * Constructor for object Animal
+         * @param genus1
+         * @param family1
+         * @param genus_lat1
+         * @param family_lat1
+         * @param description1
+         */
+        public void Animal(String genus1, String family1, String genus_lat1, String family_lat1, String description1){
+            this.genus=genus1;
+            this.family=family1;
+            this.genus_lat=genus_lat1;
+            this.family_lat=family_lat1;
+            this.description=description1;
+        }
+
 	public int getId() {
 		return id;
 	}

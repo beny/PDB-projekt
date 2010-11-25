@@ -240,20 +240,19 @@ public class DataBase {
 				stat.close();
 				return;
 			} else {
-				rset = (OracleResultSet) stat.executeQuery(SQLquery+"family='" + family + "' or family_lat='" + family+ "'");
+				rset = (OracleResultSet) stat.executeQuery(SQLquery+"LOWER(family) LIKE '%" + family.toLowerCase() + "%' or LOWER(family_lat) LIKE '%" + family.toLowerCase()+ "%'");
 			}
 		} else {
 			if (family == null ? "" == null : family.equals("")) {
-				rset = (OracleResultSet) stat.executeQuery(SQLquery + "genus='"	+ genus + "' or genus_lat='" + genus + "'");
+				rset = (OracleResultSet) stat.executeQuery(SQLquery + "LOWER(genus) LIKE '%"	+ genus.toLowerCase() + "%' or LOWER(genus_lat) LIKE '%" + genus.toLowerCase() + "%'");
 			} else {
-				rset = (OracleResultSet) stat.executeQuery(SQLquery+ "(family='" + family +
-                                        "' and genus='" + genus+ "') or (family_lat='" + family + "' and genus_lat='"+ genus + "')");
+				rset = (OracleResultSet) stat.executeQuery(SQLquery+ "(LOWER(family) LIKE '%" + family.toLowerCase() +
+                                        "%' and LOWER(genus) LIKE '%" + genus.toLowerCase()+ "%') or (LOWER(family_lat) LIKE '%" + family.toLowerCase() + "%' and LOWER(genus_lat) LIKE '%"+ genus.toLowerCase() + "%')");
 			}
 		}
                 searchResult.clear();
 		while (rset.next()) {
                     Animal temp=new Animal();
-                    //selectPicture(rset.getInt("animal_id"), false,animalPhoto);
                     temp.setId(rset.getInt("animal_id"));
                     temp.setFamily(rset.getString("family"));
                     temp.setFamily_lat(rset.getString("family_lat"));
@@ -477,6 +476,25 @@ public class DataBase {
             opstmt.setString(3, genus_lat);
             opstmt.setString(4, family_lat);
             opstmt.setString(5, description);
+            opstmt.execute();
+            opstmt.close();
+            stat.close();
+        }
+
+        /**
+         * Alternative function for inserting animal into database
+         * @param anima
+         * @throws SQLException
+         */
+        public void insertAnimal(Animal anima) throws SQLException{
+            Statement stat = con.createStatement();
+            String SQLquery = "INSERT INTO animals (genus, family, genus, genus_lat, description) VALUES (?,?,?,?,?) ";
+            OraclePreparedStatement opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
+            opstmt.setString(1, anima.getGenus());
+            opstmt.setString(2, anima.getFamily());
+            opstmt.setString(3, anima.getGenus_lat());
+            opstmt.setString(4, anima.getFamily_lat());
+            opstmt.setString(5, anima.getDescription());
             opstmt.execute();
             opstmt.close();
             stat.close();
