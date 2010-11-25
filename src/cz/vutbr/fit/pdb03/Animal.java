@@ -35,7 +35,7 @@ public class Animal {
             this.family_lat=family_lat1;
             this.description=description1;
         }
-
+////////GETRS, SETRS
 	public int getId() {
 		return id;
 	}
@@ -85,7 +85,11 @@ public class Animal {
 		this.family_lat = family_lat;
 	}
 
-
+////////OTHER PUBLIC FUNCTIONS
+        /**
+         * use this function in inserting and updating
+         * @return
+         */
 	public String getDescription() {
 		return description;
 	}
@@ -98,7 +102,7 @@ public class Animal {
 
 	/**
 	 * Returns description of current animal
-	 *
+	 * use this function in selecting - not inserting or updating - may occurs losing data
 	 * @param data
 	 *            Current DataBase
 	 * @return description of current animal
@@ -155,7 +159,8 @@ public class Animal {
 	public void positionDataChanged() {
 		freeNearestAppareance();
 	}
-
+        
+/////////PRIVATE FUNCTIONS
 	/**
 	 * Invalidates data about nearest appareance of current animal
 	 */

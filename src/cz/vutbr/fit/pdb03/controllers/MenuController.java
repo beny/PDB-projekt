@@ -14,6 +14,7 @@ import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.D;
 import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.map.JMapPane;
+import java.awt.geom.Point2D;
 
 public class MenuController implements ActionListener{
 
@@ -123,6 +124,8 @@ public class MenuController implements ActionListener{
 		// vytvoreni testovaciho zvirete
 		if(event.getSource() == menuAnimalSample){
 
+                    Point2D test=new Point2D.Double(30.9,29.9);
+
 			// testovaci zvire
 			Animal testAnimal = new Animal();
 			testAnimal.setGenus("test animal");
@@ -130,12 +133,13 @@ public class MenuController implements ActionListener{
 
 			try{
 				D.log("Vkladani zvirete do DB");
-				// TODO kontrola zda uz zvire v DB neni
-				db.searchAnimals(testAnimal.getGenus(), testAnimal.getFamily());
+				if (db.animalExists(testAnimal.getGenus(), testAnimal.getFamily())){
 
-				// TODO pokud neni tak jej uloz
+                                }else{
+                                    db.insertAnimal(testAnimal);
+                                }
 			} catch(SQLException e){
-				D.log("Chyba pri vytvareni testovaciho zvirete", 1); // FIXME odstranit magickou konstantu
+				D.log("Chyba pri vytvareni testovaciho zvirete: "+e.getMessage(), 1); // FIXME odstranit magickou konstantu
 			}
 		}
 
