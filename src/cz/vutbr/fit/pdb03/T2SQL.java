@@ -10,9 +10,59 @@ import java.text.SimpleDateFormat;
  * @author Tomáš Ižák <xizakt00@stud.fit.vutbr.cz>
  */
 public final class T2SQL {
+    private static Date validFrom=null;
+    private static Date validTo=null;
+    private static String mode="";
+    private static DateFormat dateFormat = new SimpleDateFormat("'dd-MM-yyyy HH24:MI:SS'");
+
+    /**
+     * Function sets nonsequenced validtime
+     */
+    public static void setNoTemporalRestrictions(){
+        setMode("NONSEQUENCED VALIDTIME");
+        validFrom=null;
+        validTo=null;
+    }
+
+    /**
+     * Function sets VALIDTIME PERIOD
+     * @param from
+     *          Validtime begins
+     * @param to
+     *          Validtime ends
+     */
+    public static void setValidationDates(Date from, Date to){
+        validFrom=from;
+        validTo=to;
+        setMode("VALIDTIME PERIOD");
+    }
+
+    /**
+     * Functions sets showing only valid data for actual moment
+     */
+    public static void setCurrentTime(){
+        setValidationDates(null,null);
+        setMode("");
+    }
+
+    /**
+     * Function sets showing only valid data for wanted date
+     * @param date
+     */
+    public static void setValidationDate(Date date){
+        setValidationDates(date,date);
+        setMode("VALIDTIME DATE");
+    }
+
+    /**
+     * Conversion from T2SQL notation to SQL notation
+     * Works for SELECT and INSERT
+     * @param T2SQLString
+     *          T2SQL string
+     * @return SQL string
+     */
     public static String temporal(String T2SQLString){
         String SQLString="";
-        DateFormat dateFormat = new SimpleDateFormat("'dd-MM-yyyy HH24:MI:SS'");
         if (T2SQLString.startsWith("NONSEQUENCED VALIDTIME ")){
             SQLString=T2SQLString.substring(23);
         } else if (T2SQLString.startsWith("VALIDTIME PERIOD [")){
@@ -56,10 +106,36 @@ public final class T2SQL {
             if (SQLString.startsWith("SELECT")){
                 SQLString=SQLString.replace(" WHERE ", " WHERE (valid_from <= sysdate) AND (valid_to > sysdate OR valid_to=NULL) AND ");
             } else if (SQLString.startsWith("INSERT")){
-                
+                //no need to
             }
         }
         D.log(SQLString);
         return SQLString;
+    }
+
+    /**
+     * Generates T2SQL validation prefix
+     * @return T2SQL string
+     */
+    public static String T2SQLprefix(){
+        String SQLstring="";
+        if (mode.equals("NONSEQUENCED VALIDTIME")){
+            SQLstring=mode+" ";
+        } else if (mode.equals("VALIDTIME DATE")){
+            SQLstring=mode+" "+dateFormat.format(validFrom)+" ";
+        } else if (mode.equals("VALIDTIME PERIOD")){
+            SQLstring=mode+" ["+dateFormat.format(validFrom)+" - "+dateFormat.format(validTo)+") ";
+        }
+        D.log(SQLstring);
+        return SQLstring;
+    }
+
+    /**
+     * Function sets temporal mode
+     * @param mode1
+     *          String with desired mode
+     */
+    private static void setMode(String mode1){
+        mode=mode1;
     }
 }

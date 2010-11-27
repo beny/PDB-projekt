@@ -64,7 +64,7 @@ public class DataBase {
         private final static int MAX_SEARCH_RESULTS=25;
 
         /**
-         * Data are here after searching
+         * Data storage after searching
          */
         public Collection<Animal> searchResult=new ArrayList<Animal>();
 
@@ -171,7 +171,7 @@ public class DataBase {
                     Integer.toString(animal_id)+" AND SDO_NN(SDO_GEOMETRY(2001,8307,SDO_POINT_TYPE("+nf.format(location.getX())+","+
                     nf.format(location.getY()) +",NULL),NULL,NULL), geometry,'UNIT=kilometer',1)='TRUE' ORDER BY distance";
             OracleResultSet rset = null;
-            rset = (OracleResultSet) stat.executeQuery(T2SQL.temporal(SQLquery));
+            rset = (OracleResultSet) stat.executeQuery(T2SQL.temporal(T2SQL.T2SQLprefix()+SQLquery));
             Double result=0.0;
             while (rset.next()) {
                 result= rset.getDouble("distance");
@@ -186,7 +186,7 @@ public class DataBase {
             Statement stat = con.createStatement();
             String SQLquery = "SELECT SUM(SDO_GEOM.SDO_AREA(geometry,'KILOMETER',0.1)) AS area FROM animal_movement WHERE animal_id="+Integer.toString(animal_id);
             OracleResultSet rset = null;
-            rset = (OracleResultSet) stat.executeQuery(T2SQL.temporal(SQLquery));
+            rset = (OracleResultSet) stat.executeQuery(T2SQL.temporal(T2SQL.T2SQLprefix()+SQLquery));
             Double result=0.0;
             while (rset.next()) {
                 result=result+rset.getDouble("area");
@@ -282,6 +282,35 @@ public class DataBase {
 	}
 
         /**
+         * Searches for nearest animals - result of searching is stored in searchResult
+         * @param location
+         *          Current location of user
+         * @throws SQLException
+         */
+        public void searchNearestAnimals(Point2D location) throws SQLException {
+                OraclePreparedStatement opstmt=null;
+                NumberFormat nf = NumberFormat.getInstance(Locale.ENGLISH);
+		String SQLquery = T2SQL.T2SQLprefix()
+                        +"SELECT DISTINCT animal_id,genus,family,genus_lat,family_lat FROM animals, animal_movement WHERE ROWNUM <= "
+                        +Integer.toString(MAX_SEARCH_RESULTS)+" AND animals.animal_id=animal_movement.animal_id AND SDO_NN(SDO_GEOMETRY(2001,8307,SDO_POINT_TYPE("+nf.format(location.getX())
+                        +","+nf.format(location.getY()) +",NULL),NULL,NULL), geometry,'UNIT=kilometer',1)='TRUE' ORDER BY distance";
+                OracleResultSet rset = (OracleResultSet) opstmt.executeQuery(T2SQL.temporal(SQLquery));
+                searchResult.clear();
+		while (rset.next()) {
+                    Animal temp=new Animal();
+                    temp.setId(rset.getInt("animal_id"));
+                    temp.setFamily(rset.getString("family"));
+                    temp.setFamily_lat(rset.getString("family_lat"));
+                    temp.setGenus(rset.getString("genus"));
+                    temp.setGenus_lat(rset.getString("genus_lat"));
+                    searchResult.add(temp);
+		}
+                rset.close();
+		opstmt.close();
+		return;
+	}
+
+        /**
          * Function for determine if animal is already in database
          * @param genus
          * @param family
@@ -346,7 +375,7 @@ public class DataBase {
 
         /**
 	 * Returns points which belongs to a current animal
-         * @see http://download.oracle.com/docs/cd/B19306_01/appdev.102/b14373/oracle/spatial/geometry/JGeometry.html
+         * http://download.oracle.com/docs/cd/B19306_01/appdev.102/b14373/oracle/spatial/geometry/JGeometry.html
 	 * @param animal_id
 	 *            id of current animal
 	 * @return HashMap<Integer,JGeometry> list of points belongs to current animal
@@ -355,7 +384,7 @@ public class DataBase {
 	public Map<Integer, JGeometry> selectAppareance(int animal_id)
 			throws SQLException {
 		Statement stat = con.createStatement();
-		String SQLquery = "SELECT move_id, geometry FROM animal_movement "+
+		String SQLquery = T2SQL.T2SQLprefix()+"SELECT move_id, geometry FROM animal_movement "+
                         "WHERE animal_id="+ Integer.toString(animal_id);
 		OracleResultSet rset = (OracleResultSet) stat.executeQuery(T2SQL.temporal(SQLquery));//stat.executeQuery(SQLquery);
 		HashMap<Integer, JGeometry> data = new HashMap<Integer, JGeometry>();
@@ -372,8 +401,11 @@ public class DataBase {
         /**
          * Function for updating spatial data (invalidating old data and inserting and validating new data using stored procedure)
          * @param move_id
+         *          ID of geometry record
          * @param animal_id
-         * @param data
+         *          ID of an animal
+         * @param j_geom
+         *          JGeometry object
          * @throws SQLException
          */
         public void updateAppareance(int move_id, int animal_id, JGeometry j_geom) throws SQLException{
@@ -460,6 +492,24 @@ public class DataBase {
             stat.close();
         }
 
+        /**
+         * Function for deleting picture from database
+         * @param photo_id
+         *          ID of a photo
+         * @param table_name
+         *          Name of a table we want to delete from
+         * @throws SQLException
+         */
+        public void deletePicture(int photo_id, String table_name) throws SQLException{
+            Statement stat = con.createStatement();
+            String SQLquery = "DELETE FROM "+table_name+" WHERE photo_id=?";
+            OraclePreparedStatement opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
+            opstmt.setInt(1, photo_id);
+            opstmt.execute();
+            opstmt.close();
+            stat.close();
+        }
+
 //----------INSERT functions
 
 	/**
@@ -468,6 +518,7 @@ public class DataBase {
 	 * @param animal_id
 	 *            ID of an animal
 	 * @param choosen_table
+         *          table name we want to upload in
 	 * @param filename
 	 *            Filename of a picture for upload
          * @return integer with new photo_id
@@ -500,6 +551,7 @@ public class DataBase {
 		OrdImageSignature signatureProxy = (OrdImageSignature) rset.getCustomDatum("photo_sig", OrdImageSignature.getFactory());
 		rset.close();
 		imageProxy.loadDataFromFile(filename);
+                imageProxy.process("maxscale=250 250 fileformat=png");
 		imageProxy.setProperties();
 		signatureProxy.generateSignature(imageProxy);
 		SQLquery = "UPDATE " + choosen_table + " SET photo=?, photo_sig=? where photo_id=?";
@@ -534,7 +586,8 @@ public class DataBase {
 		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
 		rset.next();
 		id = rset.getInt("nextval");
-                OraclePreparedStatement opstmt=(OraclePreparedStatement)con.prepareStatement("INSERT INTO animal_movement (move_id,animal_id,geometry) VALUES (?,?,?)");
+                SQLquery=T2SQL.T2SQLprefix()+"INSERT INTO animal_movement (move_id,animal_id,geometry) VALUES (?,?,?)";
+                OraclePreparedStatement opstmt=(OraclePreparedStatement)con.prepareStatement(T2SQL.temporal(SQLquery));
                 opstmt.setInt(1, id);
                 opstmt.setInt(2, animal_id);
                 opstmt.setSTRUCT(3, JGeometry.store(j_geom, con));
@@ -573,6 +626,7 @@ public class DataBase {
         /**
          * Alternative function for inserting animal into database
          * @param anima
+         *          object Animal
          * @throws SQLException
          */
         public void insertAnimal(Animal anima) throws SQLException{

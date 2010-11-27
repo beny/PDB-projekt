@@ -87,14 +87,18 @@ public class Animal {
 
 ////////OTHER PUBLIC FUNCTIONS
         /**
-         * use this function in inserting and updating
-         * @return
+         * use this function while inserting and updating
+         * @return description of an animal
          */
 	public String getDescription() {
 		return description;
 	}
 
-
+        /**
+         * Sets description of an animal
+         * @param description
+         *          description of an animal
+         */
 	public void setDescription(String description) {
 		this.description = description;
 	}
@@ -102,7 +106,7 @@ public class Animal {
 
 	/**
 	 * Returns description of current animal
-	 * use this function in selecting - not inserting or updating - may occurs losing data
+	 * use this function only during selecting (not inserting or updating - may occurs losing data)
 	 * @param data
 	 *            Current DataBase
 	 * @return description of current animal
@@ -159,7 +163,16 @@ public class Animal {
 	public void positionDataChanged() {
 		freeNearestAppareance();
 	}
-        
+
+        /**
+         * Converts animal object into string
+         * @return string with name of an animal
+         */
+    @Override
+        public String toString(){
+            return genus +" "+family+"\n"+genus_lat+" "+family_lat;
+    }
+    
 /////////PRIVATE FUNCTIONS
 	/**
 	 * Invalidates data about nearest appareance of current animal
@@ -172,6 +185,6 @@ public class Animal {
 	 * Invalidates data about appareance area of current animal
 	 */
 	private void freeAppareanceArea() {
-		nearest_appareance = -1.0;
+		appareance_area = -1.0;
 	}
 }
