@@ -13,11 +13,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Collection;
 import java.util.ArrayList;
+import oracle.spatial.geometry.JGeometry;
+//import sdoapi.jar from oraclelib.zip/sdo/ located in WIS
 import oracle.jdbc.OracleResultSet;
 import oracle.jdbc.OraclePreparedStatement;
 //import ordim.jar from oraclelib.zip/oraclelib/ord located in WIS
 import oracle.ord.im.OrdImage;
 import oracle.ord.im.OrdImageSignature;
+import oracle.sql.STRUCT;
 
 /**
  * Knihovna pro práci s databází
@@ -282,7 +285,7 @@ public class DataBase {
          * Function for determine if animal is already in database
          * @param genus
          * @param family
-         * @return
+         * @return true if animal already exists, false if doesn't
          * @throws SQLException
          */
         public boolean animalExists(String genus, String family) throws SQLException {
@@ -306,24 +309,58 @@ public class DataBase {
 	}
 
         /**
-	 * Returns points which belongs to a current animal
-	 *DON'T USE - treba predelat, aby to prijimalo vse! - sdo_util.getvertices
-	 * @param animal_id
-	 *            id of current animal
-	 * @return HashMap<Integer,Point2D> list of points belongs to current animal
+	 * Selects a random thumbnail or all photos of an animal, it's used for an
+	 * illustrating found results
+	 *
+	 * TO DO: return gained data
+	 *
+	 * @param id
+	 *            ID of an animal
+	 * @param all
+	 *            true if return all pictures of an animal, false if return only
+	 *            one thumbnail
+         * @param choosen_table
+         *              from which table we want pictures
+         * @return HashMap<Integer photo_id,OrdImage photo>
 	 * @throws SQLException
 	 */
-	public Map<Integer, Point2D> selectPoints(int animal_id)
+	public Map<Integer,OrdImage> selectPicture(int id, boolean all, String choosen_table) throws SQLException {
+		Statement stat = con.createStatement();
+		String SQLquery;
+		if (all) {
+			SQLquery = "SELECT photo, photo_id FROM "+choosen_table+" WHERE animal_id="
+					+ Integer.toString(id);
+		} else {
+			SQLquery = "SELECT photo, photo_id FROM "+choosen_table+" WHERE ROWNUM <= 1 AND animal_id="
+					+ Integer.toString(id);
+		}
+		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
+                HashMap<Integer,OrdImage> result = new HashMap<Integer,OrdImage>();
+		while (rset.next()) {
+                    result.put(rset.getInt("photo_id"),(OrdImage) rset.getORAData("photo",OrdImage.getORADataFactory()));
+		}
+                rset.close();
+		stat.close();
+		return result;
+	}
+
+        /**
+	 * Returns points which belongs to a current animal
+         * @see http://download.oracle.com/docs/cd/B19306_01/appdev.102/b14373/oracle/spatial/geometry/JGeometry.html
+	 * @param animal_id
+	 *            id of current animal
+	 * @return HashMap<Integer,JGeometry> list of points belongs to current animal
+	 * @throws SQLException
+	 */
+	public Map<Integer, JGeometry> selectAppareance(int animal_id)
 			throws SQLException {
 		Statement stat = con.createStatement();
-		String SQLquery = "SELECT geometry.SDO_POINT.x AS x, geometry.SDO_POINT.y AS y, move_id FROM animal_movement "+
+		String SQLquery = "SELECT move_id, geometry FROM animal_movement "+
                         "WHERE animal_id="+ Integer.toString(animal_id);
 		OracleResultSet rset = (OracleResultSet) stat.executeQuery(T2SQL.temporal(SQLquery));//stat.executeQuery(SQLquery);
-		HashMap<Integer, Point2D> data = new HashMap<Integer, Point2D>();
-		Point2D point = new Point2D.Double();
+		HashMap<Integer, JGeometry> data = new HashMap<Integer, JGeometry>();
 		while (rset.next()) {
-			point.setLocation(rset.getDouble("x"),rset.getDouble("y"));
-			data.put(rset.getInt("move_id"), point);
+			data.put(rset.getInt("move_id"), JGeometry.load((oracle.sql.STRUCT)rset.getSTRUCT("geometry")));
 		}
                 rset.close();
 		stat.close();
@@ -333,17 +370,19 @@ public class DataBase {
 //----------UPDATE functions
 
         /**
-         * Function for updating spatial data (invalidating old data and inserting and validating new data)
-         * !!!!!TO DO:treti parametr promyslet...
+         * Function for updating spatial data (invalidating old data and inserting and validating new data using stored procedure)
          * @param move_id
          * @param animal_id
          * @param data
          * @throws SQLException
          */
-        public void updateSpatialData(int move_id, int animal_id, String data) throws SQLException{
-            Statement stat = con.createStatement();
-            stat.executeQuery("CALL(animal_movement_delete("+Integer.toString(move_id)+", "+Integer.toString(animal_id)+", "+data+"))");
-            stat.close();
+        public void updateAppareance(int move_id, int animal_id, JGeometry j_geom) throws SQLException{
+            OraclePreparedStatement opstmt = (OraclePreparedStatement)con.prepareStatement("CALL(animal_movement_delete(?, ?, ?))");
+            opstmt.setInt(1, move_id);
+            opstmt.setInt(2, animal_id);
+            opstmt.setObject(3, JGeometry.store(j_geom, con));
+            opstmt.execute();
+            opstmt.close();
         }
 
         /**
@@ -371,6 +410,11 @@ public class DataBase {
             stat.close();
         }
 
+        /**
+         * Function for updating animal
+         * @param anima
+         * @throws SQLException
+         */
         public void updateAnimal(Animal anima) throws SQLException{
             Statement stat = con.createStatement();
             String SQLquery = "UPDATE animals SET (genus=?, family=?, genus=?, genus_lat=?, decsription=?) WHERE animal_id=? ";
@@ -474,43 +518,33 @@ public class DataBase {
 	}
 
 	/**
-	 * Saves point into database
+	 * Saves JGeometry into database
 	 *
 	 * @param animal_id
 	 *            ID of concrete animal
-	 * @param point
-	 *            point for save into database
-	 * @return id of a concrete point - 0 if something bad happened
+	 * @param j_geom
+	 *            JGeometry object
+         * @throws SQLException
 	 */
-	public int savePoint(int animal_id, Point2D point) {
-		NumberFormat nf = NumberFormat.getInstance(Locale.ENGLISH);
+	public void insertAppareance(int animal_id, JGeometry j_geom) throws SQLException {
 		int id = 0;
-		try {
-			con.setAutoCommit(false);
-			Statement stat = con.createStatement();
-			String SQLquery = ("SELECT animal_movement_seq.nextval FROM dual");
-			OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
-			rset.next();
-			id = rset.getInt("nextval");
-			SQLquery = "INSERT INTO animal_movement (move_id,animal_id,geometry) VALUES ("
-					+ Integer.toString(id)
-					+ ","
-					+ Integer.toString(animal_id)
-					+ ",SDO_GEOMETRY(2001,8307,SDO_POINT_TYPE("//4156
-					+ nf.format(point.getX())
-					+ ","
-					+ nf.format(point.getY()) + ",NULL),NULL,NULL))";
-                        D.log(SQLquery);
-			stat.execute(SQLquery);
-			con.commit();
-			con.setAutoCommit(true);
-                        rset.close();
-			stat.close();
-		} catch (SQLException a) {
-                        D.log("Chyba pri savePoint : "+a.getMessage());
-			id = 0;
-		}
-		return id;
+		con.setAutoCommit(false);
+		Statement stat = con.createStatement();
+		String SQLquery = ("SELECT animal_movement_seq.nextval FROM dual");
+		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
+		rset.next();
+		id = rset.getInt("nextval");
+                OraclePreparedStatement opstmt=(OraclePreparedStatement)con.prepareStatement("INSERT INTO animal_movement (move_id,animal_id,geometry) VALUES (?,?,?)");
+                opstmt.setInt(1, id);
+                opstmt.setInt(2, animal_id);
+                opstmt.setSTRUCT(3, JGeometry.store(j_geom, con));
+                opstmt.execute();
+                opstmt.close();
+		con.commit();
+		con.setAutoCommit(true);
+                rset.close();
+		stat.close();
+		return;
 	}
 
         /**
@@ -705,40 +739,4 @@ public class DataBase {
             stat.close();
         } catch (SQLException ex) {}
         }
-
-	/**
-	 * Selects a random thumbnail or all photos of an animal, it's used for an
-	 * illustrating found results
-	 *
-	 * TO DO: return gained data
-	 *
-	 * @param id
-	 *            ID of an animal
-	 * @param all
-	 *            true if return all pictures of an animal, false if return only
-	 *            one thumbnail
-         * @param choosen_table
-         *              from which table we want pictures
-         * @return HashMap<Integer photo_id,OrdImage photo>
-	 * @throws SQLException
-	 */
-	private Map<Integer,OrdImage> selectPicture(int id, boolean all, String choosen_table) throws SQLException {
-		Statement stat = con.createStatement();
-		String SQLquery;
-		if (all) {
-			SQLquery = "SELECT photo, photo_id FROM "+choosen_table+" WHERE animal_id="
-					+ Integer.toString(id);
-		} else {
-			SQLquery = "SELECT photo, photo_id FROM "+choosen_table+" WHERE ROWNUM <= 1 AND animal_id="
-					+ Integer.toString(id);
-		}
-		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
-                HashMap<Integer,OrdImage> result = new HashMap<Integer,OrdImage>();
-		while (rset.next()) {
-                    result.put(rset.getInt("photo_id"),(OrdImage) rset.getORAData("photo",OrdImage.getORADataFactory()));
-		}
-                rset.close();
-		stat.close();
-		return result;
-	}
 }
