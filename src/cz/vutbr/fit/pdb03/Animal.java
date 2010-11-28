@@ -109,6 +109,7 @@ public class Animal {
 	 * use this function only during selecting (not inserting or updating - may occurs losing data)
 	 * @param data
 	 *            Current DataBase
+         * @see DataBase#getDescription(int)
 	 * @return description of current animal
 	 * @throws SQLException
 	 */
@@ -125,6 +126,7 @@ public class Animal {
 	 *            current DataBase
 	 * @param location
 	 *            current user location
+         * @see DataBase#getNearestAppareance(int, java.awt.geom.Point2D)
 	 * @return distance of nearest appareance of current animal (km)
 	 * @throws SQLException
 	 */
@@ -140,6 +142,7 @@ public class Animal {
 	 *
 	 * @param data
 	 *            current DataBase
+         * @see DataBase#getAppareanceArea(int)
 	 * @return appareance area of current animal (km2)
 	 * @throws SQLException
 	 */
@@ -151,6 +154,13 @@ public class Animal {
 
 	/**
 	 * Call everytime, when spatial data of current animal were changed
+         * @see DataBase#deleteSpatialData(int)
+         * @see DataBase#insertAppareance(int, oracle.spatial.geometry.JGeometry)
+         * @see DataBase#updateAppareance(int, int, oracle.spatial.geometry.JGeometry)
+         * @see T2SQL#setCurrentTime()
+         * @see T2SQL#setNoTemporalRestrictions()
+         * @see T2SQL#setValidationDate(java.util.Date)
+         * @see T2SQL#setValidationDates(java.util.Date, java.util.Date)
 	 */
 	public void spatialDataChanged() {
 		freeNearestAppareance();

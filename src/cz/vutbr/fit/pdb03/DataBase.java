@@ -41,30 +41,70 @@ public class DataBase {
 
         /**
          * use this string for accesing to table with photos of animals
+         * @see #deletePicture(int, java.lang.String)
+         * @see #deleteIndex(java.lang.String)
+         * @see #uploadImage(int, java.lang.String, java.lang.String)
+         * @see #createIndex(java.lang.String)
+         * @see #searchAnimal(java.lang.String, java.lang.String)
+         * @see #EXCREMENT_PHOTO
+         * @see #FEET_PHOTO
+         * @see #SEARCH_PHOTO
          */
         public final static String ANIMAL_PHOTO = "animal_photo";
         /**
          * use this string for accesing to table with photos of excrements of animals
+         * @see #deletePicture(int, java.lang.String)
+         * @see #deleteIndex(java.lang.String)
+         * @see #uploadImage(int, java.lang.String, java.lang.String)
+         * @see #createIndex(java.lang.String)
+         * @see #searchAnimal(java.lang.String, java.lang.String)
+         * @see #ANIMAL_PHOTO
+         * @see #FEET_PHOTO
+         * @see #SEARCH_PHOTO
          */
         public final static String EXCREMENT_PHOTO = "excrement_photo";
 
         /**
          * use this string for accesing to table with photos of foot of animals
+         * @see #deletePicture(int, java.lang.String)
+         * @see #deleteIndex(java.lang.String)
+         * @see #uploadImage(int, java.lang.String, java.lang.String)
+         * @see #createIndex(java.lang.String)
+         * @see #searchAnimal(java.lang.String, java.lang.String)
+         * @see #EXCREMENT_PHOTO
+         * @see #ANIMAL_PHOTO
+         * @see #SEARCH_PHOTO
          */
         public final static String FEET_PHOTO = "footprint";
 
          /**
          * use this string for accesing to table for searching according pictures
+         * @see #deletePicture(int, java.lang.String)
+         * @see #deleteIndex(java.lang.String)
+         * @see #uploadImage(int, java.lang.String, java.lang.String)
+         * @see #createIndex(java.lang.String)
+         * @see #searchAnimal(java.lang.String, java.lang.String)
+         * @see #EXCREMENT_PHOTO
+         * @see #FEET_PHOTO
+         * @see #ANIMAL_PHOTO
          */
         public final static String SEARCH_PHOTO = "search_photo";
 
         /**
          * Number of maximum search results
+         * @see #searchResult
+         * @see #searchAnimal(java.lang.String, java.lang.String)
+         * @see #searchAnimals(java.lang.String, java.lang.String)
+         * @see #searchNearestAnimals(java.awt.geom.Point2D)
          */
         private final static int MAX_SEARCH_RESULTS=25;
 
         /**
          * Data storage after searching
+         * @see #MAX_SEARCH_RESULTS
+         * @see #searchAnimal(java.lang.String, java.lang.String)
+         * @see #searchAnimals(java.lang.String, java.lang.String)
+         * @see #searchNearestAnimals(java.awt.geom.Point2D)
          */
         public Collection<Animal> searchResult=new ArrayList<Animal>();
 
@@ -77,10 +117,11 @@ public class DataBase {
 	 *            username for database connection
 	 * @param password
 	 *            password for database connection
-	 * @throws Exception
+	 * @throws SQLException
+         * @see #disconnect()
+         * @see #isConnected()
 	 */
-	public void connect(String username, String password) throws SQLException,
-			ClassNotFoundException, Exception {
+	public void connect(String username, String password) throws SQLException {
 		con = DriverManager.getConnection("jdbc:oracle:thin:" + username + "/"
 				+ password + connectionString);
 		con.setAutoCommit(true);
@@ -88,20 +129,21 @@ public class DataBase {
 
 	/**
 	 * Function for disconnecting from database
-	 *
+	 * @see #connect(java.lang.String, java.lang.String)
+         * @see #isConnected()
 	 * @throws SQLException
 	 */
 	public void disconnect() throws SQLException {
-		if (con != null) {
-			con.close();
-			// System.out.println("Disconnected");
-		}
+		if (!isConnected()) con.close();
 	}
 
         /**
 	 * Function for creating dabase - no need to destroy previous database
 	 * objects - this function cares of that.
-	 *
+	 * @see #deleteDatabase()
+         * @see #createIndex(java.lang.String)
+         * @see #createSequences()
+         * @see #createTriggersAndProcedures() 
 	 * @throws SQLException
 	 */
 	public void createDatabase() throws SQLException {
@@ -129,7 +171,8 @@ public class DataBase {
 
         /**
 	 * SIMPLE function if needed to determine, if system is connected.
-	 *
+	 * @see #connect(java.lang.String, java.lang.String)
+         * @see #disconnect()
 	 * @return true if connection is alive, 0 if not connected
 	 */
 	public boolean isConnected() {
@@ -142,28 +185,14 @@ public class DataBase {
 /////////Functions for queriing databse
 //-------SELECT functions
         /**
-         * Function for receiving animal description from database
-         *
+         * Function for searching distance of nearest animal from current positions
          * @param animal_id
-         *           ID of an animal
-         * @return String with description
+         *          ID of an animal
+         * @param location
+         *          Location of an user
+         * @return Distance in km
          * @throws SQLException
          */
-        public String getDescription(int animal_id) throws SQLException{
-            Statement stat = con.createStatement();
-            String SQLquery = "SELECT description FROM animals WHERE animal_id="+Integer.toString(animal_id);
-            OracleResultSet rset = null;
-            rset = (OracleResultSet) stat.executeQuery(SQLquery);
-            SQLquery="";
-            while (rset.next()) {
-                SQLquery= rset.getString("description");
-                break;
-            }
-            rset.close();
-            stat.close();
-	    return SQLquery;
-        }
-
         public Double getNearestAppareance(int animal_id,Point2D location) throws SQLException{
             Statement stat = con.createStatement();
             NumberFormat nf = NumberFormat.getInstance(Locale.ENGLISH);
@@ -182,6 +211,13 @@ public class DataBase {
 	    return result;
         }
 
+        /**
+         * Function determines appareance area
+         * @param animal_id
+         *          ID of an animal
+         * @return Appareance in km2
+         * @throws SQLException
+         */
         public Double getAppareanceArea(int animal_id) throws SQLException{
             Statement stat = con.createStatement();
             String SQLquery = "SELECT SUM(SDO_GEOM.SDO_AREA(geometry,'KILOMETER',0.1)) AS area FROM animal_movement WHERE animal_id="+Integer.toString(animal_id);
@@ -200,6 +236,11 @@ public class DataBase {
          * Function using for searching animals according their photos
          * @param filename
          * @param tablename
+         * @see #ANIMAL_PHOTO
+         * @see #EXCREMENT_PHOTO
+         * @see #FEET_PHOTO
+         * @see #MAX_SEARCH_RESULTS
+         * @see #searchResult
          * @throws SQLException
          * @throws IOException
          */
@@ -232,7 +273,8 @@ public class DataBase {
 	 * Function for searching animals by their names - choose one notation -
 	 * latin or other language - do not blend! No need to fill both params,
 	 * replace blank param by null or "".
-	 *
+	 * @see #MAX_SEARCH_RESULTS
+         * @see #searchResult
 	 * @param genus
 	 *            genus name of an animal
 	 * @param family
@@ -283,6 +325,9 @@ public class DataBase {
 
         /**
          * Searches for nearest animals - result of searching is stored in searchResult
+         * @see #MAX_SEARCH_RESULTS
+         * @see #searchResult
+         * @see T2SQL
          * @param location
          *          Current location of user
          * @throws SQLException
@@ -340,8 +385,9 @@ public class DataBase {
         /**
 	 * Selects a random thumbnail or all photos of an animal, it's used for an
 	 * illustrating found results
-	 *
-	 * TO DO: return gained data
+	 * @see #ANIMAL_PHOTO
+         * @see #EXCREMENT_PHOTO
+         * @see #FEET_PHOTO
 	 *
 	 * @param id
 	 *            ID of an animal
@@ -380,6 +426,7 @@ public class DataBase {
 	 *            id of current animal
 	 * @return HashMap<Integer,JGeometry> list of points belongs to current animal
 	 * @throws SQLException
+         * @see T2SQL
 	 */
 	public Map<Integer, JGeometry> selectAppareance(int animal_id)
 			throws SQLException {
@@ -407,6 +454,7 @@ public class DataBase {
          * @param j_geom
          *          JGeometry object
          * @throws SQLException
+         * @see T2SQL
          */
         public void updateAppareance(int move_id, int animal_id, JGeometry j_geom) throws SQLException{
             OraclePreparedStatement opstmt = (OraclePreparedStatement)con.prepareStatement("CALL(animal_movement_delete(?, ?, ?))");
@@ -446,6 +494,7 @@ public class DataBase {
          * Function for updating animal
          * @param anima
          * @throws SQLException
+         * @see Animal
          */
         public void updateAnimal(Animal anima) throws SQLException{
             Statement stat = con.createStatement();
@@ -469,10 +518,11 @@ public class DataBase {
          * @param move_id
          *          ID of a spatial object
          * @throws SQLException
+         * @see T2SQL
          */
         public void deleteSpatialData(int move_id) throws SQLException{
             Statement stat = con.createStatement();
-            stat.executeQuery("CALL(animal_movement_delete("+Integer.toString(move_id)+"))");
+            stat.executeQuery(T2SQL.temporal(T2SQL.T2SQLprefix()+"DELETE FROM animal_movement WHERE move_id="+Integer.toString(move_id)));
             stat.close();
 
         }
@@ -499,6 +549,11 @@ public class DataBase {
          * @param table_name
          *          Name of a table we want to delete from
          * @throws SQLException
+         * @see #ANIMAL_PHOTO
+         * @see #EXCREMENT_PHOTO
+         * @see #FEET_PHOTO
+         * @see #SEARCH_PHOTO
+         * @see #uploadImage(int, java.lang.String, java.lang.String)
          */
         public void deletePicture(int photo_id, String table_name) throws SQLException{
             Statement stat = con.createStatement();
@@ -524,6 +579,11 @@ public class DataBase {
          * @return integer with new photo_id
 	 * @throws SQLException
 	 * @throws IOException
+         * @see #ANIMAL_PHOTO
+         * @see #EXCREMENT_PHOTO
+         * @see #FEET_PHOTO
+         * @see #SEARCH_PHOTO
+         * @see #deletePicture(int, java.lang.String)
 	 */
 	public int uploadImage(int animal_id, String choosen_table, String filename)
 			throws SQLException, IOException {
@@ -577,6 +637,7 @@ public class DataBase {
 	 * @param j_geom
 	 *            JGeometry object
          * @throws SQLException
+         * @see T2SQL
 	 */
 	public void insertAppareance(int animal_id, JGeometry j_geom) throws SQLException {
 		int id = 0;
@@ -608,6 +669,10 @@ public class DataBase {
          * @param family_lat
          * @param description
          * @throws SQLException
+         * @see #deleteAnimal(int)
+         * @see #insertAnimal(cz.vutbr.fit.pdb03.Animal)
+         * @see #updateAnimal(cz.vutbr.fit.pdb03.Animal)
+         * @see #updateAnimal(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
          */
         public void insertAnimal(String genus, String family, String genus_lat, String family_lat, String description) throws SQLException{
             Statement stat = con.createStatement();
@@ -628,6 +693,11 @@ public class DataBase {
          * @param anima
          *          object Animal
          * @throws SQLException
+         * @see Animal
+         * @see #insertAnimal(java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
+         * @see #deleteAnimal(int)
+         * @see #updateAnimal(cz.vutbr.fit.pdb03.Animal)
+         * @see #updateAnimal(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
          */
         public void insertAnimal(Animal anima) throws SQLException{
             Statement stat = con.createStatement();
@@ -643,12 +713,36 @@ public class DataBase {
             stat.close();
         }
 
+/////////PROTECTED FUNCTIONS////////////////////////////////////////////////////
+        /**
+         * Function for receiving animal description from database
+         *
+         * @param animal_id
+         *           ID of an animal
+         * @return String with description
+         * @throws SQLException
+         */
+        protected String getDescription(int animal_id) throws SQLException{
+            Statement stat = con.createStatement();
+            String SQLquery = "SELECT description FROM animals WHERE animal_id="+Integer.toString(animal_id);
+            OracleResultSet rset = null;
+            rset = (OracleResultSet) stat.executeQuery(SQLquery);
+            SQLquery="";
+            while (rset.next()) {
+                SQLquery= rset.getString("description");
+                break;
+            }
+            rset.close();
+            stat.close();
+	    return SQLquery;
+        }
 /////////PRIVATE FUNCTIONS//////////////////////////////////////////////////////
 	/**
 	 * Function for deleting objects in database - important before creating a
 	 * new database
 	 *
 	 * @throws SQLException
+         * @see #createDatabase()
 	 */
 	private void deleteDatabase() throws SQLException {
             deleteIndex(ANIMAL_PHOTO);
@@ -714,7 +808,8 @@ public class DataBase {
 	/**
 	 * Function for creating sequences in database - all starts with 1 and are
 	 * incremented by 1
-	 *
+	 * @see #createDatabase()
+         * @see #deleteDatabase()
 	 * @throws SQLException
 	 */
 	private void createSequences() throws SQLException {
@@ -730,6 +825,8 @@ public class DataBase {
         /**
          * Function for creating stored procedures and triggers in database.
          * @throws SQLException
+         * @see #createDatabase()
+         * @see #deleteDatabase()
          */
         private void createTriggersAndProcedures() throws SQLException{
             Statement stat = con.createStatement();
@@ -749,11 +846,22 @@ public class DataBase {
                               "BEGIN"+
                               "  IF (:new.valid_from is NULL) THEN :NEW.valid_from:=sysdate; "+
                               "  END IF; END; ");
+            //TO DO: ověřit
             stat.executeQuery("CREATE OR REPLACE PROCEDURE animal_movement_delete( "+
-                              "my_move_id IN	NUMBER) AS "+
+                              "my_move_id IN	NUMBER, date_to IN  DATE, date_from IN  DATE) AS "+
                               "BEGIN "+
-                              "  UPDATE animal_movement SET valid_to=sysdate WHERE move_id=my_move_id; "+
+                              "DECLARE temp_date DATE; DECLARE temp_geometry MDSYS.SDO_GEOMETRY;"+
+                              "  IF date_to=null AND date_from=null THEN UPDATE animal_movement SET valid_to=sysdate WHERE move_id=my_move_id; "+
+                              "  ELSIF date_to=date_from THEN UPDATE animal_movement SET valid_to=date_to WHERE move_id=my_move_id; "+
+                              "  ELSIF date_to>date_from THEN "+
+                              "   SELECT date_to, geometry INTO temp_date, temp_geometry FROM animal_movement WHERE move_id=my_move_id;"+
+                              "   IF date_to<temp_date THEN "+
+                              "      INSERT INTO animal_movement (valid_from, valid_to, geometry) VALUES (date_to,temp_date,temp_geometry); "+
+                              "    END IF; "+
+                              "    UPDATE animal_movement SET valid_to=date_from WHERE move_id=my_move_id; "+
+                              "  END IF; "+
                               "END animal_movement_delete; ");
+            //TO DO:
             stat.executeQuery("CREATE OR REPLACE PROCEDURE animal_movement_update( "+
                               "my_move_id IN	NUMBER, "+
                               "my_animal_id IN	NUMBER, "+
@@ -772,6 +880,12 @@ public class DataBase {
         /**
          * Function for creating picture index
          * @param tablename
+         * @see #createDatabase()
+         * @see #deleteDatabase()
+         * @see #ANIMAL_PHOTO
+         * @see #EXCREMENT_PHOTO
+         * @see #FEET_PHOTO
+         * @see #SEARCH_PHOTO
          */
         private void createIndex(String tablename){
         try {
@@ -785,6 +899,13 @@ public class DataBase {
         /**
          * Function for deleting picture index
          * @param tablename
+         * @see #createDatabase()
+         * @see #createIndex(java.lang.String)
+         * @see #deleteDatabase()
+         * @see #ANIMAL_PHOTO
+         * @see #EXCREMENT_PHOTO
+         * @see #FEET_PHOTO
+         * @see #SEARCH_PHOTO
          */
         private void deleteIndex(String tablename){
         try {
