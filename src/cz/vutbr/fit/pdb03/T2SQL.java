@@ -7,6 +7,21 @@ import java.text.SimpleDateFormat;
 
 /**
  * Class for T2SQL support
+ * Defines new language T2SQL (TimeToSQL). It's something like simple TSQL2 or TimeDB
+ *
+ * It's defined like this:
+ * - VALIDTIME PERIOD [<DateTime>,<DateTime>) <SQL>
+ *  transforms SQL for valid records only (which are valid in some time which is in interval)
+ * - VALIDTIME DATE <DateTime> <SQL>
+ *  transforms SQL for valid records only (which are valid in that time)
+ * - <SQL>
+ *  transforms SQL for valid records only (which are valid in current time)
+ * - NONSEQUENCED VALIDTIME <SQL>
+ *  prefix (NONSEQUENCED VALIDTIME ) is deleted only. SQL is for all records in database.
+ * 
+ *  <SQL> is some SQL language
+ *  <DateTime> is Date and Time in format yyyy/MM/dd~HH:mm
+ *
  * @author Tomáš Ižák <xizakt00@stud.fit.vutbr.cz>
  */
 public final class T2SQL {
@@ -87,7 +102,7 @@ public final class T2SQL {
                 SQLString=(SQLString.substring(SQLString.indexOf("=")+1)).trim();
                 SQLString="CALL(animal_movement_delete("+SQLString+",null,null))";
             } else if (SQLString.startsWith("UPDATE")){
-                SQLString="CALL()";
+                SQLString="CALL()";//TODO
             }
         } else if (T2SQLString.startsWith("VALIDTIME PERIOD [")){
             int point1=T2SQLString.indexOf('[');
@@ -102,7 +117,7 @@ public final class T2SQL {
             SQLString=T2SQLString.substring(point3+1);
             SQLString=SQLString.trim();
             if (SQLString.startsWith("SELECT")){
-                SQLString=SQLString.replace(" WHERE ", " WHERE (valid_from <= '"+dateFormat.format(day_from)+"') AND (valid_to > '"+dateFormat.format(day_to)+"' OR valid_to=NULL) AND ");
+                SQLString=SQLString.replace(" WHERE ", " WHERE (valid_from <= '"+dateFormat.format(day_from)+"' AND (valid_to > '"+dateFormat.format(day_from)+"' OR valid_to=NULL)) OR (valid_from <= '"+dateFormat.format(day_to)+"' AND (valid_to > '"+dateFormat.format(day_to)+"' OR valid_to=NULL)) AND ");
             } else if (SQLString.startsWith("INSERT")){
                 SQLString=SQLString.replace("INSERT INTO animal_movement (", "INSERT INTO animal_movement (valid_from,valid_to,");
                 SQLString=SQLString.replace(" VALUES (", " VALUES ('"+dateFormat.format(day_from)+"','"+dateFormat.format(day_to)+"',");
@@ -111,7 +126,7 @@ public final class T2SQL {
                 SQLString=(SQLString.substring(SQLString.indexOf("=")+1)).trim();
                 SQLString="CALL(animal_movement_delete("+SQLString+",'"+dateFormat.format(day_from)+"','"+dateFormat.format(day_to)+"'))";
             } else if (SQLString.startsWith("UPDATE")){
-                SQLString="CALL()";
+                SQLString="CALL()";//TODO
             }
         } else if (T2SQLString.startsWith("VALIDTIME DATE ")){
             int point1=15;
@@ -135,7 +150,7 @@ public final class T2SQL {
                 SQLString=(SQLString.substring(SQLString.indexOf("=")+1)).trim();
                 SQLString="CALL(animal_movement_delete("+SQLString+",'"+dateFormat.format(day)+"','"+dateFormat.format(day)+"'))";
             } else if (SQLString.startsWith("UPDATE")){
-                SQLString="CALL()";
+                SQLString="CALL()";//TODO
             }
         } else {
             SQLString=T2SQLString.trim();
@@ -148,7 +163,7 @@ public final class T2SQL {
                 SQLString=(SQLString.substring(SQLString.indexOf("=")+1)).trim();
                 SQLString="CALL(animal_movement_delete("+SQLString+",null,null))";
             } else if (SQLString.startsWith("UPDATE")){
-                SQLString="CALL()";
+                SQLString="CALL()";//TODO
             }
         }
         D.log(SQLString);

@@ -235,7 +235,9 @@ public class DataBase {
         /**
          * Function using for searching animals according their photos
          * @param filename
+         *          filename of picture
          * @param tablename
+         *          In which tablename we want to search
          * @see #ANIMAL_PHOTO
          * @see #EXCREMENT_PHOTO
          * @see #FEET_PHOTO
@@ -307,6 +309,30 @@ public class DataBase {
                                 opstmt.setString(4, "%"+genus.toLowerCase()+"%");
 			}
 		}
+                OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
+                searchResult.clear();
+		while (rset.next()) {
+                    Animal temp=new Animal();
+                    temp.setId(rset.getInt("animal_id"));
+                    temp.setFamily(rset.getString("family"));
+                    temp.setFamily_lat(rset.getString("family_lat"));
+                    temp.setGenus(rset.getString("genus"));
+                    temp.setGenus_lat(rset.getString("genus_lat"));
+                    searchResult.add(temp);
+		}
+                rset.close();
+		opstmt.close();
+		return;
+	}
+
+        /**
+         * Function finds all animals in database
+         * @throws SQLException
+         */
+        public void allAnimals() throws SQLException {
+                OraclePreparedStatement opstmt=null;
+		String SQLquery = "SELECT animal_id,genus,family,genus_lat,family_lat FROM animals";
+		opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
                 OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
                 searchResult.clear();
 		while (rset.next()) {
