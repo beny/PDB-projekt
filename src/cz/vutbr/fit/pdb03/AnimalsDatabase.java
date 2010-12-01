@@ -1,36 +1,25 @@
 package cz.vutbr.fit.pdb03;
 
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Vector;
-import java.util.prefs.Preferences;
 
-import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
-import org.openstreetmap.gui.jmapviewer.JMapViewer;
-import org.openstreetmap.gui.jmapviewer.OsmTileLoader;
-import org.openstreetmap.gui.jmapviewer.OsmTileSource;
-
+import cz.vutbr.fit.pdb03.controllers.ListController;
 import cz.vutbr.fit.pdb03.controllers.MenuController;
 import cz.vutbr.fit.pdb03.controllers.MouseController;
 import cz.vutbr.fit.pdb03.controllers.WindowController;
-import cz.vutbr.fit.pdb03.dialogs.ConnectDialog;
-import cz.vutbr.fit.pdb03.map.JMapPane;
+import cz.vutbr.fit.pdb03.map.JMapPanel;
 
 /**
  * Hlavni trida zajistujici vykreselni hlavniho okna, rozdeleneho do tri
@@ -44,16 +33,21 @@ public class AnimalsDatabase extends JFrame{
 	private static final long serialVersionUID = 1L;
 
 	// komponenty jednotlivych casti hlavniho okna
-	JComponent rightPanel, leftTopPanel, leftBottomPanel;
+	JComponent infoPanel, animalsPanel, mapPanel;
 
 	// map items
-	JMapPane map;
+	JMapPanel map;
 
 	// database items
 	private DataBase db;
 
-	// dialogs
-	private ConnectDialog connectDialog;
+	// controllers
+	MenuController menuController;
+
+	// seznam zvirat
+	private JList list;
+	private Vector<Animal> animals;
+	private ArrayList<Animal> dbList;
 
 	/**
 	 * Zakladni konstruktor, ktery naplni hlavni okno
@@ -66,37 +60,98 @@ public class AnimalsDatabase extends JFrame{
 		db = new DataBase();
 
 		// mapa
-		map = new JMapPane(this);
+		map = new JMapPanel(this);
 
 		// nastaveni kontroleru
 		new MouseController(this);
 		new WindowController(this);
-		new MenuController(this);
+		menuController = new MenuController(this);
 
 		// pridani rozdeleni do jednotlivych podoken
+		infoPanel = initInfoPanel();
+		animalsPanel = initAnimalsPanel();
+		mapPanel = map;
+
 		// TODO dodelat nejak poradne vahy pri resize oknu a pri prvnim spusteni
-		JSplitPane splitPaneH = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, getTopLeftPanel() , getTopRightPanel());
+		JSplitPane splitPaneH = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, infoPanel, animalsPanel);
 		splitPaneH.setResizeWeight(0.5);
 		splitPaneH.setDividerLocation(600);
 		splitPaneH.setBorder(null);
 
-		JSplitPane splitPaneV= new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPaneH, map);
+		JSplitPane splitPaneV= new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPaneH, mapPanel);
 		splitPaneV.setResizeWeight(0.3);
 		splitPaneV.setDividerLocation(200);
 		add(splitPaneV);
 
-		// dialog pro pripojeni
-		connectDialog = new ConnectDialog(this, db);
-		connectDialog.fillDialog(ConnectDialog.ONDRA);
-		connectDialog.setVisible(true);
 	}
 
+	/**
+	 * Hlavni main pro spusteni aplikace
+	 * @param args argumenty z prikazove radky
+	 */
+	public static void main(String[] args) {
+		AnimalsDatabase aDb = new AnimalsDatabase("Animals database");
+		aDb.setVisible(true);
+	}
+
+	/**
+	 * Obnoveni seznamu zvirat
+	 */
+	public void refreshAnimalsList(){
+		try{
+			db.searchAnimals();
+			dbList = (ArrayList<Animal>) db.searchResult;
+		} catch(SQLException e){
+			D.log("Chyba pri hledani zvirat: " + e.getMessage() , 1); // TODO odstranit magickou konstatntu
+		}
+
+		D.log("Nalezeno " + dbList.size() + " zvirat");
+
+		animals.clear();
+		for (Animal animal: dbList) {
+			animals.add(animal);
+		}
+
+		list.setListData(animals);
+	}
+
+	/**
+	 * Ziskani instance mapy
+	 * @return reference na objekt mapy
+	 */
+	public JMapPanel getMap() {
+		return map;
+	}
+
+	/**
+	 * Ziskani instance databaze
+	 * @return reference na objekt databaze
+	 */
+	public DataBase getDb() {
+		return db;
+	}
+
+	public JList getList() {
+		return list;
+	}
+
+	public MenuController getMenuController() {
+		return menuController;
+	}
+
+	public JComponent getInfoPanel() {
+		return infoPanel;
+	}
+
+	public JComponent getAnimalsPanel() {
+		return animalsPanel;
+	}
 
 	/**
 	 * Metoda pro ziskani panelu pro levou horni cast okna
 	 * @return komponenta vyplnena JTabbedPane pro obrazky
 	 */
-	public JComponent getTopLeftPanel() {
+	private JComponent initInfoPanel() {
 
 		// picture panel
 		JTabbedPane picturesPanel = new JTabbedPane();
@@ -112,54 +167,15 @@ public class AnimalsDatabase extends JFrame{
 	 * Metoda pro ziskani panelu pro pravou horni cast okna
 	 * @return komponenta se seznamem zvirat v databazi
 	 */
-	public JComponent getTopRightPanel() {
+	private JComponent initAnimalsPanel() {
 
-		Vector<String> properties = new Vector<String>();
-		properties.add("Prase domácí");
-		properties.add("Tygr usurijský");
-		properties.add("Kachna blátotlačka");
-		properties.add("Slon indický");
-		properties.add("Lev mandžuský");
-		properties.add("Kráva domácí");
-		JList list = new JList(properties);
-
+		animals = new Vector<Animal>();
+		list = new JList();
+		list.addMouseListener(new ListController(this));
 		JScrollPane scroll = new JScrollPane(list);
 		scroll.setPreferredSize(new Dimension(300, 500));
 
 		return scroll;
-	}
-
-	public JMapPane getMap() {
-		return map;
-	}
-
-	public void setMap(JMapPane map) {
-		this.map = map;
-	}
-
-	public DataBase getDb() {
-		return db;
-	}
-
-	public void setDb(DataBase db) {
-		this.db = db;
-	}
-
-	public ConnectDialog getConnectDialog() {
-		return connectDialog;
-	}
-
-	public void setConnectDialog(ConnectDialog connectDialog) {
-		this.connectDialog = connectDialog;
-	}
-
-	/**
-	 * Hlavni main pro spusteni aplikace
-	 * @param args argumenty z prikazove radky
-	 */
-	public static void main(String[] args) {
-		AnimalsDatabase aDb = new AnimalsDatabase("Animals database");
-		aDb.setVisible(true);
 	}
 
 }

@@ -39,6 +39,9 @@ public class DataBase {
 	 */
 	private Connection con = null;
 
+		public static final int MAX_STRING = 25;
+		public static final int MAX_LONG_STRING = 500;
+
         /**
          * use this string for accesing to table with photos of animals
          * @see #deletePicture(int, java.lang.String)
@@ -134,7 +137,7 @@ public class DataBase {
 	 * @throws SQLException
 	 */
 	public void disconnect() throws SQLException {
-		if (!isConnected()) con.close();
+		if (isConnected()) con.close();
 	}
 
         /**
@@ -143,7 +146,7 @@ public class DataBase {
 	 * @see #deleteDatabase()
          * @see #createIndex(java.lang.String)
          * @see #createSequences()
-         * @see #createTriggersAndProcedures() 
+         * @see #createTriggersAndProcedures()
 	 * @throws SQLException
 	 */
 	public void createDatabase() throws SQLException {
@@ -151,7 +154,7 @@ public class DataBase {
 		deleteDatabase();
                 D.log("Database deleted!");
 		Statement stat = con.createStatement();
-		stat.executeQuery("CREATE TABLE animals (animal_id NUMBER PRIMARY KEY, genus VARCHAR(20), family VARCHAR(20), genus_lat VARCHAR(20), family_lat VARCHAR(20), description VARCHAR(500))");
+		stat.executeQuery("CREATE TABLE animals (animal_id NUMBER PRIMARY KEY, genus VARCHAR(" + MAX_STRING + "), family VARCHAR(" + MAX_STRING + "), genus_lat VARCHAR(" + MAX_STRING + "), family_lat VARCHAR(" + MAX_STRING + "), description VARCHAR(" + MAX_LONG_STRING + "))");
 		stat.executeQuery("CREATE TABLE "+ANIMAL_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
 		stat.executeQuery("CREATE TABLE "+EXCREMENT_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
 		stat.executeQuery("CREATE TABLE "+FEET_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
@@ -176,10 +179,30 @@ public class DataBase {
 	 * @return true if connection is alive, 0 if not connected
 	 */
 	public boolean isConnected() {
-            try{
-                if (con.isValid(0)) return true;
-                else return false;
-            }catch(SQLException e){return false;}
+
+		boolean connected = false;
+
+		if (con == null) {
+			return false;
+		} else {
+			try {
+				if (con.isValid(0)){
+					connected = true;
+				}
+				else {
+					connected = false;
+				}
+			} catch (SQLException e) {
+				connected = false;
+			}
+		}
+
+		if(connected){
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 /////////Functions for queriing databse
@@ -257,12 +280,12 @@ public class DataBase {
             OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
             searchResult.clear();
             while (rset.next()) {
-                Animal temp=new Animal();
+                Animal temp = new Animal();
                 temp.setId(rset.getInt("animal_id"));
                 temp.setFamily(rset.getString("family"));
-                temp.setFamily_lat(rset.getString("family_lat"));
+                temp.setFamilyLat(rset.getString("family_lat"));
                 temp.setGenus(rset.getString("genus"));
-                temp.setGenus_lat(rset.getString("genus_lat"));
+                temp.setGenusLat(rset.getString("genus_lat"));
                 searchResult.add(temp);
             }
             rset.close();
@@ -270,6 +293,34 @@ public class DataBase {
             stat.close();
             return;
         }
+
+	/**
+	 * Function for searching animals by their id
+	 *
+	 * @see #searchResult
+	 * @throws SQLException
+	 */
+	public void searchAnimals(int id) throws SQLException {
+		OraclePreparedStatement opstmt = null;
+		String SQLquery = "SELECT animal_id,genus,family,genus_lat,family_lat FROM animals WHERE animal_id = ?";
+		opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
+		opstmt.setInt(1,id);
+
+		OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
+		searchResult.clear();
+		while (rset.next()) {
+			Animal temp = new Animal();
+			temp.setId(rset.getInt("animal_id"));
+			temp.setFamily(rset.getString("family"));
+			temp.setFamilyLat(rset.getString("family_lat"));
+			temp.setGenus(rset.getString("genus"));
+			temp.setGenusLat(rset.getString("genus_lat"));
+			searchResult.add(temp);
+		}
+		rset.close();
+		opstmt.close();
+		return;
+	}
 
 	/**
 	 * Function for searching animals by their names - choose one notation -
@@ -315,9 +366,9 @@ public class DataBase {
                     Animal temp=new Animal();
                     temp.setId(rset.getInt("animal_id"));
                     temp.setFamily(rset.getString("family"));
-                    temp.setFamily_lat(rset.getString("family_lat"));
+                    temp.setFamilyLat(rset.getString("family_lat"));
                     temp.setGenus(rset.getString("genus"));
-                    temp.setGenus_lat(rset.getString("genus_lat"));
+                    temp.setGenusLat(rset.getString("genus_lat"));
                     searchResult.add(temp);
 		}
                 rset.close();
@@ -329,7 +380,7 @@ public class DataBase {
          * Function finds all animals in database
          * @throws SQLException
          */
-        public void allAnimals() throws SQLException {
+        public void searchAnimals() throws SQLException {
                 OraclePreparedStatement opstmt=null;
 		String SQLquery = "SELECT animal_id,genus,family,genus_lat,family_lat FROM animals";
 		opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
@@ -339,9 +390,9 @@ public class DataBase {
                     Animal temp=new Animal();
                     temp.setId(rset.getInt("animal_id"));
                     temp.setFamily(rset.getString("family"));
-                    temp.setFamily_lat(rset.getString("family_lat"));
+                    temp.setFamilyLat(rset.getString("family_lat"));
                     temp.setGenus(rset.getString("genus"));
-                    temp.setGenus_lat(rset.getString("genus_lat"));
+                    temp.setGenusLat(rset.getString("genus_lat"));
                     searchResult.add(temp);
 		}
                 rset.close();
@@ -371,9 +422,9 @@ public class DataBase {
                     Animal temp=new Animal();
                     temp.setId(rset.getInt("animal_id"));
                     temp.setFamily(rset.getString("family"));
-                    temp.setFamily_lat(rset.getString("family_lat"));
+                    temp.setFamilyLat(rset.getString("family_lat"));
                     temp.setGenus(rset.getString("genus"));
-                    temp.setGenus_lat(rset.getString("genus_lat"));
+                    temp.setGenusLat(rset.getString("genus_lat"));
                     searchResult.add(temp);
 		}
                 rset.close();
@@ -524,12 +575,12 @@ public class DataBase {
          */
         public void updateAnimal(Animal anima) throws SQLException{
             Statement stat = con.createStatement();
-            String SQLquery = "UPDATE animals SET (genus=?, family=?, genus=?, genus_lat=?, decsription=?) WHERE animal_id=? ";
+            String SQLquery = "UPDATE animals SET genus=?, family=?, genus_lat=?, family_lat=?, description=? WHERE animal_id=? ";
             OraclePreparedStatement opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
             opstmt.setString(1, anima.getGenus());
             opstmt.setString(2, anima.getFamily());
-            opstmt.setString(3, anima.getGenus_lat());
-            opstmt.setString(4, anima.getFamily_lat());
+            opstmt.setString(3, anima.getGenusLat());
+            opstmt.setString(4, anima.getFamilyLat());
             opstmt.setString(5, anima.getDescription());
             opstmt.setInt(6, anima.getId());
             opstmt.execute();
@@ -716,7 +767,7 @@ public class DataBase {
 
         /**
          * Alternative function for inserting animal into database
-         * @param anima
+         * @param animal
          *          object Animal
          * @throws SQLException
          * @see Animal
@@ -725,15 +776,15 @@ public class DataBase {
          * @see #updateAnimal(cz.vutbr.fit.pdb03.Animal)
          * @see #updateAnimal(int, java.lang.String, java.lang.String, java.lang.String, java.lang.String, java.lang.String)
          */
-        public void insertAnimal(Animal anima) throws SQLException{
+        public void insertAnimal(Animal animal) throws SQLException{
             Statement stat = con.createStatement();
             String SQLquery = "INSERT INTO animals (genus, family, genus_lat, family_lat, description) VALUES (?,?,?,?,?) ";
             OraclePreparedStatement opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
-            opstmt.setString(1, anima.getGenus());
-            opstmt.setString(2, anima.getFamily());
-            opstmt.setString(3, anima.getGenus_lat());
-            opstmt.setString(4, anima.getFamily_lat());
-            opstmt.setString(5, anima.getDescription());
+            opstmt.setString(1, animal.getGenus());
+            opstmt.setString(2, animal.getFamily());
+            opstmt.setString(3, animal.getGenusLat());
+            opstmt.setString(4, animal.getFamilyLat());
+            opstmt.setString(5, animal.getDescription());
             opstmt.execute();
             opstmt.close();
             stat.close();

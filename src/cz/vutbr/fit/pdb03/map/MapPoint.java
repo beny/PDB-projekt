@@ -21,6 +21,8 @@ public class MapPoint extends MapMarkerDot {
 
 	public static int counter = 0;
 
+	private boolean selected = false;
+
 	public MapPoint(double lat, double lon, int id) {
 		super(lat, lon);
 
@@ -39,19 +41,35 @@ public class MapPoint extends MapMarkerDot {
 		return id;
 	}
 
+	public void setSelected(boolean selected){
+		this.selected = selected;
+	}
+
+	public boolean getSelected(){
+		return selected;
+	}
+
 	@Override
 	public void paint(Graphics g, Point position) {
 
         int sizeHorizontal = pointSize / 2;
         g.setColor(color);
         g.fillOval(position.x - sizeHorizontal, position.y - sizeHorizontal, pointSize, pointSize);
-        g.setColor(Color.BLACK);
+
+        // zda je bod vybran ci ne
+        if(selected){
+        	g.setColor(Color.RED);
+        }
+        else {
+        	g.setColor(Color.BLACK);
+        }
         g.drawOval(position.x - sizeHorizontal, position.y - sizeHorizontal, pointSize, pointSize);
 
         g.setColor(Color.BLACK);
 		g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, pointSize-2));
 		g.drawString(id+"", position.x-(int)(pointSize/4), position.y+(pointSize/2));
 	}
+
 
 	@Override
 	public String toString() {

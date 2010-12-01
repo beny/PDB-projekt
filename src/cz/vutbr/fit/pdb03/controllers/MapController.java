@@ -9,6 +9,7 @@ public class MapController extends DefaultMapController{
 
 	public MapController(JMapViewer map) {
 		super(map);
+		super.setDoubleClickZoomEnabled(false);
 	}
 
 
