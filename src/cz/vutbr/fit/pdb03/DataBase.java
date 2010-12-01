@@ -380,7 +380,7 @@ public class DataBase {
          * Function finds all animals in database
          * @throws SQLException
          */
-        public void searchAnimals() throws SQLException {
+        public void searchAnimals() throws SQLException, NullPointerException {
                 OraclePreparedStatement opstmt=null;
 		String SQLquery = "SELECT animal_id,genus,family,genus_lat,family_lat FROM animals";
 		opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);

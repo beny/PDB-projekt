@@ -25,6 +25,7 @@ public class AboutDialog extends JDialog {
 		pContent.add(lInfo);
 
 		// nastaveni dialogu
+		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setResizable(false);
 		setModal(true);
 		add(pContent);

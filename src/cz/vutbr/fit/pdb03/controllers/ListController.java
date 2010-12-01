@@ -52,6 +52,7 @@ public class ListController extends MouseAdapter {
 			AnimalDialog dAnimal = new AnimalDialog(frame);
 			GUIManager.moveToCenter(dAnimal, frame);
 			dAnimal.fill(animal);
+			dAnimal.enableDeleteButton(true);
 			dAnimal.setMode(AnimalDialog.UPDATE);
 			dAnimal.setVisible(true);
 		}

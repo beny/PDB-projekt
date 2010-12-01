@@ -40,7 +40,7 @@ public class AnimalDialog extends JDialog implements ActionListener{
 	JLabel lId, lGenus, lFamily, lGenusLat, lFamilyLat, lDescription;
 	JTextField tGenus, tFamily, tGenusLat, tFamilyLat;
 	JTextArea taDescription;
-	JButton bCancel, bSave;
+	JButton bCancel, bSave, bDelete;
 
 	private int mode;
 
@@ -112,14 +112,20 @@ public class AnimalDialog extends JDialog implements ActionListener{
 		// pridani tlacitek
 		gbc.gridy++;
 		gbc.gridx = 1;
-		gbc.gridwidth = GridBagConstraints.REMAINDER;
 
 		bSave = new JButton(SAVE);
 		bSave.addActionListener(this);
 		pContent.add(bSave, gbc);
 
+		gbc.gridx = 0;
+		bDelete = new JButton("Smazat");
+		bDelete.addActionListener(this);
+		bDelete.setEnabled(false);
+		pContent.add(bDelete, gbc);
+
 		add(pContent);
 
+		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setMode(AnimalDialog.INSERT);
 		pack();
 		setResizable(false);
@@ -141,6 +147,14 @@ public class AnimalDialog extends JDialog implements ActionListener{
 		} catch (SQLException e){
 			System.err.println("Chyba pri ziskavani popisu: " + e.getMessage());
 		}
+	}
+
+	/**
+	 * Metoda ktera zobrazuje/skryva do dialogu tlacitko na mazani
+	 * @param enable
+	 */
+	public void enableDeleteButton(boolean enable){
+		bDelete.setEnabled(enable);
 	}
 
 	public void setMode(int mode) {
@@ -211,5 +225,22 @@ public class AnimalDialog extends JDialog implements ActionListener{
 			}
 		}
 
+		// smazani zaznamu
+		if(event.getSource() == bDelete){
+
+			int id = 0;
+			try{
+				id = Integer.parseInt(lId.getText());
+				db.deleteAnimal(id);
+				D.log("Mazu zvire s ID " + id);
+			} catch (NumberFormatException e) {
+				System.err.println("Chyba pri editaci zvirete, neexistujici ID: " + e.getMessage());
+			} catch (SQLException e) {
+				System.err.println("Chyba pri mazani zvirete z DB" + e.getMessage());
+			}
+
+			parent.refreshAnimalsList();
+			dispose();
+		}
 	}
 }
