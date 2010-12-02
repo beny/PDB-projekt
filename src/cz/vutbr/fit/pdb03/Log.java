@@ -8,20 +8,34 @@ package cz.vutbr.fit.pdb03;
  */
 public final class Log {
 
+	// debugovaci levely
+	public final static int INFO = 1;
+	public final static int DEBUG = 2;
+	public final static int WARNING = 3;
+	public final static int ERROR = 4;
+	public final static int ALL = 10;
+
+	// zvoleny debug level
+	public final static int LEVEL = ALL; // chci vypsat debug, info
+
 	public static void info(String message){
-		System.out.println("INFO: " + message);
+		if (LEVEL >= INFO)
+			System.out.println("INFO: " + message);
 	}
 
-	public static void debug(String message){
-		System.out.println("DEBUG: " + message);
+	public static void debug(String message) {
+		if (LEVEL >= DEBUG)
+			System.out.println("DEBUG: " + message);
 	}
 
-	public static void warning(String message){
-		System.err.println("WARNING: " + message);
+	public static void warning(String message) {
+		if (LEVEL >= WARNING)
+			System.err.println("WARNING: " + message);
 	}
 
-	public static void error(String message){
-		System.err.println("ERROR: " + message);
+	public static void error(String message) {
+		if (LEVEL >= ERROR)
+			System.err.println("ERROR: " + message);
 	}
 
 }
