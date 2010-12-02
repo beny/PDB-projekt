@@ -41,6 +41,7 @@ public class DataBase {
 
 		public static final int MAX_STRING = 25;
 		public static final int MAX_LONG_STRING = 500;
+                private static final String RESOLUTION = "250 250";
 
         /**
          * use this string for accesing to table with photos of animals
@@ -154,17 +155,17 @@ public class DataBase {
 		deleteDatabase();
                 D.log("Database deleted!");
 		Statement stat = con.createStatement();
-		stat.executeQuery("CREATE TABLE animals (animal_id NUMBER PRIMARY KEY, genus VARCHAR(" + MAX_STRING + "), family VARCHAR(" + MAX_STRING + "), genus_lat VARCHAR(" + MAX_STRING + "), family_lat VARCHAR(" + MAX_STRING + "), description VARCHAR(" + MAX_LONG_STRING + "))");
-		stat.executeQuery("CREATE TABLE "+ANIMAL_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
-		stat.executeQuery("CREATE TABLE "+EXCREMENT_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
-		stat.executeQuery("CREATE TABLE "+FEET_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
-                stat.executeQuery("CREATE TABLE "+SEARCH_PHOTO+" (photo_id NUMBER PRIMARY KEY, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
-		stat.executeQuery("CREATE TABLE animal_movement (move_id NUMBER PRIMARY KEY, animal_id NUMBER, geometry MDSYS.SDO_GEOMETRY, valid_from DATE, valid_to DATE)");
+		stat.execute("CREATE TABLE animals (animal_id NUMBER PRIMARY KEY, genus VARCHAR(" + MAX_STRING + "), family VARCHAR(" + MAX_STRING + "), genus_lat VARCHAR(" + MAX_STRING + "), family_lat VARCHAR(" + MAX_STRING + "), description VARCHAR(" + MAX_LONG_STRING + "))");
+		stat.execute("CREATE TABLE "+ANIMAL_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+		stat.execute("CREATE TABLE "+EXCREMENT_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+		stat.execute("CREATE TABLE "+FEET_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+                stat.execute("CREATE TABLE "+SEARCH_PHOTO+" (photo_id NUMBER PRIMARY KEY, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+		stat.execute("CREATE TABLE animal_movement (move_id NUMBER PRIMARY KEY, animal_id NUMBER, geometry MDSYS.SDO_GEOMETRY, valid_from DATE, valid_to DATE)");
                 con.commit();
                 try{
-                  stat.executeQuery("INSERT INTO USER_SDO_GEOM_METADATA VALUES ('animal_movement','geometry',SDO_DIM_ARRAY(SDO_DIM_ELEMENT('LONGITUDE',-180,180,100),SDO_DIM_ELEMENT('LATITUDE',-90, 90,100)),8307)");
+                  stat.execute("INSERT INTO USER_SDO_GEOM_METADATA VALUES ('animal_movement','geometry',SDO_DIM_ARRAY(SDO_DIM_ELEMENT('LONGITUDE',-180,180,100),SDO_DIM_ELEMENT('LATITUDE',-90, 90,100)),8307)");
                 }catch(SQLException e){}
-		stat.executeQuery("CREATE INDEX animal_movement_sidx ON animal_movement (geometry) indextype is MDSYS.SPATIAL_INDEX");
+		stat.execute("CREATE INDEX animal_movement_sidx ON animal_movement (geometry) indextype is MDSYS.SPATIAL_INDEX");
                 stat.close();
                 D.log("Preparing for creating sequences");
 		createSequences();
@@ -498,7 +499,9 @@ public class DataBase {
 
         /**
 	 * Returns points which belongs to a current animal
+         * <p>
          * http://download.oracle.com/docs/cd/B19306_01/appdev.102/b14373/oracle/spatial/geometry/JGeometry.html
+         * </p>
 	 * @param animal_id
 	 *            id of current animal
 	 * @return HashMap<Integer,JGeometry> list of points belongs to current animal
@@ -510,7 +513,7 @@ public class DataBase {
 		Statement stat = con.createStatement();
 		String SQLquery = T2SQL.T2SQLprefix()+"SELECT move_id, geometry FROM animal_movement "+
                         "WHERE animal_id="+ Integer.toString(animal_id);
-		OracleResultSet rset = (OracleResultSet) stat.executeQuery(T2SQL.temporal(SQLquery));//stat.executeQuery(SQLquery);
+		OracleResultSet rset = (OracleResultSet) stat.executeQuery(T2SQL.temporal(SQLquery));
 		HashMap<Integer, JGeometry> data = new HashMap<Integer, JGeometry>();
 		while (rset.next()) {
 			data.put(rset.getInt("move_id"), JGeometry.load((oracle.sql.STRUCT)rset.getSTRUCT("geometry")));
@@ -533,11 +536,11 @@ public class DataBase {
          * @throws SQLException
          * @see T2SQL
          */
-        public void updateAppareance(int move_id, int animal_id, JGeometry j_geom) throws SQLException{
-            OraclePreparedStatement opstmt = (OraclePreparedStatement)con.prepareStatement("CALL(animal_movement_delete(?, ?, ?))");
-            opstmt.setInt(1, move_id);
-            opstmt.setInt(2, animal_id);
-            opstmt.setObject(3, JGeometry.store(j_geom, con));
+        public void updateAppareance(int move_id, JGeometry j_geom) throws SQLException{
+            String SQLquery=T2SQL.T2SQLprefix()+"UPDATE geometry=? WHERE move_id=?";
+            OraclePreparedStatement opstmt=(OraclePreparedStatement)con.prepareStatement(T2SQL.temporal(SQLquery));
+            opstmt.setSTRUCT(1, JGeometry.store(j_geom, con));
+            opstmt.setInt(2, move_id);
             opstmt.execute();
             opstmt.close();
         }
@@ -562,13 +565,13 @@ public class DataBase {
             opstmt.setString(4, family_lat);
             opstmt.setString(5, description);
             opstmt.setInt(6, animal_id);
-            opstmt.execute();
+            opstmt.executeUpdate();
             opstmt.close();
             stat.close();
         }
 
         /**
-         * Function for updating animal
+         * Function for updating an animal
          * @param anima
          * @throws SQLException
          * @see Animal
@@ -583,7 +586,7 @@ public class DataBase {
             opstmt.setString(4, anima.getFamilyLat());
             opstmt.setString(5, anima.getDescription());
             opstmt.setInt(6, anima.getId());
-            opstmt.execute();
+            opstmt.executeUpdate();
             opstmt.close();
             stat.close();
         }
@@ -681,14 +684,14 @@ public class DataBase {
 				+ ", ordsys.ordimage.init(), ordsys.ordimagesignature.init())";
                 }
                 stat.execute(SQLquery);
-		SQLquery = "SELECT image, signature FROM " + choosen_table + " WHERE animal_id = " + nextval + " FOR UPDATE";
+		SQLquery = "SELECT photo, photo_sig FROM " + choosen_table + " WHERE photo_id = " + Integer.toString(nextval) + " FOR UPDATE";
 		rset = (OracleResultSet) stat.executeQuery(SQLquery);
 		rset.next();
 		OrdImage imageProxy = (OrdImage) rset.getORAData("photo",OrdImage.getORADataFactory());
 		OrdImageSignature signatureProxy = (OrdImageSignature) rset.getCustomDatum("photo_sig", OrdImageSignature.getFactory());
 		rset.close();
 		imageProxy.loadDataFromFile(filename);
-                imageProxy.process("maxscale=250 250 fileformat=png");
+                imageProxy.process("maxscale="+RESOLUTION+" fileformat=png");
 		imageProxy.setProperties();
 		signatureProxy.generateSignature(imageProxy);
 		SQLquery = "UPDATE " + choosen_table + " SET photo=?, photo_sig=? where photo_id=?";
@@ -828,55 +831,55 @@ public class DataBase {
             deleteIndex(SEARCH_PHOTO);
             Statement stat = con.createStatement();
             try {
-            	stat.executeQuery("DROP INDEX animal_movement_sidx;");
+            	stat.execute("DROP INDEX animal_movement_sidx;");
             } catch (SQLException e) {}
             try {
-            	stat.executeQuery("DROP TABLE animals");
+            	stat.execute("DROP TABLE animals");
             } catch (SQLException e) {}
             try {
-		stat.executeQuery("DROP SEQUENCE animals_seq");
+		stat.execute("DROP SEQUENCE animals_seq");
             } catch (SQLException e) {}
             try {
-		stat.executeQuery("DROP TABLE "+ANIMAL_PHOTO);
+		stat.execute("DROP TABLE "+ANIMAL_PHOTO);
             } catch (SQLException e) {}
             try {
-		stat.executeQuery("DROP SEQUENCE "+ANIMAL_PHOTO+"_seq");
+		stat.execute("DROP SEQUENCE "+ANIMAL_PHOTO+"_seq");
             } catch (SQLException e) {}
             try {
-		stat.executeQuery("DROP TABLE "+EXCREMENT_PHOTO);
+		stat.execute("DROP TABLE "+EXCREMENT_PHOTO);
             } catch (SQLException e) {}
             try {
-		stat.executeQuery("DROP SEQUENCE "+EXCREMENT_PHOTO+"_seq");
+		stat.execute("DROP SEQUENCE "+EXCREMENT_PHOTO+"_seq");
             } catch (SQLException e) {}
             try {
-            	stat.executeQuery("DROP TABLE "+FEET_PHOTO);
+            	stat.execute("DROP TABLE "+FEET_PHOTO);
             } catch (SQLException e) {}
             try {
-            	stat.executeQuery("DROP SEQUENCE "+FEET_PHOTO+"_seq");
+            	stat.execute("DROP SEQUENCE "+FEET_PHOTO+"_seq");
             } catch (SQLException e) {}
             try {
-            	stat.executeQuery("DROP TABLE animal_movement");
+            	stat.execute("DROP TABLE animal_movement");
             } catch (SQLException e) {}
             try {
-            	stat.executeQuery("DROP SEQUENCE animal_movement_seq");
+            	stat.execute("DROP SEQUENCE animal_movement_seq");
             } catch (SQLException e) {}
             try {
-		stat.executeQuery("DROP TABLE "+SEARCH_PHOTO);
+		stat.execute("DROP TABLE "+SEARCH_PHOTO);
             } catch (SQLException e) {}
             try {
-		stat.executeQuery("DROP SEQUENCE "+SEARCH_PHOTO+"_seq");
+		stat.execute("DROP SEQUENCE "+SEARCH_PHOTO+"_seq");
             } catch (SQLException e) {}
             try {
-            	stat.executeQuery("DROP TRIGGER animals_trigger");
+            	stat.execute("DROP TRIGGER animals_trigger");
             } catch (SQLException e) {}
             try {
-		stat.executeQuery("DROP TRIGGER animal_movement_trigger_i");
+		stat.execute("DROP TRIGGER animal_movement_trigger_i");
             } catch (SQLException e) {}
             try {
-            	stat.executeQuery("DROP PROCEDURE animal_movement_delete");
+            	stat.execute("DROP PROCEDURE animal_movement_delete");
             } catch (SQLException e) {}
             try {
-		stat.executeQuery("DROP PROCEDURE animal_movement_update");
+		stat.execute("DROP PROCEDURE animal_movement_update");
             } catch (SQLException e) {}
             stat.close();
             con.commit();
@@ -891,11 +894,11 @@ public class DataBase {
 	 */
 	private void createSequences() throws SQLException {
 		Statement stat = con.createStatement();
-		stat.executeQuery("CREATE SEQUENCE animal_movement_seq START WITH 1 INCREMENT BY 1");
-		stat.executeQuery("CREATE SEQUENCE "+FEET_PHOTO+"_seq START WITH 1 INCREMENT BY 1");
-		stat.executeQuery("CREATE SEQUENCE "+EXCREMENT_PHOTO+"_seq START WITH 1 INCREMENT BY 1");
-		stat.executeQuery("CREATE SEQUENCE "+ANIMAL_PHOTO+"_seq START WITH 1 INCREMENT BY 1");
-		stat.executeQuery("CREATE SEQUENCE animals_seq START WITH 1 INCREMENT BY 1");
+		stat.execute("CREATE SEQUENCE animal_movement_seq START WITH 1 INCREMENT BY 1");
+		stat.execute("CREATE SEQUENCE "+FEET_PHOTO+"_seq START WITH 1 INCREMENT BY 1");
+		stat.execute("CREATE SEQUENCE "+EXCREMENT_PHOTO+"_seq START WITH 1 INCREMENT BY 1");
+		stat.execute("CREATE SEQUENCE "+ANIMAL_PHOTO+"_seq START WITH 1 INCREMENT BY 1");
+		stat.execute("CREATE SEQUENCE animals_seq START WITH 1 INCREMENT BY 1");
 		stat.close();
 	}
 
@@ -907,7 +910,7 @@ public class DataBase {
          */
         private void createTriggersAndProcedures() throws SQLException{
             Statement stat = con.createStatement();
-            stat.executeQuery("CREATE OR REPLACE TRIGGER animals_trigger "+
+            stat.execute("CREATE OR REPLACE TRIGGER animals_trigger "+
                               "BEFORE INSERT OR DELETE ON animals FOR EACH ROW "+
                               "BEGIN "+
                               "  IF INSERTING THEN "+
@@ -918,16 +921,15 @@ public class DataBase {
                               "    DELETE FROM "+FEET_PHOTO+" WHERE animal_id=:old.animal_id; "+
                               "    DELETE FROM animal_movement WHERE animal_id=:old.animal_id; "+
                               "  END IF; END;");
-            stat.executeQuery("CREATE OR REPLACE TRIGGER animal_movement_trigger_i "+
+            stat.execute("CREATE OR REPLACE TRIGGER animal_movement_trigger_i "+
                               "BEFORE INSERT ON animal_movement FOR EACH ROW "+
                               "BEGIN"+
                               "  IF (:new.valid_from is NULL) THEN :NEW.valid_from:=sysdate; "+
                               "  END IF; END; ");
-            //TO DO: ověřit
-            stat.executeQuery("CREATE OR REPLACE PROCEDURE animal_movement_delete( "+
-                              "my_move_id IN	NUMBER, date_to IN  DATE, date_from IN  DATE) AS "+
+            stat.execute("CREATE OR REPLACE PROCEDURE animal_movement_delete( "+
+                              "my_move_id IN	NUMBER, date_to IN  DATE, date_from IN  DATE) IS "+
+                              "temp_date DATE; temp_geometry MDSYS.SDO_GEOMETRY;"+
                               "BEGIN "+
-                              "DECLARE temp_date DATE; DECLARE temp_geometry MDSYS.SDO_GEOMETRY;"+
                               "  IF date_to=null AND date_from=null THEN UPDATE animal_movement SET valid_to=sysdate WHERE move_id=my_move_id; "+
                               "  ELSIF date_to=date_from THEN UPDATE animal_movement SET valid_to=date_to WHERE move_id=my_move_id; "+
                               "  ELSIF date_to>date_from THEN "+
@@ -938,19 +940,63 @@ public class DataBase {
                               "    UPDATE animal_movement SET valid_to=date_from WHERE move_id=my_move_id; "+
                               "  END IF; "+
                               "END animal_movement_delete; ");
-            //TO DO:
-            stat.executeQuery("CREATE OR REPLACE PROCEDURE animal_movement_update( "+
-                              "my_move_id IN	NUMBER, "+
-                              "my_animal_id IN	NUMBER, "+
-                              "my_move IN	MDSYS.SDO_GEOMETRY) AS "+
-                              "BEGIN "+
-                              "  DECLARE cislo NUMBER; "+
-                              "  BEGIN "+
-                              "    UPDATE animal_movement SET valid_to=sysdate WHERE move_id=my_move_id; "+
-                              "    SELECT animal_movement_seq.nextval INTO cislo FROM dual; "+
-                              "    INSERT INTO animal_movement (move_id,animal_id,geometry) VALUES (cislo,my_animal_id,my_move); "+
-                              "  END; "+
-                              "END animal_movement_update;");
+            stat.execute("CREATE OR REPLACE PROCEDURE animal_movement_update("+
+                    "new_move IN	MDSYS.SDO_GEOMETRY, "+
+                    "old_move_id IN	NUMBER, "+
+                    "new_from IN	DATE, "+
+                    "new_to IN	DATE) IS "+
+                    " new_move_id NUMBER; "+
+                    " old_move MDSYS.SDO_GEOMETRY; "+
+                    " old_animal_id NUMBER; "+
+                    " old_from DATE; "+
+                    " old_to DATE; "+
+                    "BEGIN"+
+                    "    SELECT geometry, animal_id, valid_from, valid_to INTO old_move, old_animal_id, old_from, old_to"+
+                    "    FROM animal_movement WHERE move_id=old_move_id;"+
+                    "    IF new_from=new_to THEN"+
+                    "      IF new_from=NULL THEN"+
+                    "        UPDATE animal_movement SET valid_from=NULL, valid_to=NULL, geometry=new_move WHERE move_id=old_move_id;"+
+                    "      ELSIF new_from <= old_from THEN"+
+                    "        UPDATE animal_movement SET valid_from=new_from, valid_to=null, geometry=new_move WHERE move_id=old_move_id;"+
+                    "      ELSIF new_to >= old_to THEN"+
+                    "        SELECT animal_movement_seq.nextval INTO new_move_id FROM dual;"+
+                    "        INSERT INTO animal_movement (move_id,animal_id,valid_from, valid_to, geometry)"+
+                    "        VALUES (new_move_id,old_animal_id, new_from, null,new_move);"+
+                    "      ELSE"+
+                    "        UPDATE animal_movement SET valid_to=new_from WHERE move_id=old_move_id;"+
+                    "        SELECT animal_movement_seq.nextval INTO new_move_id FROM dual;"+
+                    "        INSERT INTO animal_movement (move_id,animal_id,valid_from, valid_to, geometry)"+
+                    "        VALUES (new_move_id,old_animal_id, new_from, null,new_move);"+
+                    "      END IF;"+
+                    "    ELSIF new_from<new_to THEN"+
+                    "     IF new_from<=old_from AND new_to>old_from THEN"+
+                    "        IF new_to>=old_to THEN"+
+                    "          UPDATE animal_movement SET valid_from=new_from, valid_to=new_to, geometry=new_move WHERE move_id=old_move_id;"+
+                    "        ELSE"+
+                    "          UPDATE animal_movement SET valid_from=new_to WHERE move_id=old_move_id;"+
+                    "          SELECT animal_movement_seq.nextval INTO new_move_id FROM dual;"+
+                    "          INSERT INTO animal_movement (move_id,animal_id,valid_from, valid_to, geometry)"+
+                    "          VALUES (new_move_id,old_animal_id, new_from, new_to,new_move);"+
+                    "        END IF;"+
+                    "      ELSIF new_to>=old_to AND new_from<old_to THEN"+
+                    "        IF new_from<=old_to THEN"+
+                    "          UPDATE animal_movement SET valid_from=new_from, valid_to=new_to, geometry=new_move WHERE move_id=old_move_id;"+
+                    "        ELSE UPDATE animal_movement SET valid_to=new_from WHERE move_id=old_move_id;"+
+                    "          SELECT animal_movement_seq.nextval INTO new_move_id FROM dual;"+
+                    "          INSERT INTO animal_movement (move_id,animal_id,valid_from, valid_to, geometry)"+
+                    "          VALUES (new_move_id,old_animal_id, new_from, new_to,new_move);"+
+                    "        END IF;"+
+                    "      ELSE"+
+                    "        SELECT animal_movement_seq.nextval INTO new_move_id FROM dual;"+
+                    "        INSERT INTO animal_movement (move_id,animal_id,valid_from, valid_to, geometry)"+
+                    "        VALUES (new_move_id,old_animal_id, new_to, old_to,old_move);"+
+                    "        UPDATE animal_movement SET valid_to=new_from WHERE move_id=old_move_id;"+
+                    "        SELECT animal_movement_seq.nextval INTO new_move_id FROM dual;"+
+                    "        INSERT INTO animal_movement (move_id,animal_id,valid_from, valid_to, geometry)"+
+                    "        VALUES (new_move_id,old_animal_id, new_from, new_to,new_move);"+
+                    "      END IF;"+
+                    "    END IF; "+
+                    "END animal_movement_update;");
             stat.close();
         }
 
@@ -967,7 +1013,7 @@ public class DataBase {
         private void createIndex(String tablename){
         try {
             Statement stat = con.createStatement();
-            stat.executeQuery("CREATE INDEX " + tablename + "_idx ON " + tablename + " (photo_sig) INDEXTYPE IS ordsys.ordimageindex;");
+            stat.execute("CREATE INDEX " + tablename + "_idx ON " + tablename + " (photo_sig) INDEXTYPE IS ordsys.ordimageindex;");
             stat.close();
         } catch (SQLException ex) {
         }
@@ -987,7 +1033,7 @@ public class DataBase {
         private void deleteIndex(String tablename){
         try {
             Statement stat = con.createStatement();
-            stat.executeQuery("DROP INDEX " + tablename + "_idx;");
+            stat.execute("DROP INDEX " + tablename + "_idx;");
             stat.close();
         } catch (SQLException ex) {}
         }

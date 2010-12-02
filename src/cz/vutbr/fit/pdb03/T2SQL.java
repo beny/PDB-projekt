@@ -4,21 +4,25 @@ import java.util.Date;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-
+// TODO overit delete a ze to vsechno dela co ma
 /**
  * Class for T2SQL support
  * Defines new language T2SQL (TimeToSQL). It's something like simple TSQL2 or TimeDB
- *
+ * <p>
  * It's defined like this:
+ * </p><p>
  * - VALIDTIME PERIOD [<DateTime>,<DateTime>) <SQL>
  *  transforms SQL for valid records only (which are valid in some time which is in interval)
+ * </p><p>
  * - VALIDTIME DATE <DateTime> <SQL>
  *  transforms SQL for valid records only (which are valid in that time)
+ * </p><p>
  * - <SQL>
  *  transforms SQL for valid records only (which are valid in current time)
+ * </p><p>
  * - NONSEQUENCED VALIDTIME <SQL>
  *  prefix (NONSEQUENCED VALIDTIME ) is deleted only. SQL is for all records in database.
- * 
+ * </p>
  *  <SQL> is some SQL language
  *  <DateTime> is Date and Time in format yyyy/MM/dd~HH:mm
  *
@@ -83,10 +87,36 @@ public final class T2SQL {
     }
 
     /**
+     * To find out FROM validation date
+     * @return Setted validation date 'From'
+     */
+    public static Date getValidationDateFrom(){
+        return validFrom;
+    }
+
+    /**
+     * To find out TO validation date
+     * @return Setted validation date 'To'
+     */
+    public static Date getValidationDateTo(){
+        return validTo;
+    }
+
+    /**
+     * To find out which mode is setted
+     * @see #setCurrentTime()
+     * @see #setNoTemporalRestrictions()
+     * @see #setValidationDates(java.util.Date, java.util.Date)
+     * @see #setValidationDate(java.util.Date)
+     * @return Setted mode
+     */
+    public static String getMode(){
+        return mode;
+    }
+
+    /**
      * Conversion from T2SQL notation to SQL notation
-     * Works for SELECT and INSERT
-     * Verify for DELETE
-     * DO for UPDATE
+     * Works for SELECT, INSERT, UPDATE and DELETE
      * RESTRICTIONS: simple querying, DELETE and UPDATE have format ...WHERE move_id=<number>
      * @param T2SQLString
      *          T2SQL string
@@ -102,7 +132,15 @@ public final class T2SQL {
                 SQLString=(SQLString.substring(SQLString.indexOf("=")+1)).trim();
                 SQLString="CALL(animal_movement_delete("+SQLString+",null,null))";
             } else if (SQLString.startsWith("UPDATE")){
-                SQLString="CALL()";//TODO
+                int point1u=SQLString.indexOf("geometry");
+                point1u=SQLString.indexOf('=',point1u);
+                int point2u=SQLString.indexOf(" WHERE ");
+                int point3u=SQLString.indexOf("move_id", point2u);
+                point3u=SQLString.indexOf('=',point3u);
+                String move_id=(SQLString.substring(point3u+1)).trim();
+                if (move_id.indexOf(' ')>0) move_id.substring(0, move_id.indexOf(' '));
+                String geometry=(SQLString.substring(point1u+1,point2u)).trim();
+                SQLString="CALL(animal_movement_update("+geometry+", "+move_id+", null, null))";
             }
         } else if (T2SQLString.startsWith("VALIDTIME PERIOD [")){
             int point1=T2SQLString.indexOf('[');
@@ -126,7 +164,15 @@ public final class T2SQL {
                 SQLString=(SQLString.substring(SQLString.indexOf("=")+1)).trim();
                 SQLString="CALL(animal_movement_delete("+SQLString+",'"+dateFormat.format(day_from)+"','"+dateFormat.format(day_to)+"'))";
             } else if (SQLString.startsWith("UPDATE")){
-                SQLString="CALL()";//TODO
+                int point1u=SQLString.indexOf("geometry");
+                point1u=SQLString.indexOf('=',point1u);
+                int point2u=SQLString.indexOf(" WHERE ");
+                int point3u=SQLString.indexOf("move_id", point2u);
+                point3u=SQLString.indexOf('=',point3u);
+                String move_id=(SQLString.substring(point3u+1)).trim();
+                if (move_id.indexOf(' ')>0) move_id.substring(0, move_id.indexOf(' '));
+                String geometry=(SQLString.substring(point1u+1,point2u)).trim();
+                SQLString="CALL(animal_movement_update("+geometry+", "+move_id+",'"+dateFormat.format(day_from)+"','"+dateFormat.format(day_to)+"'))";
             }
         } else if (T2SQLString.startsWith("VALIDTIME DATE ")){
             int point1=15;
@@ -150,7 +196,15 @@ public final class T2SQL {
                 SQLString=(SQLString.substring(SQLString.indexOf("=")+1)).trim();
                 SQLString="CALL(animal_movement_delete("+SQLString+",'"+dateFormat.format(day)+"','"+dateFormat.format(day)+"'))";
             } else if (SQLString.startsWith("UPDATE")){
-                SQLString="CALL()";//TODO
+                int point1u=SQLString.indexOf("geometry");
+                point1u=SQLString.indexOf('=',point1u);
+                int point2u=SQLString.indexOf(" WHERE ");
+                int point3u=SQLString.indexOf("move_id", point2u);
+                point3u=SQLString.indexOf('=',point3u);
+                String move_id=(SQLString.substring(point3u+1)).trim();
+                if (move_id.indexOf(' ')>0) move_id.substring(0, move_id.indexOf(' '));
+                String geometry=(SQLString.substring(point1u+1,point2u)).trim();
+                SQLString="CALL(animal_movement_update("+geometry+", "+move_id+",'"+dateFormat.format(day)+"','"+dateFormat.format(day)+"'))";
             }
         } else {
             SQLString=T2SQLString.trim();
@@ -161,12 +215,20 @@ public final class T2SQL {
             } else if (SQLString.startsWith("DELETE")){
                 SQLString=SQLString.substring(SQLString.indexOf("move_id")+7);
                 SQLString=(SQLString.substring(SQLString.indexOf("=")+1)).trim();
-                SQLString="CALL(animal_movement_delete("+SQLString+",null,null))";
+                SQLString="CALL(animal_movement_delete("+SQLString+",sysdate,sysdate))";
             } else if (SQLString.startsWith("UPDATE")){
-                SQLString="CALL()";//TODO
+                int point1u=SQLString.indexOf("geometry");
+                point1u=SQLString.indexOf('=',point1u);
+                int point2u=SQLString.indexOf(" WHERE ");
+                int point3u=SQLString.indexOf("move_id", point2u);
+                point3u=SQLString.indexOf('=',point3u);
+                String move_id=(SQLString.substring(point3u+1)).trim();
+                if (move_id.indexOf(' ')>0) move_id.substring(0, move_id.indexOf(' '));
+                String geometry=(SQLString.substring(point1u+1,point2u)).trim();
+                SQLString="CALL(animal_movement_update("+geometry+", "+move_id+",sysdate,sysdate)";
             }
         }
-        D.log(SQLString);
+        D.log("*"+SQLString);
         return SQLString;
     }
 
@@ -183,11 +245,10 @@ public final class T2SQL {
         if (mode.equals("NONSEQUENCED VALIDTIME")){
             SQLstring=mode+" ";
         } else if (mode.equals("VALIDTIME DATE")){
-            SQLstring=mode+" "+dateFormat.format(validFrom)+" ";
+            SQLstring=mode+" "+dateFormatIn.format(validFrom)+" ";
         } else if (mode.equals("VALIDTIME PERIOD")){
-            SQLstring=mode+" ["+dateFormat.format(validFrom)+" - "+dateFormat.format(validTo)+") ";
+            SQLstring=mode+" ["+dateFormatIn.format(validFrom)+" - "+dateFormatIn.format(validTo)+") ";
         }
-        D.log(SQLstring);
         return SQLstring;
     }
 
