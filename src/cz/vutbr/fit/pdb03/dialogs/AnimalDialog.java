@@ -140,8 +140,8 @@ public class AnimalDialog extends JDialog implements ActionListener{
 		lId.setText(animal.getId() + "");
 		tGenus.setText(animal.getGenus());
 		tGenusLat.setText(animal.getGenusLat());
-		tFamily.setText(animal.getFamily());
-		tFamilyLat.setText(animal.getFamilyLat());
+		tFamily.setText(animal.getSpecies());
+		tFamilyLat.setText(animal.getSpeciesLat());
 		try {
 			taDescription.setText(animal.getDescription(db));
 		} catch (SQLException e){

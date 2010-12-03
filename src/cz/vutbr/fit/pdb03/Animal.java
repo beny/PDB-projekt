@@ -13,9 +13,9 @@ public class Animal {
 	// basic informations about animal
 	private int id = 0;
 	private String genus = "";
-	private String family = "";
+	private String species = "";
 	private String genusLat = "";
-	private String familyLat = "";
+	private String speciesLat = "";
 	private String description = "";
 	private Double nearestAppareance = -1.0;
 	private Double appareanceArea = -1.0;
@@ -24,17 +24,17 @@ public class Animal {
 
 	}
 
-	public Animal(String genus, String family, String genusLat,
-			String familyLat, String description) {
+	public Animal(String genus, String species, String genusLat,
+			String speciesLat, String description) {
 		this.genus = genus;
-		this.family = family;
+		this.species = species;
 		this.genusLat = genusLat;
-		this.familyLat = familyLat;
+		this.speciesLat = speciesLat;
 		this.description = description;
 	}
 
-	public Animal(int id, String genus, String genusLat, String family, String familyLat, String description){
-		this(genus, family, genusLat, familyLat, description);
+	public Animal(int id, String genus, String genusLat, String species, String speciesLat, String description){
+		this(genus, species, genusLat, speciesLat, description);
 		setId(id);
 	}
 
@@ -55,12 +55,12 @@ public class Animal {
 		this.genus = genus;
 	}
 
-	public String getFamily() {
-		return family;
+	public String getSpecies() {
+		return species;
 	}
 
-	public void setFamily(String family) {
-		this.family = family;
+	public void setSpecies(String species) {
+		this.species = species;
 	}
 
 	public String getGenusLat() {
@@ -71,12 +71,12 @@ public class Animal {
 		this.genusLat = genusLat;
 	}
 
-	public String getFamilyLat() {
-		return familyLat;
+	public String getSpeciesLat() {
+		return speciesLat;
 	}
 
-	public void setFamilyLat(String familyLat) {
-		this.familyLat = familyLat;
+	public void setSpeciesLat(String speciesLat) {
+		this.speciesLat = speciesLat;
 	}
 
 	// //////OTHER PUBLIC FUNCTIONS
@@ -179,7 +179,7 @@ public class Animal {
 	 */
 	@Override
 	public String toString() {
-		return genus + ", " + family;
+		return genus + ", " + species;
 	}
 
 	// ///////PRIVATE FUNCTIONS

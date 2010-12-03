@@ -33,7 +33,7 @@ public final class T2SQL {
     private static Date validTo=null;
     private static String mode="";
     private static DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-    private static DateFormat dateFormatIn = new SimpleDateFormat("yyyy/MM/dd'~'HH:mm");
+    private static DateFormat dateFormatIn = new SimpleDateFormat("yyyy/MM/dd'~'HH:mm:ss");
 
     /**
      * Function sets nonsequenced validtime
@@ -155,7 +155,7 @@ public final class T2SQL {
             SQLString=T2SQLString.substring(point3+1);
             SQLString=SQLString.trim();
             if (SQLString.startsWith("SELECT")){
-                SQLString=SQLString.replace(" WHERE ", " WHERE (valid_from <= '"+dateFormat.format(day_from)+"' AND (valid_to > '"+dateFormat.format(day_from)+"' OR valid_to=NULL)) OR (valid_from <= '"+dateFormat.format(day_to)+"' AND (valid_to > '"+dateFormat.format(day_to)+"' OR valid_to=NULL)) AND ");
+                SQLString=SQLString.replace(" WHERE ", " WHERE ((valid_from <= '"+dateFormat.format(day_from)+"' OR valid_from is NULL) AND (valid_to > '"+dateFormat.format(day_from)+"' OR valid_to is NULL)) OR ((valid_from <= '"+dateFormat.format(day_to)+"' OR valid_from is NULL) AND (valid_to > '"+dateFormat.format(day_to)+"' OR valid_to is NULL)) AND ");
             } else if (SQLString.startsWith("INSERT")){
                 SQLString=SQLString.replace("INSERT INTO animal_movement (", "INSERT INTO animal_movement (valid_from,valid_to,");
                 SQLString=SQLString.replace(" VALUES (", " VALUES ('"+dateFormat.format(day_from)+"','"+dateFormat.format(day_to)+"',");
@@ -187,7 +187,7 @@ public final class T2SQL {
             SQLString=T2SQLString.substring(point2+1);
             SQLString=SQLString.trim();
             if (SQLString.startsWith("SELECT")){
-                SQLString=SQLString.replace(" WHERE ", " WHERE (valid_from <= '"+dateFormat.format(day)+"') AND (valid_to > '"+dateFormat.format(day)+"' OR valid_to=NULL) AND ");
+                SQLString=SQLString.replace(" WHERE ", " WHERE (valid_from <= '"+dateFormat.format(day)+"' OR valid_from is NULL) AND (valid_to > '"+dateFormat.format(day)+"' OR valid_to is NULL) AND ");
             } else if (SQLString.startsWith("INSERT")){
                 SQLString=SQLString.replace("INSERT INTO animal_movement (", "INSERT INTO animal_movement (valid_from,");
                 SQLString=SQLString.replace(" VALUES (", " VALUES ('"+dateFormat.format(day)+"',");
@@ -209,7 +209,7 @@ public final class T2SQL {
         } else {
             SQLString=T2SQLString.trim();
             if (SQLString.startsWith("SELECT")){
-                SQLString=SQLString.replace(" WHERE ", " WHERE (valid_from <= sysdate) AND (valid_to > sysdate OR valid_to=NULL) AND ");
+                SQLString=SQLString.replace(" WHERE ", " WHERE (valid_from <= sysdate OR valid_from is NULL) AND (valid_to > sysdate OR valid_to is NULL) AND ");
             } else if (SQLString.startsWith("INSERT")){
                 //no need to
             } else if (SQLString.startsWith("DELETE")){
