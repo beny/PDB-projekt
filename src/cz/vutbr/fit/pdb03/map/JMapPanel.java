@@ -166,6 +166,7 @@ public class JMapPanel extends JMapViewer implements ActionListener {
 			// enable list
 			frame.getAnimalsPanel().setEnabled(true);
 
+			frame.setEnable(true);
 			setEditMode(false);
 		}
 

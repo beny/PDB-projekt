@@ -5,7 +5,7 @@ import java.awt.event.MouseEvent;
 import org.openstreetmap.gui.jmapviewer.DefaultMapController;
 import org.openstreetmap.gui.jmapviewer.JMapViewer;
 
-public class MapController extends DefaultMapController{
+public class MapController extends DefaultMapController {
 
 	public MapController(JMapViewer map) {
 		super(map);

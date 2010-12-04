@@ -38,8 +38,8 @@ public class AnimalDialog extends JDialog implements ActionListener{
 	JPanel pContent;
 
 	// GUI elementy
-	JLabel lId, lGenus, lFamily, lGenusLat, lFamilyLat, lDescription;
-	JTextField tGenus, tFamily, tGenusLat, tFamilyLat;
+	JLabel lId, lGenus, lSpecies, lGenusLat, lSpeciesLat, lDescription;
+	JTextField tGenus, tSpecies, tGenusLat, tSpeciesLat;
 	JTextArea taDescription;
 	JButton bCancel, bSave, bDelete;
 
@@ -76,12 +76,12 @@ public class AnimalDialog extends JDialog implements ActionListener{
 		pContent.add(lGenusLat, gbc);
 
 		gbc.gridy++;
-		lFamily = new JLabel("Family:");
-		pContent.add(lFamily, gbc);
+		lSpecies = new JLabel("Species:");
+		pContent.add(lSpecies, gbc);
 
 		gbc.gridy++;
-		lFamilyLat = new JLabel("Family (latin):");
-		pContent.add(lFamilyLat, gbc);
+		lSpeciesLat = new JLabel("Species (latin):");
+		pContent.add(lSpeciesLat, gbc);
 
 		gbc.gridy++;
 		lDescription = new JLabel("Description:");
@@ -99,12 +99,12 @@ public class AnimalDialog extends JDialog implements ActionListener{
 		pContent.add(tGenusLat, gbc);
 
 		gbc.gridy++;
-		tFamily = new JTextField(DataBase.MAX_STRING);
-		pContent.add(tFamily, gbc);
+		tSpecies = new JTextField(DataBase.MAX_STRING);
+		pContent.add(tSpecies, gbc);
 
 		gbc.gridy++;
-		tFamilyLat = new JTextField(DataBase.MAX_STRING);
-		pContent.add(tFamilyLat, gbc);
+		tSpeciesLat = new JTextField(DataBase.MAX_STRING);
+		pContent.add(tSpeciesLat, gbc);
 
 		gbc.gridy++;
 		taDescription = new JTextArea(5, 20);
@@ -145,8 +145,8 @@ public class AnimalDialog extends JDialog implements ActionListener{
 		lId.setText(animal.getId() + "");
 		tGenus.setText(animal.getGenus());
 		tGenusLat.setText(animal.getGenusLat());
-		tFamily.setText(animal.getSpecies());
-		tFamilyLat.setText(animal.getSpeciesLat());
+		tSpecies.setText(animal.getSpecies());
+		tSpeciesLat.setText(animal.getSpeciesLat());
 		try {
 			taDescription.setText(animal.getDescription(db));
 		} catch (SQLException e){
@@ -182,8 +182,8 @@ public class AnimalDialog extends JDialog implements ActionListener{
 			case INSERT:
 
 				animal = new Animal(tGenus.getText(),
-						tGenusLat.getText(), tFamily.getText(),
-						tFamilyLat.getText(), taDescription.getText());
+						tGenusLat.getText(), tSpecies.getText(),
+						tSpeciesLat.getText(), taDescription.getText());
 
 				try {
 					db.insertAnimal(animal);
@@ -212,8 +212,8 @@ public class AnimalDialog extends JDialog implements ActionListener{
 				if (id != 0) {
 
 					animal = new Animal(id, tGenus.getText(),
-							tGenusLat.getText(), tFamily.getText(),
-							tFamilyLat.getText(), taDescription.getText());
+							tGenusLat.getText(), tSpecies.getText(),
+							tSpeciesLat.getText(), taDescription.getText());
 
 					Log.debug("Id zvirete ktere chci ulozit:" + id);
 
