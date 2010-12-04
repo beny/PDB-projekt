@@ -1,7 +1,7 @@
 package cz.vutbr.fit.pdb03;
 
-import java.sql.SQLException;
 import java.awt.geom.Point2D;
+import java.sql.SQLException;
 
 /**
  * Object for saving informations about animal

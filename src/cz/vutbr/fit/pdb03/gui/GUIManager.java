@@ -1,4 +1,4 @@
-package cz.vutbr.fit.pdb03;
+package cz.vutbr.fit.pdb03.gui;
 
 import java.awt.Component;
 import java.awt.Dimension;

@@ -9,7 +9,7 @@ import javax.swing.JFrame;
 
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.DataBase;
-import cz.vutbr.fit.pdb03.D;
+import cz.vutbr.fit.pdb03.Log;
 
 /**
  * Kontroler zajistujici ovladani okenich akci
@@ -40,7 +40,7 @@ public class WindowController extends WindowAdapter {
 			try {
 				db.disconnect();
 
-				D.log("Disconnected");
+				Log.info("Disconnected");
 			} catch (SQLException e) {
 				System.err
 						.println("Error while disconnection from DB: " + e.getMessage());

@@ -1,24 +1,20 @@
 package cz.vutbr.fit.pdb03;
 
-import java.awt.Dimension;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Vector;
 
-import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JList;
-import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
-import cz.vutbr.fit.pdb03.controllers.ListController;
 import cz.vutbr.fit.pdb03.controllers.MenuController;
 import cz.vutbr.fit.pdb03.controllers.MouseController;
 import cz.vutbr.fit.pdb03.controllers.WindowController;
+import cz.vutbr.fit.pdb03.dialogs.ConnectDialog;
+import cz.vutbr.fit.pdb03.gui.AnimalsPanel;
+import cz.vutbr.fit.pdb03.gui.GUIManager;
+import cz.vutbr.fit.pdb03.gui.PhotosPanel;
 import cz.vutbr.fit.pdb03.map.JMapPanel;
 
 /**
@@ -28,12 +24,14 @@ import cz.vutbr.fit.pdb03.map.JMapPanel;
  * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
-public class AnimalsDatabase extends JFrame{
+public class AnimalsDatabase extends JFrame  {
 
 	private static final long serialVersionUID = 1L;
 
 	// komponenty jednotlivych casti hlavniho okna
-	JComponent infoPanel, animalsPanel, mapPanel;
+	PhotosPanel photosPanel;
+	JMapPanel mapPanel;
+	AnimalsPanel animalsPanel;
 
 	// map items
 	JMapPanel map;
@@ -46,8 +44,7 @@ public class AnimalsDatabase extends JFrame{
 
 	// seznam zvirat
 	private JList list;
-	private Vector<Animal> animals;
-	private ArrayList<Animal> dbList;
+	private Vector<Animal> vAnimals = new Vector<Animal>();
 
 	/**
 	 * Zakladni konstruktor, ktery naplni hlavni okno
@@ -68,20 +65,35 @@ public class AnimalsDatabase extends JFrame{
 		menuController = new MenuController(this);
 
 		// pridani rozdeleni do jednotlivych podoken
-		infoPanel = initInfoPanel();
-		animalsPanel = initAnimalsPanel();
+		photosPanel = new PhotosPanel(this);
+		animalsPanel = new AnimalsPanel(this);
 		mapPanel = map;
 
-		// TODO dodelat nejak poradne vahy pri resize oknu a pri prvnim spusteni
-		JSplitPane splitPaneH = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, infoPanel, animalsPanel);
+		// soupaci panely
+		JSplitPane splitPaneH = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, photosPanel, animalsPanel);
 		splitPaneH.setResizeWeight(0.5);
 		splitPaneH.setDividerLocation(600);
 		splitPaneH.setBorder(null);
 
-		JSplitPane splitPaneV= new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPaneH, mapPanel);
+		JSplitPane splitPaneV = new JSplitPane(JSplitPane.VERTICAL_SPLIT, splitPaneH, mapPanel);
 		splitPaneV.setResizeWeight(0.3);
 		splitPaneV.setDividerLocation(200);
 		add(splitPaneV);
+
+		// v zakladu zakaz vse co pouziva DB
+		setEnable(false);
+
+		// pokud neni pripojeni k DB, zobraz dialog
+		if(!db.isConnected()){
+			javax.swing.SwingUtilities.invokeLater(new Runnable() {
+	            @Override
+				public void run() {
+	            	ConnectDialog dConnect = new ConnectDialog(AnimalsDatabase.this, db);
+					GUIManager.moveToCenter(dConnect, AnimalsDatabase.this);
+					dConnect.setVisible(true);
+	            }
+			});
+		}
 
 	}
 
@@ -98,21 +110,38 @@ public class AnimalsDatabase extends JFrame{
 	 * Obnoveni seznamu zvirat
 	 */
 	public void refreshAnimalsList(){
+
+		ArrayList<Animal> dbAnimals = new ArrayList<Animal>();
+
+		// nalezeni zvirat
 		try{
 			db.searchAnimals();
-			dbList = (ArrayList<Animal>) db.searchResult;
+			dbAnimals = (ArrayList<Animal>) db.searchResult;
 		} catch(SQLException e){
-			D.log("Chyba pri hledani zvirat: " + e.getMessage() , 1); // TODO odstranit magickou konstatntu
+			Log.error("Chyba pri hledani zvirat: " + e.getMessage());
 		}
 
-		D.log("Nalezeno " + dbList.size() + " zvirat");
+		Log.info("Nalezeno "+ dbAnimals + " zvirat");
 
-		animals.clear();
-		for (Animal animal: dbList) {
-			animals.add(animal);
+		// nastaveni novych zvirat
+		vAnimals.clear();
+		for (Animal animal: dbAnimals) {
+			vAnimals.add(animal);
 		}
 
-		list.setListData(animals);
+		animalsPanel.setData(vAnimals);
+	}
+
+	/**
+	 * Nastavovani zda jsou prvky k dispozici dle pripojeni
+	 * @param enable
+	 */
+	public void setEnable(boolean enable){
+
+		// disable menu items
+		menuController.setConnectionState(db.isConnected());
+		animalsPanel.setEnabled(enable);
+		photosPanel.setEnabled(enable);
 	}
 
 	/**
@@ -131,6 +160,10 @@ public class AnimalsDatabase extends JFrame{
 		return db;
 	}
 
+	public void setList(JList list) {
+		this.list = list;
+	}
+
 	public JList getList() {
 		return list;
 	}
@@ -139,43 +172,11 @@ public class AnimalsDatabase extends JFrame{
 		return menuController;
 	}
 
-	public JComponent getInfoPanel() {
-		return infoPanel;
+	public PhotosPanel getPhotosPanel() {
+		return photosPanel;
 	}
 
-	public JComponent getAnimalsPanel() {
+	public AnimalsPanel getAnimalsPanel() {
 		return animalsPanel;
 	}
-
-	/**
-	 * Metoda pro ziskani panelu pro levou horni cast okna
-	 * @return komponenta vyplnena JTabbedPane pro obrazky
-	 */
-	private JComponent initInfoPanel() {
-
-		// picture panel
-		JTabbedPane picturesPanel = new JTabbedPane();
-		picturesPanel.addTab("Fotky", new JLabel("Red panel", JLabel.CENTER));
-		picturesPanel.addTab("Stopy", new JLabel("Blue panel", JLabel.CENTER));
-		picturesPanel.addTab("Trus", new JLabel("Green panel", JLabel.CENTER));
-
-		return new JScrollPane(picturesPanel);
-
-	}
-
-	/**
-	 * Metoda pro ziskani panelu pro pravou horni cast okna
-	 * @return komponenta se seznamem zvirat v databazi
-	 */
-	private JComponent initAnimalsPanel() {
-
-		animals = new Vector<Animal>();
-		list = new JList();
-		list.addMouseListener(new ListController(this));
-		JScrollPane scroll = new JScrollPane(list);
-		scroll.setPreferredSize(new Dimension(300, 500));
-
-		return scroll;
-	}
-
 }

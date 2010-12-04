@@ -9,8 +9,8 @@ import javax.swing.ListModel;
 import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.DataBase;
-import cz.vutbr.fit.pdb03.GUIManager;
 import cz.vutbr.fit.pdb03.dialogs.AnimalDialog;
+import cz.vutbr.fit.pdb03.gui.GUIManager;
 import cz.vutbr.fit.pdb03.map.JMapPanel;
 
 /**
@@ -25,12 +25,12 @@ public class ListController extends MouseAdapter {
 	 */
 	private JMapPanel map;
 	private AnimalsDatabase frame;
-	private JList list;
 	DataBase db;
+
+	Animal selectedAnimal;
 
 	public ListController(AnimalsDatabase frame) {
 		this.frame = frame;
-		list = frame.getList();
 		db = frame.getDb();
 
 		// pridani listeneru
@@ -39,19 +39,37 @@ public class ListController extends MouseAdapter {
 
 	}
 
+
+	public Animal getSelectedAnimal() {
+		return selectedAnimal;
+	}
+
+
+	public void setSelectedAnimal(Animal selectedAnimal) {
+		this.selectedAnimal = selectedAnimal;
+	}
+
+
 	@Override
 	public void mouseClicked(MouseEvent e) {
+
+		// normalni klik
+		if(e.getButton() == MouseEvent.BUTTON1){
+
+			int index = frame.getList().locationToIndex(e.getPoint());
+			ListModel dlm = frame.getList().getModel();
+			setSelectedAnimal((Animal) dlm.getElementAt(index));
+
+		}
 
 		// pro leve tlacitko mysi dvojklik
 		if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
 
-			int index = list.locationToIndex(e.getPoint());
-			ListModel dlm = list.getModel();
-			Animal animal = (Animal)dlm.getElementAt(index);
-			list.ensureIndexIsVisible(index);
+			int index = frame.getList().locationToIndex(e.getPoint());
+			frame.getList().ensureIndexIsVisible(index);
 			AnimalDialog dAnimal = new AnimalDialog(frame);
 			GUIManager.moveToCenter(dAnimal, frame);
-			dAnimal.fill(animal);
+			dAnimal.fill(getSelectedAnimal());
 			dAnimal.enableDeleteButton(true);
 			dAnimal.setMode(AnimalDialog.UPDATE);
 			dAnimal.setVisible(true);

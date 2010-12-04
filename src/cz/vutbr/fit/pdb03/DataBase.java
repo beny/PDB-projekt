@@ -1,4 +1,4 @@
-package cz.vutbr.fit.pdb03;
+	package cz.vutbr.fit.pdb03;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -7,11 +7,12 @@ import java.io.InputStreamReader;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Statement;
-//import ojdbc6.jar from oraclelib.zip/oraclelib/jdbc located in WIS
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -156,9 +157,9 @@ public class DataBase {
 	 * @throws SQLException
 	 */
 	public void createDatabase() throws SQLException {
-                D.log("Recreating database...");
+                Log.debug("Recreating database...");
 		deleteDatabase();
-                D.log("Database deleted!");
+                Log.debug("Database deleted!");
 		Statement stat = con.createStatement();
 		stat.execute("CREATE TABLE animals (animal_id NUMBER PRIMARY KEY, genus VARCHAR(" + MAX_STRING + "), species VARCHAR(" + MAX_STRING + "), genus_lat VARCHAR(" + MAX_STRING + "), species_lat VARCHAR(" + MAX_STRING + "), description VARCHAR(" + MAX_LONG_STRING + "))");
 		stat.execute("CREATE TABLE "+ANIMAL_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
@@ -172,9 +173,9 @@ public class DataBase {
                 }catch(SQLException e){}
 		stat.execute("CREATE INDEX animal_movement_sidx ON animal_movement (geometry) indextype is MDSYS.SPATIAL_INDEX");
                 stat.close();
-                D.log("Preparing for creating sequences");
+                Log.debug("Preparing for creating sequences");
 		createSequences();
-                D.log("Preparing for creating triggers and procedures");
+                Log.debug("Preparing for creating triggers and procedures");
                 createTriggersAndProcedures();
 	}
 
@@ -396,7 +397,7 @@ public class DataBase {
 		return;
 	}
 
-                /**
+        /**
          * searches animals in areas of an animal appareance
          * @param animal_id
          * @throws SQLException
@@ -426,7 +427,9 @@ public class DataBase {
 		  }
                   rset1.close();
                   opstmt1.close();
-                  }catch(SQLException e){D.log("LEVEL2: "+e.getMessage());}
+                  }catch(SQLException e){
+                	  Log.debug("LEVEL2: "+e.getMessage());
+                  }
                 }
                 rset.close();
                 opstmt.close();
@@ -801,8 +804,8 @@ public class DataBase {
 	 *            ID of concrete animal
 	 * @param j_geom
 	 *            JGeometry object
-         * @throws SQLException
-         * @see T2SQL
+	 * @throws SQLException
+	 * @see T2SQL
 	 */
 	public void insertAppareance(int animal_id, JGeometry j_geom) throws SQLException {
 		int id = 0;
@@ -814,14 +817,14 @@ public class DataBase {
 		id = rset.getInt("nextval");
                 SQLquery=T2SQL.T2SQLprefix()+"INSERT INTO animal_movement (move_id,animal_id,geometry) VALUES (?,?,?)";
                 OraclePreparedStatement opstmt=(OraclePreparedStatement)con.prepareStatement(T2SQL.temporal(SQLquery));
-                opstmt.setInt(1, id);
-                opstmt.setInt(2, animal_id);
-                opstmt.setSTRUCT(3, JGeometry.store(j_geom, con));
-                opstmt.execute();
-                opstmt.close();
+		opstmt.setInt(1, id);
+		opstmt.setInt(2, animal_id);
+		opstmt.setSTRUCT(3, JGeometry.store(j_geom, con));
+		opstmt.execute();
+		opstmt.close();
 		con.commit();
 		con.setAutoCommit(true);
-                rset.close();
+		rset.close();
 		stat.close();
 		return;
 	}
@@ -1122,7 +1125,7 @@ public class DataBase {
             stat.close();
         } catch (SQLException ex) {}
         }
-        
+
         /**
          * Fills dabase with example data
          * @param filename
@@ -1148,6 +1151,5 @@ public class DataBase {
             }
           }
         }
-
 
 }

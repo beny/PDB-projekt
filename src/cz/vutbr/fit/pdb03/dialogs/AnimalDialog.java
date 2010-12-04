@@ -11,13 +11,14 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
-import cz.vutbr.fit.pdb03.D;
 import cz.vutbr.fit.pdb03.DataBase;
+import cz.vutbr.fit.pdb03.Log;
 
 /**
  * Dialog, pro pridavani a editaci zvirete
@@ -107,7 +108,11 @@ public class AnimalDialog extends JDialog implements ActionListener{
 
 		gbc.gridy++;
 		taDescription = new JTextArea(5, 20);
-		pContent.add(taDescription, gbc);
+		taDescription.setLineWrap(true);
+		taDescription.setWrapStyleWord(true);
+		JScrollPane js = new JScrollPane(taDescription);
+
+		pContent.add(js, gbc);
 
 		// pridani tlacitek
 		gbc.gridy++;
@@ -210,7 +215,7 @@ public class AnimalDialog extends JDialog implements ActionListener{
 							tGenusLat.getText(), tFamily.getText(),
 							tFamilyLat.getText(), taDescription.getText());
 
-					D.log("Id zvirete ktere chci ulozit:" + id);
+					Log.debug("Id zvirete ktere chci ulozit:" + id);
 
 					try {
 						db.updateAnimal(animal);
@@ -232,7 +237,7 @@ public class AnimalDialog extends JDialog implements ActionListener{
 			try{
 				id = Integer.parseInt(lId.getText());
 				db.deleteAnimal(id);
-				D.log("Mazu zvire s ID " + id);
+				Log.debug("Mazu zvire s ID " + id);
 			} catch (NumberFormatException e) {
 				System.err.println("Chyba pri editaci zvirete, neexistujici ID: " + e.getMessage());
 			} catch (SQLException e) {

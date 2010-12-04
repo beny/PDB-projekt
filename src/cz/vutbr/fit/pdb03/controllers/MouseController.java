@@ -6,14 +6,11 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-
 import org.openstreetmap.gui.jmapviewer.Coordinate;
 import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
 
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
-import cz.vutbr.fit.pdb03.D;
+import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.map.JMapPanel;
 import cz.vutbr.fit.pdb03.map.MapPoint;
 
@@ -37,31 +34,6 @@ public class MouseController extends MouseAdapter {
 		map = frame.getMap();
 		map.addMouseListener(this);
 
-	}
-
-	@Override
-	public void mouseClicked(MouseEvent e) {
-		Coordinate pointClicked = map.getPosition(e.getPoint());
-
-		// pro leve tlacitko mysi
-		if (e.getButton() == MouseEvent.BUTTON1) {
-
-			// nakresli pouze bod pokud jsou body viditelne
-			if (map.getMapMarkersVisible() && map.isEditMode()) {
-				MapPoint.counter = MapPoint.counter + 1;
-				map.addMapMarker(new MapPoint(pointClicked.getLat(),
-						pointClicked.getLon(), MapPoint.counter));
-
-				D.log("Pridavam bod do mapy na souradnice: " + pointClicked);
-			}
-		}
-		// pro prave tlacitko mysi
-		else if (e.getButton() == MouseEvent.BUTTON3) {
-
-			if(map.isEditMode()){
-				deletePoints(e.getPoint());
-			}
-		}
 	}
 
 	/**
@@ -99,7 +71,7 @@ public class MouseController extends MouseAdapter {
 
 		// smazani prislusnych bodu
 		for (MapMarker mapMarker : toDelete) {
-			D.log("Info o bodu: " + mapMarker);
+			Log.debug("Info o bodu: " + mapMarker);
 
 			((MapPoint)mapMarker).setSelected(true);
 //			markers.remove(mapMarker);
@@ -107,5 +79,30 @@ public class MouseController extends MouseAdapter {
 
 		// repaint map
 		map.repaint();
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		Coordinate pointClicked = map.getPosition(e.getPoint());
+
+		// pro leve tlacitko mysi
+		if (e.getButton() == MouseEvent.BUTTON1) {
+
+			// nakresli pouze bod pokud jsou body viditelne
+			if (map.getMapMarkersVisible() && map.isEditMode()) {
+				MapPoint.counter = MapPoint.counter + 1;
+				map.addMapMarker(new MapPoint(pointClicked.getLat(),
+						pointClicked.getLon(), MapPoint.counter));
+
+				Log.debug("Pridavam bod do mapy na souradnice: " + pointClicked);
+			}
+		}
+		// pro prave tlacitko mysi
+		else if (e.getButton() == MouseEvent.BUTTON3) {
+
+			if(map.isEditMode()){
+				deletePoints(e.getPoint());
+			}
+		}
 	}
 }

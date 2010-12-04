@@ -228,7 +228,7 @@ public final class T2SQL {
                 SQLString="CALL(animal_movement_update("+geometry+", "+move_id+",sysdate,sysdate)";
             }
         }
-        D.log("*"+SQLString);
+        Log.debug("*"+SQLString);
         return SQLString;
     }
 
