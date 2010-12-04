@@ -2,6 +2,7 @@ package cz.vutbr.fit.pdb03.controllers;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.sql.SQLException;
 
 import javax.swing.JMenu;
@@ -25,7 +26,7 @@ public class MenuController implements ActionListener{
 	// menu items
 	private JMenuBar mBar;
 	private JMenu mDatabase, mAbout, mAnimal;
-	private JMenuItem miAboutInfo, miDatabaseConnection, miDatabaseCreate,
+	private JMenuItem miAboutInfo, miDatabaseConnection, miDatabaseCreate, miDatabaseSample,
 			miAnimalRefresh, miAnimalAdd;
 
 	// dialog
@@ -62,6 +63,10 @@ public class MenuController implements ActionListener{
 		miDatabaseCreate.addActionListener(this);
 		mDatabase.add(miDatabaseCreate);
 
+		miDatabaseSample = new JMenuItem("Vytvořit a naplnit databázi vzorky");
+		miDatabaseSample.addActionListener(this);
+		mDatabase.add(miDatabaseSample);
+
 		// menu zvire
 		mAnimal = new JMenu("Zvíře");
 		mBar.add(mAnimal);
@@ -93,6 +98,7 @@ public class MenuController implements ActionListener{
 
 		// nastaveni polozky pro pripojeni k databazi
 		miDatabaseConnection.setText(connected?DISCONNECT_FROM_DB:CONNECT_TO_DB);
+		miDatabaseSample.setEnabled(connected);
 		miAnimalAdd.setEnabled(connected);
 		miAnimalRefresh.setEnabled(connected);
 		miDatabaseCreate.setEnabled(connected);
@@ -143,7 +149,23 @@ public class MenuController implements ActionListener{
 					Log.debug("Creating empty database");
 					db.createDatabase();
 				} catch (SQLException e){
-					System.err.println("Chyba pri vytvareni DB: " + e.getMessage());
+					Log.error("Chyba pri vytvareni DB: " + e.getMessage());
+				}
+			}
+
+			frame.refreshAnimalsList();
+		}
+
+		// naplneni DB vzorovymi daty
+		if(event.getSource() == miDatabaseSample){
+			if(db.isConnected()){
+				try {
+					Log.debug("Vytvarim databazi se vzorovymi daty");
+					db.fillDatabase();
+				} catch(SQLException e){
+					Log.error("Chyba SQL pri vytvareni databaze se vzorovymi daty: " + e.getMessage());
+				} catch(IOException e){
+					Log.error("Chyba cteni souboru pri vytvareni databaze se vzorovymi daty: " + e.getMessage());
 				}
 			}
 

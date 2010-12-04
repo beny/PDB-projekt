@@ -1,6 +1,7 @@
 	package cz.vutbr.fit.pdb03;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
@@ -43,11 +44,17 @@ public class DataBase {
 	 */
 	private Connection con = null;
 
-		public static final int MAX_STRING = 25;
-		public static final int MAX_LONG_STRING = 1500;
-                private static final String RESOLUTION = "250 250";
-                private static final String EXAMPLE_FILE = "src\\cz\\vutbr\\fit\\pdb03\\example\\example.sql";
-                private static final String PICTURE_FOLDER = "src\\cz\\vutbr\\fit\\pdb03\\example\\";
+	public static final int MAX_STRING = 25;
+	public static final int MAX_LONG_STRING = 1500;
+	private static final String RESOLUTION = "250 250";
+	private static final String EXAMPLE_FILE = "src" + File.separator
+			+ "cz" + File.separator + "vutbr" + File.separator + "fit"
+			+ File.separator + "pdb03" + File.separator + "example"
+			+ File.separator + "example.sql";
+	private static final String PICTURE_FOLDER = "src" + File.separator
+			+ "cz" + File.separator + "vutbr" + File.separator + "fit"
+			+ File.separator + "pdb03" + File.separator + "example"
+			+ File.separator + "";
 
         /**
          * use this string for accesing to table with photos of animals
@@ -998,7 +1005,7 @@ public class DataBase {
          * @see #ANIMAL_PHOTO
          * @see #EXCREMENT_PHOTO
          * @see #FEET_PHOTO
-         * @see #setPhotoDescription(int, java.lang.String, java.lang.String) 
+         * @see #setPhotoDescription(int, java.lang.String, java.lang.String)
          * @return
          * @throws SQLException
          */
