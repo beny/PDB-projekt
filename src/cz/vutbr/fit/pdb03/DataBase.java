@@ -46,8 +46,8 @@ public class DataBase {
 		public static final int MAX_STRING = 25;
 		public static final int MAX_LONG_STRING = 1500;
                 private static final String RESOLUTION = "250 250";
-                private static final String EXAMPLE_FILE = "C:/mysqlfile.sql";
-                private static final String PICTURE_FOLDER = "C:/pictures/";
+                private static final String EXAMPLE_FILE = "src\\cz\\vutbr\\fit\\pdb03\\example\\example.sql";
+                private static final String PICTURE_FOLDER = "src\\cz\\vutbr\\fit\\pdb03\\example\\";
 
         /**
          * use this string for accesing to table with photos of animals
@@ -162,9 +162,9 @@ public class DataBase {
                 Log.debug("Database deleted!");
 		Statement stat = con.createStatement();
 		stat.execute("CREATE TABLE animals (animal_id NUMBER PRIMARY KEY, genus VARCHAR(" + MAX_STRING + "), species VARCHAR(" + MAX_STRING + "), genus_lat VARCHAR(" + MAX_STRING + "), species_lat VARCHAR(" + MAX_STRING + "), description VARCHAR(" + MAX_LONG_STRING + "))");
-		stat.execute("CREATE TABLE "+ANIMAL_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
-		stat.execute("CREATE TABLE "+EXCREMENT_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
-		stat.execute("CREATE TABLE "+FEET_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
+		stat.execute("CREATE TABLE "+ANIMAL_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature, move_id NUMBER, description VARCHAR("+MAX_LONG_STRING+"))");
+		stat.execute("CREATE TABLE "+EXCREMENT_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature, move_id NUMBER, description VARCHAR("+MAX_LONG_STRING+"))");
+		stat.execute("CREATE TABLE "+FEET_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature, move_id NUMBER, description VARCHAR("+MAX_LONG_STRING+"))");
                 stat.execute("CREATE TABLE "+SEARCH_PHOTO+" (photo_id NUMBER PRIMARY KEY, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
 		stat.execute("CREATE TABLE animal_movement (move_id NUMBER PRIMARY KEY, animal_id NUMBER, geometry MDSYS.SDO_GEOMETRY, valid_from DATE, valid_to DATE)");
                 con.commit();
@@ -189,8 +189,8 @@ public class DataBase {
         public void fillDatabase() throws SQLException, IOException {
             createDatabase();
             executeSQLFile(EXAMPLE_FILE);
-            uploadImage(1,ANIMAL_PHOTO,PICTURE_FOLDER+"1-1.jpeg");
-            uploadImage(7,ANIMAL_PHOTO,PICTURE_FOLDER+"7-1.jpg");
+            uploadImage(1,ANIMAL_PHOTO,PICTURE_FOLDER+"1-1.jpeg",0,"Obrázek žirafy");
+            uploadImage(7,ANIMAL_PHOTO,PICTURE_FOLDER+"7-1.jpg",0,"Je to gibon?");
         }
 
         /**
@@ -292,7 +292,7 @@ public class DataBase {
          */
         public void searchAnimal(String filename, String tablename) throws SQLException, IOException{
             Statement stat = con.createStatement();
-            int nextval=uploadImage(0,SEARCH_PHOTO,filename);
+            int nextval=uploadImage(0,SEARCH_PHOTO,filename,0,"");
             String SQLquery = "SELECT DISTINCT animal.animal_id,animal.genus,animal.species,animal.genus_lat,animal.species_lat FROM "+
                     SEARCH_PHOTO+" fp, "+tablename+" photodb, animals animal "+
                     "WHERE ROWNUM <= "+Integer.toString(MAX_SEARCH_RESULTS)+" AND ordsys.IMGSimilar(fp.photo_sig, photodb.photo_sig, 'color=0.3, texture=0.3, shape=0.3, location=0.1',100 ,123)=1 "+
@@ -586,6 +586,37 @@ public class DataBase {
 	}
 
         /**
+         * Finds pictures associated to concrete geometry position - finds in all tables
+         * @param move_id
+         *         ID of a geometry
+         * @return
+         *         Map<Integer,OrdImage>
+         * @throws SQLException
+         */
+        public Map<Integer,OrdImage> selectPicture(int move_id) throws SQLException {
+		Statement stat = con.createStatement();
+                HashMap<Integer,OrdImage> result = new HashMap<Integer,OrdImage>();
+		OracleResultSet rset = (OracleResultSet) stat.executeQuery("SELECT photo, photo_id FROM "+
+                        ANIMAL_PHOTO+" WHERE move_id="+ Integer.toString(move_id));
+		while (rset.next()) {
+                    result.put(rset.getInt("photo_id"),(OrdImage) rset.getORAData("photo",OrdImage.getORADataFactory()));
+		}
+                rset = (OracleResultSet) stat.executeQuery("SELECT photo, photo_id FROM "+
+                        EXCREMENT_PHOTO+" WHERE move_id="+ Integer.toString(move_id));
+		while (rset.next()) {
+                    result.put(rset.getInt("photo_id"),(OrdImage) rset.getORAData("photo",OrdImage.getORADataFactory()));
+		}
+                rset = (OracleResultSet) stat.executeQuery("SELECT photo, photo_id FROM "+
+                        FEET_PHOTO+" WHERE move_id="+ Integer.toString(move_id));
+		while (rset.next()) {
+                    result.put(rset.getInt("photo_id"),(OrdImage) rset.getORAData("photo",OrdImage.getORADataFactory()));
+		}
+                rset.close();
+		stat.close();
+		return result;
+	}
+
+        /**
 	 * Returns points which belongs to a current animal
          * <p>
          * http://download.oracle.com/docs/cd/B19306_01/appdev.102/b14373/oracle/spatial/geometry/JGeometry.html
@@ -744,6 +775,10 @@ public class DataBase {
          *          table name we want to upload in
 	 * @param filename
 	 *            Filename of a picture for upload
+         * @param  move_id
+         *            If it belongs to a geometry, this is it's id, else 0
+         * @param description
+         *              Description of an picture
          * @return integer with new photo_id
 	 * @throws SQLException
 	 * @throws IOException
@@ -753,7 +788,7 @@ public class DataBase {
          * @see #SEARCH_PHOTO
          * @see #deletePicture(int, java.lang.String)
 	 */
-	public int uploadImage(int animal_id, String choosen_table, String filename)
+	public int uploadImage(int animal_id, String choosen_table, String filename, int move_id, String description)
 			throws SQLException, IOException {
 		con.setAutoCommit(false);
 		Statement stat = con.createStatement();
@@ -767,9 +802,9 @@ public class DataBase {
 				+ ", ordsys.ordimage.init(), ordsys.ordimagesignature.init())";
                 } else {
                     SQLquery = "INSERT INTO " + choosen_table
-				+ " (photo_id, animal_id, photo, photo_sig) VALUES (" + nextval
+				+ " (photo_id, animal_id, photo, photo_sig, move_id, description) VALUES (" + nextval
 				+ ", " + animal_id
-				+ ", ordsys.ordimage.init(), ordsys.ordimagesignature.init())";
+				+ ", ordsys.ordimage.init(), ordsys.ordimagesignature.init(),"+Integer.toString(move_id)+",'"+description.replaceAll("'","")+"')";
                 }
                 stat.execute(SQLquery);
 		SQLquery = "SELECT photo, photo_sig FROM " + choosen_table + " WHERE photo_id = " + Integer.toString(nextval) + " FOR UPDATE";
@@ -857,6 +892,55 @@ public class DataBase {
         }
 
         /**
+         * Updates photo description in table of photos
+         * @param photo_id
+         *          Photo ID
+         * @param tablename
+         *          Name of table with pictures
+         * @see #ANIMAL_PHOTO
+         * @see #EXCREMENT_PHOTO
+         * @see #FEET_PHOTO
+         * @see #getPhotoDescription(int, java.lang.String)
+         * @param description
+         *          Description of a photo
+         * @throws SQLException
+         */
+        public void setPhotoDescription(int photo_id, String tablename, String description) throws SQLException{
+            Statement stat = con.createStatement();
+            String SQLquery = "UPDATE "+tablename+" SET description=? WHERE photo_id=?";
+            OraclePreparedStatement opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
+            opstmt.setString(1, description);
+            opstmt.setInt(2, photo_id);
+            opstmt.execute();
+            opstmt.close();
+            stat.close();
+        }
+
+        /**
+         * Updates association to geometry.
+         * @param photo_id
+         *          ID of a photo
+         * @param tablename
+         *          Name of a photo table
+         * @param move_id
+         *          ID of a geometry
+         * @see #ANIMAL_PHOTO
+         * @see #EXCREMENT_PHOTO
+         * @see #FEET_PHOTO
+         * @throws SQLException
+         */
+        public void setPhotoGeometry(int photo_id, String tablename, int move_id) throws SQLException{
+            Statement stat = con.createStatement();
+            String SQLquery = "UPDATE "+tablename+" SET move_id=? WHERE photo_id=?";
+            OraclePreparedStatement opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
+            opstmt.setInt(1, move_id);
+            opstmt.setInt(2, photo_id);
+            opstmt.execute();
+            opstmt.close();
+            stat.close();
+        }
+
+        /**
          * Alternative function for inserting animal into database
          * @param animal
          *          object Animal
@@ -900,6 +984,32 @@ public class DataBase {
                 SQLquery= rset.getString("description");
                 break;
             }
+            rset.close();
+            stat.close();
+	    return SQLquery;
+        }
+
+        /**
+         * Returns description for photo
+         * @param photo_id
+         *          Photo ID
+         * @param tablename
+         *          Tablename of photo table
+         * @see #ANIMAL_PHOTO
+         * @see #EXCREMENT_PHOTO
+         * @see #FEET_PHOTO
+         * @see #setPhotoDescription(int, java.lang.String, java.lang.String) 
+         * @return
+         * @throws SQLException
+         */
+        public String getPhotoDescription(int photo_id, String tablename) throws SQLException{
+            Statement stat = con.createStatement();
+            String SQLquery = "SELECT description FROM "+tablename+" WHERE photo_id="+Integer.toString(photo_id);
+            OracleResultSet rset = null;
+            rset = (OracleResultSet) stat.executeQuery(SQLquery);
+            SQLquery="";
+            rset.next();
+            SQLquery= rset.getString("description");
             rset.close();
             stat.close();
 	    return SQLquery;
@@ -1012,8 +1122,8 @@ public class DataBase {
             stat.execute("CREATE OR REPLACE TRIGGER animal_movement_trigger_i "+
                               "BEFORE INSERT ON animal_movement FOR EACH ROW "+
                               "BEGIN"+
-                              "  IF (:new.valid_from is NULL) THEN :NEW.valid_from:=sysdate; "+
-                              "  END IF; END; ");
+                              "  SELECT animal_movement_seq.nextval INTO :NEW.move_id FROM dual; "+
+                              "END; ");
             stat.execute("CREATE OR REPLACE PROCEDURE animal_movement_delete( "+
                               "my_move_id IN	NUMBER, date_to IN  DATE, date_from IN  DATE) IS "+
                               "temp_date DATE; temp_geometry MDSYS.SDO_GEOMETRY;"+
