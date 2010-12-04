@@ -106,7 +106,7 @@ public class DataBase {
          * @see #searchAnimals(java.lang.String, java.lang.String)
          * @see #searchNearestAnimals(java.awt.geom.Point2D)
          */
-        private final static int MAX_SEARCH_RESULTS=25;
+        private final static int MAX_SEARCH_RESULTS=50;
 
         /**
          * Data storage after searching
@@ -396,6 +396,43 @@ public class DataBase {
 		return;
 	}
 
+                /**
+         * searches animals in areas of an animal appareance
+         * @param animal_id
+         * @throws SQLException
+         */
+        public void searchAnimalsOnArea(int animal_id) throws SQLException {
+                String SQLquery = T2SQL.T2SQLprefix()
+                        +"SELECT geometry FROM animal_movement WHERE animal_id="+Integer.toString(animal_id);
+                OraclePreparedStatement opstmt = (OraclePreparedStatement) con.prepareStatement(T2SQL.temporal(SQLquery));
+                OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
+                searchResult.clear();
+		while (rset.next()) {
+                    try{
+                  SQLquery = T2SQL.T2SQLprefix()
+                        +"SELECT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat FROM animals a, animal_movement am WHERE a.animal_id=am.animal_id AND am.animal_id<>"
+                        +Integer.toString(animal_id)+" AND SDO_GEOM.SDO_INTERSECTION(am.geometry,?,1) IS NOT NULL";
+                  OraclePreparedStatement opstmt1 = (OraclePreparedStatement) con.prepareStatement(T2SQL.temporal(SQLquery));
+                  opstmt1.setSTRUCT(1, rset.getSTRUCT("geometry"));
+                  OracleResultSet rset1 = (OracleResultSet) opstmt1.executeQuery();
+		  while (rset1.next()) {
+                      Animal temp=new Animal();
+                      temp.setId(rset1.getInt("a.animal_id"));
+                      temp.setSpecies(rset1.getString("a.species"));
+                      temp.setSpeciesLat(rset1.getString("a.species_lat"));
+                      temp.setGenus(rset1.getString("a.genus"));
+                      temp.setGenusLat(rset1.getString("a.genus_lat"));
+                      if (searchResult.contains(temp)==false) searchResult.add(temp); //correct??
+		  }
+                  rset1.close();
+                  opstmt1.close();
+                  }catch(SQLException e){D.log("LEVEL2: "+e.getMessage());}
+                }
+                rset.close();
+                opstmt.close();
+		return;
+	}
+
         /**
          * Function finds all animals in database
          * @throws SQLException
@@ -404,6 +441,34 @@ public class DataBase {
                 OraclePreparedStatement opstmt=null;
 		String SQLquery = "SELECT animal_id,genus,species,genus_lat,species_lat FROM animals";
 		opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
+                OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
+                searchResult.clear();
+		while (rset.next()) {
+                    Animal temp=new Animal();
+                    temp.setId(rset.getInt("animal_id"));
+                    temp.setSpecies(rset.getString("species"));
+                    temp.setSpeciesLat(rset.getString("species_lat"));
+                    temp.setGenus(rset.getString("genus"));
+                    temp.setGenusLat(rset.getString("genus_lat"));
+                    searchResult.add(temp);
+		}
+                rset.close();
+		opstmt.close();
+		return;
+	}
+
+        /**
+         * Searches animals according area size
+         * @see #searchResult
+         * @see T2SQL
+         * @throws SQLException
+         * @throws NullPointerException
+         */
+        public void searchAnimalsByAreaSize() throws SQLException, NullPointerException {
+                OraclePreparedStatement opstmt=null;
+		String SQLquery = T2SQL.T2SQLprefix()+"SELECT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat, SUM(SDO_GEOM.SDO_AREA(am.geometry,0.1,'unit=SQ_KM')) AS area FROM animals a, animal_movement am "
+                        + "WHERE ROWNUM<="+MAX_SEARCH_RESULTS+" AND a.animal_id=am.animal_id GROUP BY a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat ORDER BY area DESC";
+		opstmt = (OraclePreparedStatement) con.prepareStatement(T2SQL.temporal(SQLquery));
                 OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
                 searchResult.clear();
 		while (rset.next()) {
@@ -1083,4 +1148,6 @@ public class DataBase {
             }
           }
         }
+
+
 }
