@@ -297,7 +297,7 @@ public class DataBase {
          * @throws SQLException
          * @throws IOException
          */
-        public void searchAnimal(String filename, String tablename) throws SQLException, IOException{
+        public void searchAnimalsByPicture(String filename, String tablename) throws SQLException, IOException{
             Statement stat = con.createStatement();
             int nextval=uploadImage(0,SEARCH_PHOTO,filename,0,"");
             String SQLquery = "SELECT DISTINCT animal.animal_id,animal.genus,animal.species,animal.genus_lat,animal.species_lat FROM "+
@@ -398,6 +398,111 @@ public class DataBase {
                     temp.setGenus(rset.getString("genus"));
                     temp.setGenusLat(rset.getString("genus_lat"));
                     searchResult.add(temp);
+		}
+                rset.close();
+		opstmt.close();
+		return;
+	}
+
+        /**
+         * Searches animals by their description
+         * @see #MAX_SEARCH_RESULTS
+         * @see #searchResult
+         * @param description
+         *          Your earch string. If null, nothing is found.
+         * @throws SQLException
+         */
+        public void searchAnimals(String description) throws SQLException {
+                if (description == null ? "" == null : description.equals("")) {
+		  searchResult.clear();
+                  return;
+		}
+                OraclePreparedStatement opstmt=null;
+		String SQLquery = "SELECT animal_id,genus,species,genus_lat,species_lat FROM animals WHERE ROWNUM <= "+Integer.toString(MAX_SEARCH_RESULTS)+" AND ";
+		SQLquery=SQLquery+ "(LOWER(description) LIKE ?)";
+                opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
+                opstmt.setString(1, "%"+description.toLowerCase()+"%");
+		OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
+                searchResult.clear();
+		while (rset.next()) {
+                    Animal temp=new Animal();
+                    temp.setId(rset.getInt("animal_id"));
+                    temp.setSpecies(rset.getString("species"));
+                    temp.setSpeciesLat(rset.getString("species_lat"));
+                    temp.setGenus(rset.getString("genus"));
+                    temp.setGenusLat(rset.getString("genus_lat"));
+                    searchResult.add(temp);
+		}
+                rset.close();
+		opstmt.close();
+		return;
+	}
+
+        /**
+         * Searches animal by their photo description
+         * @see #ANIMAL_PHOTO
+         * @see #EXCREMENT_PHOTO
+         * @see #FEET_PHOTO
+         * @see #MAX_SEARCH_RESULTS
+         * @param description
+         *          Your dearch string. If null, nothing is found.
+         * @throws SQLException
+         */
+        public void searchAnimalsByPicture(String description) throws SQLException {
+                if (description == null ? "" == null : description.equals("")) {
+		  searchResult.clear();
+                  return;
+		}
+                searchResult.clear();
+                OraclePreparedStatement opstmt=null;
+		String SQLquery = "SELECT DISTINCT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat FROM animals a, "
+                        +ANIMAL_PHOTO+ " p WHERE ROWNUM <= "+Integer.toString(MAX_SEARCH_RESULTS)+
+                        " AND a.animal_id=p.animal_id AND LOWER(p.description) LIKE ?";
+                opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
+                opstmt.setString(1, "%"+description.toLowerCase()+"%");
+		OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
+		while (rset.next()) {
+                    Animal temp=new Animal();
+                    temp.setId(rset.getInt("animal_id"));
+                    temp.setSpecies(rset.getString("species"));
+                    temp.setSpeciesLat(rset.getString("species_lat"));
+                    temp.setGenus(rset.getString("genus"));
+                    temp.setGenusLat(rset.getString("genus_lat"));
+                    searchResult.add(temp);
+		}
+                rset.close();
+                opstmt.close();
+                SQLquery = "SELECT DISTINCT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat FROM animals a, "
+                        +EXCREMENT_PHOTO+" p WHERE ROWNUM <= "+Integer.toString(MAX_SEARCH_RESULTS)+
+                        " AND a.animal_id=p.animal_id AND LOWER(p.description) LIKE ?";
+                opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
+                opstmt.setString(1, "%"+description.toLowerCase()+"%");
+		rset = (OracleResultSet) opstmt.executeQuery();
+		while (rset.next()) {
+                    Animal temp=new Animal();
+                    temp.setId(rset.getInt("animal_id"));
+                    temp.setSpecies(rset.getString("species"));
+                    temp.setSpeciesLat(rset.getString("species_lat"));
+                    temp.setGenus(rset.getString("genus"));
+                    temp.setGenusLat(rset.getString("genus_lat"));
+                    if (searchResult.contains(temp)==false) searchResult.add(temp);
+		}
+                rset.close();
+                opstmt.close();
+                SQLquery = "SELECT DISTINCT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat FROM animals a, "
+                        +FEET_PHOTO+" p WHERE ROWNUM <= "+Integer.toString(MAX_SEARCH_RESULTS)+
+                        " AND a.animal_id=p.animal_id AND LOWER(p.description) LIKE ?";
+                opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
+                opstmt.setString(1, "%"+description.toLowerCase()+"%");
+		rset = (OracleResultSet) opstmt.executeQuery();
+		while (rset.next()) {
+                    Animal temp=new Animal();
+                    temp.setId(rset.getInt("animal_id"));
+                    temp.setSpecies(rset.getString("species"));
+                    temp.setSpeciesLat(rset.getString("species_lat"));
+                    temp.setGenus(rset.getString("genus"));
+                    temp.setGenusLat(rset.getString("genus_lat"));
+                    if (searchResult.contains(temp)==false) searchResult.add(temp);
 		}
                 rset.close();
 		opstmt.close();
