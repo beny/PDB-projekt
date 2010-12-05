@@ -195,9 +195,62 @@ public class DataBase {
          */
         public void fillDatabase() throws SQLException, IOException {
             createDatabase();
+            Log.debug("Loading sql file: "+EXAMPLE_FILE);
             executeSQLFile(EXAMPLE_FILE);
+            Log.debug("Uploading example images...");
             uploadImage(1,ANIMAL_PHOTO,PICTURE_FOLDER+"1-1.jpeg",0,"Obrázek žirafy");
-            uploadImage(7,ANIMAL_PHOTO,PICTURE_FOLDER+"7-1.jpg",0,"Je to gibon?");
+            uploadImage(1,ANIMAL_PHOTO,PICTURE_FOLDER+"1-2.jpg",0,"Obrázek žirafy");
+            uploadImage(1,ANIMAL_PHOTO,PICTURE_FOLDER+"1-3.jpg",0,"Obrázek žirafy");
+            uploadImage(1,ANIMAL_PHOTO,PICTURE_FOLDER+"1-4.jpg",0,"Obrázek žirafy");
+            uploadImage(1,ANIMAL_PHOTO,PICTURE_FOLDER+"1-5.jpg",0,"Obrázek žirafy");
+            uploadImage(2,ANIMAL_PHOTO,PICTURE_FOLDER+"2-1.jpg",0,"Obrázek zebry");
+            uploadImage(2,ANIMAL_PHOTO,PICTURE_FOLDER+"2-2.jpg",0,"Obrázek zebry");
+            uploadImage(2,ANIMAL_PHOTO,PICTURE_FOLDER+"2-3.jpg",0,"Obrázek zebry");
+            uploadImage(3,ANIMAL_PHOTO,PICTURE_FOLDER+"3-1.jpg",0,"Stojící lev");
+            uploadImage(3,ANIMAL_PHOTO,PICTURE_FOLDER+"3-2.jpg",0,"Ležící lev");
+            uploadImage(3,ANIMAL_PHOTO,PICTURE_FOLDER+"3-3.jpg",0,"Ležící lvice");
+            uploadImage(4,ANIMAL_PHOTO,PICTURE_FOLDER+"4-1.jpg",0,"Obrázek hrocha");
+            uploadImage(4,ANIMAL_PHOTO,PICTURE_FOLDER+"4-2.jpg",0,"Zívající hroch");
+            uploadImage(4,ANIMAL_PHOTO,PICTURE_FOLDER+"4-3.jpg",0,"Obrázek hrocha");
+            uploadImage(5,ANIMAL_PHOTO,PICTURE_FOLDER+"5-1.jpg",0,"Ležící tygr");
+            uploadImage(5,ANIMAL_PHOTO,PICTURE_FOLDER+"5-2.jpg",0,"Pijící tygr");
+            uploadImage(5,ANIMAL_PHOTO,PICTURE_FOLDER+"5-3.jpg",0,"Stojící tygr");
+            uploadImage(5,ANIMAL_PHOTO,PICTURE_FOLDER+"5-4.jpg",0,"Potápějící se tygr");
+            uploadImage(5,ANIMAL_PHOTO,PICTURE_FOLDER+"5-5.jpg",0,"Ležící tygr");
+            uploadImage(6,ANIMAL_PHOTO,PICTURE_FOLDER+"6-1.jpg",0,"Ilustrace smilodona");
+            uploadImage(7,ANIMAL_PHOTO,PICTURE_FOLDER+"7-1.jpg",0,"Sedící gibon");
+            uploadImage(7,ANIMAL_PHOTO,PICTURE_FOLDER+"7-2.jpg",0,"Sedící gibon");
+            uploadImage(7,ANIMAL_PHOTO,PICTURE_FOLDER+"7-3.jpg",0,"Sedící gibon");
+            uploadImage(8,ANIMAL_PHOTO,PICTURE_FOLDER+"8-1.jpg",0,"Sedící šimpanz");
+            uploadImage(8,ANIMAL_PHOTO,PICTURE_FOLDER+"8-2.jpg",0,"Sedící šimpanze");
+            uploadImage(8,ANIMAL_PHOTO,PICTURE_FOLDER+"8-3.jpg",0,"Sedící šimpanz");
+            uploadImage(8,ANIMAL_PHOTO,PICTURE_FOLDER+"8-4.jpg",0,"Válející se šimpanz");
+            uploadImage(9,ANIMAL_PHOTO,PICTURE_FOLDER+"9-1.jpg",0,"Obrázek žraloka");
+            uploadImage(9,ANIMAL_PHOTO,PICTURE_FOLDER+"9-2.jpg",0,"Obrázek žraloka");
+            uploadImage(9,ANIMAL_PHOTO,PICTURE_FOLDER+"9-3.jpg",0,"Obrázek žraloka");
+            uploadImage(10,ANIMAL_PHOTO,PICTURE_FOLDER+"10-1.jpg",0,"Ilustrace lososa");
+            uploadImage(10,ANIMAL_PHOTO,PICTURE_FOLDER+"10-2.jpg",0,"Ilustrace lososa");
+            uploadImage(10,ANIMAL_PHOTO,PICTURE_FOLDER+"10-3.jpeg",0,"Obrázek lososa");
+            uploadImage(11,ANIMAL_PHOTO,PICTURE_FOLDER+"11-1.jpg",0,"Obrázek kapra");
+            uploadImage(11,ANIMAL_PHOTO,PICTURE_FOLDER+"11-2.jpg",0,"Obrázek kapra");
+
+            uploadImage(1,FEET_PHOTO,PICTURE_FOLDER+"1-1f.jpg",0,"Stopa žirafy");
+            uploadImage(1,FEET_PHOTO,PICTURE_FOLDER+"1-2f.jpg",0,"Stopa žirafy");
+            uploadImage(1,FEET_PHOTO,PICTURE_FOLDER+"1-3f.jpg",0,"Stopa žirafy");
+            uploadImage(1,FEET_PHOTO,PICTURE_FOLDER+"1-4f.jpg",0,"Stopa žirafy");
+            uploadImage(2,FEET_PHOTO,PICTURE_FOLDER+"2-1f.jpg",0,"Stopa zebry");
+            uploadImage(3,FEET_PHOTO,PICTURE_FOLDER+"3-1f.jpg",0,"Stopa lva");
+            uploadImage(3,FEET_PHOTO,PICTURE_FOLDER+"3-2f.png",0,"Stopa lva");
+            uploadImage(3,FEET_PHOTO,PICTURE_FOLDER+"3-3f.jpg",0,"Stopa lva");
+            uploadImage(4,FEET_PHOTO,PICTURE_FOLDER+"4-1f.jpg",0,"Stopa hrocha");
+            uploadImage(4,FEET_PHOTO,PICTURE_FOLDER+"4-2f.jpg",0,"Stopa hrocha");
+            uploadImage(5,FEET_PHOTO,PICTURE_FOLDER+"5-1f.jpg",0,"Stopa tigra");
+            uploadImage(5,FEET_PHOTO,PICTURE_FOLDER+"5-2f.jpg",0,"Stopa tigra");
+            uploadImage(8,FEET_PHOTO,PICTURE_FOLDER+"8-1f.jpg",0,"Stopa šimpanze");
+
+            uploadImage(1,EXCREMENT_PHOTO,PICTURE_FOLDER+"1-1e.jpg",0,"Trus žirafy");
+            Log.debug("Example images uploaded.");
+
         }
 
         /**
@@ -552,7 +605,7 @@ public class DataBase {
          * Function finds all animals in database
          * @throws SQLException
          */
-        public void searchAnimals() throws SQLException, NullPointerException {
+        public void searchAnimals() throws SQLException {
                 OraclePreparedStatement opstmt=null;
 		String SQLquery = "SELECT animal_id,genus,species,genus_lat,species_lat FROM animals";
 		opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
@@ -577,12 +630,45 @@ public class DataBase {
          * @see #searchResult
          * @see T2SQL
          * @throws SQLException
-         * @throws NullPointerException
          */
-        public void searchAnimalsByAreaSize() throws SQLException, NullPointerException {
+        public void searchAnimalsByAreaSize() throws SQLException {
                 OraclePreparedStatement opstmt=null;
-		String SQLquery = T2SQL.T2SQLprefix()+"SELECT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat, SUM(SDO_GEOM.SDO_AREA(am.geometry,0.1,'unit=SQ_KM')) AS area FROM animals a, animal_movement am "
-                        + "WHERE ROWNUM<="+MAX_SEARCH_RESULTS+" AND a.animal_id=am.animal_id GROUP BY a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat ORDER BY area DESC";
+		String SQLquery = T2SQL.T2SQLprefix()
+                        + "SELECT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat, SUM(SDO_GEOM.SDO_AREA(am.geometry,0.1,'unit=SQ_KM')) AS area "
+                        + "FROM animals a, animal_movement am "
+                        + "WHERE ROWNUM<="+MAX_SEARCH_RESULTS+" AND a.animal_id=am.animal_id "
+                        + "GROUP BY a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat "
+                        + "ORDER BY area DESC";
+		opstmt = (OraclePreparedStatement) con.prepareStatement(T2SQL.temporal(SQLquery));
+                OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
+                searchResult.clear();
+		while (rset.next()) {
+                    Animal temp=new Animal();
+                    temp.setId(rset.getInt("animal_id"));
+                    temp.setSpecies(rset.getString("species"));
+                    temp.setSpeciesLat(rset.getString("species_lat"));
+                    temp.setGenus(rset.getString("genus"));
+                    temp.setGenusLat(rset.getString("genus_lat"));
+                    searchResult.add(temp);
+		}
+                rset.close();
+		opstmt.close();
+		return;
+	}
+
+        /**
+         * Finds extinct animals for temporal settings
+         * @see #searchResult
+         * @throws SQLException
+         */
+        public void searchExtinctAnimals() throws SQLException {
+                OraclePreparedStatement opstmt=null;
+		String SQLquery = T2SQL.T2SQLprefix()
+                        + "SELECT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat, COUNT(am.move_id) "
+                        + "FROM animals a, animal_movement am "
+                        + "WHERE a.animal_id=am.animal_id(+) "
+                        + "GROUP BY a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat "
+                        + "HAVING COUNT(am.move_id)=0";
 		opstmt = (OraclePreparedStatement) con.prepareStatement(T2SQL.temporal(SQLquery));
                 OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
                 searchResult.clear();
@@ -751,6 +837,32 @@ public class DataBase {
 		}
                 rset.close();
 		stat.close();
+		return data;
+	}
+
+        /**
+         * Returns animal appareance of whole genus
+         * @param genus
+         *          Genus of an animal
+         * @param genus_lat
+         *          Latin genus of an animal
+         * @return HashMap<int move_id, JGeometry geometry>
+         * @throws SQLException
+         */
+        public Map<Integer, JGeometry> selectAppareance(String genus, String genus_lat)
+			throws SQLException {
+		String SQLquery = T2SQL.T2SQLprefix()+"SELECT move_id, geometry FROM animal_movement am, animals a "+
+                        "WHERE a.animal_id=am.animal_id AND (LOWER(a.genus) LIKE ? OR LOWER(a.genus_lat) LIKE ?)";
+                OraclePreparedStatement opstmt = (OraclePreparedStatement) con.prepareStatement(T2SQL.temporal(SQLquery));
+                opstmt.setString(1, genus);
+                opstmt.setString(2, genus_lat);
+		OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
+		HashMap<Integer, JGeometry> data = new HashMap<Integer, JGeometry>();
+		while (rset.next()) {
+			data.put(rset.getInt("move_id"), JGeometry.load((oracle.sql.STRUCT)rset.getSTRUCT("geometry")));
+		}
+                rset.close();
+		opstmt.close();
 		return data;
 	}
 
@@ -1361,7 +1473,7 @@ public class DataBase {
           String s = new String();
           StringBuilder sb = new StringBuilder();
           createDatabase();
-          BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "windows-1250"));
+          BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filename)));
           while((s = br.readLine()) != null){ sb.append(s); }
           br.close();
           String[] inst = sb.toString().split(";");
