@@ -152,6 +152,7 @@ public class DataBase {
 	 */
 	public void disconnect() throws SQLException {
 		if (isConnected()) con.close();
+                searchResult.clear();
 	}
 
         /**
@@ -169,11 +170,12 @@ public class DataBase {
                 Log.debug("Database deleted!");
 		Statement stat = con.createStatement();
 		stat.execute("CREATE TABLE animals (animal_id NUMBER PRIMARY KEY, genus VARCHAR(" + MAX_STRING + "), species VARCHAR(" + MAX_STRING + "), genus_lat VARCHAR(" + MAX_STRING + "), species_lat VARCHAR(" + MAX_STRING + "), description VARCHAR(" + MAX_LONG_STRING + "))");
-		stat.execute("CREATE TABLE "+ANIMAL_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature, move_id NUMBER, description VARCHAR("+MAX_LONG_STRING+"))");
-		stat.execute("CREATE TABLE "+EXCREMENT_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature, move_id NUMBER, description VARCHAR("+MAX_LONG_STRING+"))");
-		stat.execute("CREATE TABLE "+FEET_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature, move_id NUMBER, description VARCHAR("+MAX_LONG_STRING+"))");
+                con.commit();
+		stat.execute("CREATE TABLE "+ANIMAL_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER REFERENCES animals(animal_id) ON DELETE CASCADE, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature, move_id NUMBER, description VARCHAR("+MAX_LONG_STRING+"))");
+		stat.execute("CREATE TABLE "+EXCREMENT_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER REFERENCES animals(animal_id) ON DELETE CASCADE, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature, move_id NUMBER, description VARCHAR("+MAX_LONG_STRING+"))");
+		stat.execute("CREATE TABLE "+FEET_PHOTO+" (photo_id NUMBER PRIMARY KEY, animal_id NUMBER REFERENCES animals(animal_id) ON DELETE CASCADE, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature, move_id NUMBER, description VARCHAR("+MAX_LONG_STRING+"))");
                 stat.execute("CREATE TABLE "+SEARCH_PHOTO+" (photo_id NUMBER PRIMARY KEY, photo ORDSYS.ORDImage, photo_sig ORDSYS.ORDImageSignature)");
-		stat.execute("CREATE TABLE animal_movement (move_id NUMBER PRIMARY KEY, animal_id NUMBER, geometry MDSYS.SDO_GEOMETRY, valid_from DATE, valid_to DATE)");
+		stat.execute("CREATE TABLE animal_movement (move_id NUMBER PRIMARY KEY, animal_id NUMBER REFERENCES animals(animal_id) ON DELETE CASCADE, geometry MDSYS.SDO_GEOMETRY, valid_from DATE, valid_to DATE)");
                 con.commit();
                 try{
                   stat.execute("INSERT INTO USER_SDO_GEOM_METADATA VALUES ('animal_movement','geometry',SDO_DIM_ARRAY(SDO_DIM_ELEMENT('LONGITUDE',-180,180,100),SDO_DIM_ELEMENT('LATITUDE',-90, 90,100)),8307)");
@@ -1253,10 +1255,7 @@ public class DataBase {
             deleteIndex(SEARCH_PHOTO);
             Statement stat = con.createStatement();
             try {
-            	stat.execute("DROP INDEX animal_movement_sidx FORCE;");
-            } catch (SQLException e) {}
-            try {
-            	stat.execute("DROP TABLE animals");
+            	stat.execute("DROP INDEX animal_movement_sidx FORCE");
             } catch (SQLException e) {}
             try {
 		stat.execute("DROP SEQUENCE animals_seq");
@@ -1284,6 +1283,9 @@ public class DataBase {
             } catch (SQLException e) {}
             try {
             	stat.execute("DROP SEQUENCE animal_movement_seq");
+            } catch (SQLException e) {}
+            try {
+            	stat.execute("DROP TABLE animals");
             } catch (SQLException e) {}
             try {
 		stat.execute("DROP TABLE "+SEARCH_PHOTO);
@@ -1337,11 +1339,6 @@ public class DataBase {
                               "BEGIN "+
                               "  IF INSERTING THEN "+
                               "    SELECT animals_seq.nextval INTO :NEW.animal_id FROM dual; "+
-                              "  ELSIF DELETING THEN "+
-                              "    DELETE FROM "+ANIMAL_PHOTO+" WHERE animal_id=:old.animal_id; "+
-                              "    DELETE FROM "+EXCREMENT_PHOTO+" WHERE animal_id=:old.animal_id; "+
-                              "    DELETE FROM "+FEET_PHOTO+" WHERE animal_id=:old.animal_id; "+
-                              "    DELETE FROM animal_movement WHERE animal_id=:old.animal_id; "+
                               "  END IF; END;");
             stat.execute("CREATE OR REPLACE TRIGGER animal_movement_trigger_i "+
                               "BEFORE INSERT ON animal_movement FOR EACH ROW "+
@@ -1455,7 +1452,7 @@ public class DataBase {
         private void deleteIndex(String tablename){
         try {
             Statement stat = con.createStatement();
-            stat.execute("DROP INDEX " + tablename + "_idx FORCE;");
+            stat.execute("DROP INDEX " + tablename + "_idx FORCE");
             stat.close();
         } catch (SQLException ex) {}
         }
