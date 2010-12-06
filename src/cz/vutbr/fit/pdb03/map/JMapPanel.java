@@ -7,7 +7,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.geom.GeneralPath;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -125,7 +124,6 @@ public class JMapPanel extends JMapViewer {
 		comboElements = new JComboBox(elements);
 		comboElements.setBounds(50 + buttonSizeX + smallSpace, smallSpace, 120, buttonSizeY);
 		comboElements.setActionCommand(ACTION_CHANGE_TYPE);
-		comboElements.setSelectedIndex(0);
 		setMode(MODE_POINT);
 		comboElements.addActionListener(mapController);
 		add(comboElements);
@@ -141,6 +139,52 @@ public class JMapPanel extends JMapViewer {
 		setMapMarkerList(new LinkedList<MapMarker>());
 		setMapPolygonList(new LinkedList<List<MapMarker>>());
 		setMapRectangleList(new LinkedList<MapRectangle>());
+		mapController.clearMap();
+	}
+
+	/**
+	 * Metoda ktera naplni mapu z data z JGeometry
+	 * @param data
+	 */
+	public void setMapData(Map<Integer, JGeometry> data){
+
+		clear();
+		for (Map.Entry<Integer, JGeometry> entry : data.entrySet()){
+		    Log.debug("Geometrie s ID " + entry.getKey() + " je : " + entry.getValue());
+
+		    JGeometry geometry = entry.getValue();
+
+		    switch (geometry.getType()) {
+			case JGeometry.GTYPE_POINT:
+				addMapMarker(ConvertGeo.createPoint(geometry));
+				Log.debug("Geometrie je bod");
+				break;
+			case JGeometry.GTYPE_CURVE:
+				addMapLinestring(ConvertGeo.createLinestring(geometry));
+				Log.debug("Geometrie je krivka");
+				break;
+			case JGeometry.GTYPE_POLYGON:
+				addMapPolygon(ConvertGeo.createPolygon(geometry));
+				break;
+			case JGeometry.GTYPE_MULTIPOINT:
+				// TODO
+				Log.debug("Geometrie je mnozina bodu");
+				break;
+			case JGeometry.GTYPE_MULTICURVE:
+				// TODO
+				Log.debug("Geometrie je mnozina krivek");
+				break;
+			case JGeometry.GTYPE_MULTIPOLYGON:
+				// TODO
+				Log.debug("Geometrie je mnozina polygonu");
+				break;
+
+			default:
+				break;
+			}
+
+
+		}
 	}
 
 
@@ -222,62 +266,6 @@ public class JMapPanel extends JMapViewer {
 		}
 	}
 
-	/**
-	 * Metoda ktera naplni mapu z data z JGeometry
-	 * @param data
-	 */
-	public void setMapData(Map<Integer, JGeometry> data){
-
-		clear();
-		for (Map.Entry<Integer, JGeometry> entry : data.entrySet()){
-		    Log.debug("Geometrie s ID " + entry.getKey() + " je : " + entry.getValue());
-
-		    JGeometry geometry = entry.getValue();
-
-		    switch (geometry.getType()) {
-			case JGeometry.GTYPE_POINT:
-				Log.debug("Geometrie je bod");
-				break;
-			case JGeometry.GTYPE_CURVE:
-				Log.debug("Geometrie je krivka");
-				break;
-			case JGeometry.GTYPE_POLYGON:
-				Log.debug("Geometrie je polygon");
-
-				double[] points = geometry.getOrdinatesArray();
-				Log.debug("Geometrie ma " + geometry.getNumPoints() + " bodu");
-
-				// prevod geometrie na polygon
-				// TODO udelat na to tridu
-				ArrayList<MapMarker> polygon = new ArrayList<MapMarker>();
-				for (int i = 0; i < points.length; i++) {
-					double x = points[i];
-					i++;
-					double y = points[i];
-					MapPoint tmpPoint = new MapPoint(x, y, MapPoint.counter);
-					polygon.add(tmpPoint);
-				}
-				addMapPolygon(polygon);
-
-				break;
-			case JGeometry.GTYPE_MULTIPOINT:
-				Log.debug("Geometrie je mnozina bodu");
-				break;
-			case JGeometry.GTYPE_MULTICURVE:
-				Log.debug("Geometrie je mnozina krivek");
-				break;
-			case JGeometry.GTYPE_MULTIPOLYGON:
-				Log.debug("Geometrie je mnozina polygonu");
-				break;
-
-			default:
-				break;
-			}
-
-
-		}
-	}
-
 	public AnimalsDatabase getFrame() {
 		return frame;
 	}
@@ -345,5 +333,6 @@ public class JMapPanel extends JMapViewer {
 
 	public void setMode(int mode) {
 		this.mode = mode;
+		comboElements.setSelectedIndex(mode);
 	}
 }

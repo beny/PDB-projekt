@@ -56,7 +56,7 @@ public class ListController extends MouseAdapter {
 	public void mouseClicked(MouseEvent e) {
 
 		// normalni klik
-		if(e.getButton() == MouseEvent.BUTTON1){
+		if (e.getButton() == MouseEvent.BUTTON1) {
 
 			int index = frame.getList().locationToIndex(e.getPoint());
 			ListModel dlm = frame.getList().getModel();
@@ -64,15 +64,16 @@ public class ListController extends MouseAdapter {
 			Animal selectedAnimal = (Animal) dlm.getElementAt(index);
 			setSelectedAnimal(selectedAnimal);
 
-			Log.info("Ziskavam data o zvireti " + selectedAnimal);
-
 			try {
-				Map<Integer, JGeometry> spatialInfo = db.selectAppareance(selectedAnimal.getId());
-//				Log.debug("data o pozici zvirete v DB: " + spatialInfo);
+				Map<Integer, JGeometry> spatialInfo = db
+						.selectAppareance(selectedAnimal.getId());
 				map.setMapData(spatialInfo);
-			} catch (SQLException ex){
-				Log.error("Chyba pri hledani spatial info o zvireti " + selectedAnimal.getId());
+			} catch (SQLException ex) {
+				Log.error("Chyba pri hledani spatial info o zvireti "
+						+ selectedAnimal.getId());
 			}
+
+			Log.debug("Aktivni zvire: " + getSelectedAnimal());
 
 		}
 
@@ -88,6 +89,5 @@ public class ListController extends MouseAdapter {
 			dAnimal.setMode(AnimalDialog.UPDATE);
 			dAnimal.setVisible(true);
 		}
-
 	}
 }

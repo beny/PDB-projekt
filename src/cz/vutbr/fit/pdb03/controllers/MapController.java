@@ -1,6 +1,8 @@
 package cz.vutbr.fit.pdb03.controllers;
 
+import java.awt.MenuItem;
 import java.awt.Point;
+import java.awt.PopupMenu;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -11,7 +13,10 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JComboBox;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.JSeparator;
 
 import oracle.spatial.geometry.JGeometry;
 
@@ -24,6 +29,7 @@ import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.gui.AnimalsPanel;
+import cz.vutbr.fit.pdb03.map.ConvertGeo;
 import cz.vutbr.fit.pdb03.map.JMapPanel;
 import cz.vutbr.fit.pdb03.map.MapPoint;
 
@@ -34,13 +40,17 @@ import cz.vutbr.fit.pdb03.map.MapPoint;
 public class MapController extends DefaultMapController implements
 		ActionListener {
 
-	ArrayList<MapMarker> linestring;
+	// hlavni frame
 	AnimalsDatabase frame;
 
+	// databaze
 	DataBase db;
 
+	// mapa
 	JMapPanel map;
-	private GeneralPath tempPath;
+
+	// pomocne pole
+	ArrayList<MapMarker> linestring;
 
 	public MapController(JMapViewer map) {
 		super(map);
@@ -53,6 +63,13 @@ public class MapController extends DefaultMapController implements
 
 		// data
 		linestring = new ArrayList<MapMarker>();
+	}
+
+	/**
+	 * Metoda cistici mapu a docasne nastaveni
+	 */
+	public void clearMap(){
+		linestring.clear();
 	}
 
 	/**
@@ -144,11 +161,17 @@ public class MapController extends DefaultMapController implements
 				}
 			}
 		}
+
 		// pro prave tlacitko mysi
-		else if (e.getButton() == MouseEvent.BUTTON3) {
+		if (e.getButton() == MouseEvent.BUTTON3) {
 
 			if (map.isEditMode()) {
-				// deletePoints(e.getPoint());
+
+				JPopupMenu mContext = new JPopupMenu();
+				JMenuItem miDelete = new JMenuItem("Delete");
+				mContext.add(miDelete);
+				mContext.show(map, clickedPoint.x, clickedPoint.y);
+
 
 			}
 		}
@@ -160,21 +183,21 @@ public class MapController extends DefaultMapController implements
 		// doslo ke zmene v comboboxu
 		if(e.getActionCommand() == JMapPanel.ACTION_CHANGE_TYPE){
 
+			// vymaz mapu
 			map.clear();
-			linestring.clear(); // TODO doresit jak mazat docasna data
-			Log.debug("Mapa vymazana");
 
-			// TODO nastavit vse potrebne pro danou operaci
+			// nastaveni modu
 			JComboBox combo = ((JComboBox)e.getSource());
-
 			int mode = combo.getSelectedIndex();
 			map.setMode(mode);
-
-			Log.debug("Mod = " + mode);
+			Log.debug("Mod: " + mode);
 		}
 
 		// zmacknuto edit
 		if (e.getActionCommand() == JMapPanel.ACTION_EDIT) {
+
+			// vymaz mapu
+			map.clear();
 
 			AnimalsPanel animalsPanel = frame.getAnimalsPanel();
 
@@ -190,76 +213,50 @@ public class MapController extends DefaultMapController implements
 		// zmacknuto save
 		if (e.getActionCommand() == JMapPanel.ACTION_SAVE) {
 
+			JGeometry geometry = null;
+
+			// preved na spravnou geometrii
 			switch(map.getMode()){
 			case JMapPanel.MODE_POINT:
-
-				List<MapMarker> points = map.getMapMarkerList();
-
-				// TODO save to DB
-				Log.debug("Ukladam " + points.size() + " bodu");
-
+				geometry = ConvertGeo.createPoint(map.getMapMarkerList());
 				break;
 			case JMapPanel.MODE_LINESTRING:
-				if (linestring.size() > 0) {
-
-					// linestring uz je ulozen
-
-					// TODO save to DB
-					Log.debug("Ukladam linestring s " + linestring.size() + " ridicimi body");
-				}
+				geometry = ConvertGeo.createLinestring(linestring);
 				break;
 			case JMapPanel.MODE_POLYGON:
-				if (linestring.size() > 0) {
-
-					// odstran vse z mapy
-					map.clear();
-
-					// vytvor pole bodu
-
-					double[] coords = new double[linestring.size() * 2];
-
-					int i = 0;
-					for (MapMarker mapMarker : linestring) {
-						coords[i++] = mapMarker.getLat();
-						coords[i++] = mapMarker.getLon();
-					}
-
-					// vytvoreni polygonu
-					JGeometry geometry = JGeometry.createLinearPolygon(coords,
-							2, 8307);
-
-					// ulozeni do DB
-					try {
-						db.insertAppareance(frame.getAnimalsPanel().getSelectedAnimal().getId(), geometry);
-					} catch (SQLException ex) {
-						Log.error("Chyba pri ukladani polygonu do DB: " + ex.getMessage());
-					}
-
-					Log.debug("Ukladam polygon s " + linestring.size()
-							+ " ridicimi body");
-
-
-					Map<Integer, JGeometry> data = null;
-					// TODO nacti vsechny ulozene entity a zobraz
-					try {
-						data  = db.selectAppareance(frame.getAnimalsPanel().getSelectedAnimal().getId());
-					} catch (SQLException ex) {
-						Log.error("Chyba pri ziskavani geometrii u zvirete: " + ex.getMessage());
-					}
-
-					map.setMapData(data);
-				}
+				geometry = ConvertGeo.createPolygon(linestring);
 				break;
 			}
 
+			// ulozeni do DB
+			try {
+				db.insertAppareance(frame.getAnimalsPanel().getSelectedAnimal()
+						.getId(), geometry);
+			} catch (SQLException ex) {
+				Log.error("Chyba pri ukladani polygonu do DB: "
+						+ ex.getMessage());
+			}
 
-			// TODO smaz pomocne promenne
-			linestring.clear();
+			// odstran vse z mapy
+			map.clear();
+
+			// nacti vsechny data ulozena k prave vybranemu zvireti
+			Map<Integer, JGeometry> data = null;
+			try {
+				data = db.selectAppareance(frame.getAnimalsPanel()
+						.getSelectedAnimal().getId());
+			} catch (SQLException ex) {
+				Log.error("Chyba pri ziskavani geometrii u zvirete: "
+						+ ex.getMessage());
+			}
+
+			// vykresli vsechny data ke zvireti
+			map.setMapData(data);
 
 			// enable list
-			frame.getAnimalsPanel().setEnabled(true);
-
 			frame.setEnable(true);
+
+			// zrusit edit mod u mapy
 			map.setEditMode(false);
 		}
 
