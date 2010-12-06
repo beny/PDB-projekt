@@ -2,13 +2,16 @@ package cz.vutbr.fit.pdb03.controllers;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.sql.SQLException;
+import java.util.Map;
 
-import javax.swing.JList;
 import javax.swing.ListModel;
 
+import oracle.spatial.geometry.JGeometry;
 import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.DataBase;
+import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.dialogs.AnimalDialog;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
 import cz.vutbr.fit.pdb03.map.JMapPanel;
@@ -35,7 +38,6 @@ public class ListController extends MouseAdapter {
 
 		// pridani listeneru
 		map = frame.getMap();
-		map.addMouseListener(this);
 
 	}
 
@@ -58,7 +60,19 @@ public class ListController extends MouseAdapter {
 
 			int index = frame.getList().locationToIndex(e.getPoint());
 			ListModel dlm = frame.getList().getModel();
-			setSelectedAnimal((Animal) dlm.getElementAt(index));
+
+			Animal selectedAnimal = (Animal) dlm.getElementAt(index);
+			setSelectedAnimal(selectedAnimal);
+
+			Log.info("Ziskavam data o zvireti " + selectedAnimal);
+
+			try {
+				Map<Integer, JGeometry> spatialInfo = db.selectAppareance(selectedAnimal.getId());
+//				Log.debug("data o pozici zvirete v DB: " + spatialInfo);
+				map.setMapData(spatialInfo);
+			} catch (SQLException ex){
+				Log.error("Chyba pri hledani spatial info o zvireti " + selectedAnimal.getId());
+			}
 
 		}
 

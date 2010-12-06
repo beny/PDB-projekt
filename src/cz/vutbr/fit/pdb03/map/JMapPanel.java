@@ -1,42 +1,57 @@
 package cz.vutbr.fit.pdb03.map;
 
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Composite;
 import java.awt.Graphics;
-import java.awt.Polygon;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.geom.GeneralPath;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 
 import oracle.spatial.geometry.JGeometry;
-import oracle.spatial.geometry.JGeometry.Point;
 
 import org.openstreetmap.gui.jmapviewer.JMapViewer;
 import org.openstreetmap.gui.jmapviewer.MemoryTileCache;
 import org.openstreetmap.gui.jmapviewer.OsmTileLoader;
 import org.openstreetmap.gui.jmapviewer.OsmTileSource;
 import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
+import org.openstreetmap.gui.jmapviewer.interfaces.MapRectangle;
 
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.controllers.MapController;
-import cz.vutbr.fit.pdb03.dialogs.InfoDialog;
-import cz.vutbr.fit.pdb03.gui.AnimalsPanel;
-import cz.vutbr.fit.pdb03.gui.GUIManager;
 
 /**
  * Trida rozsirujici moznosti zakladni mapy
  * @author Ondřej Beneš <ondra.benes@gmail.com>
  *
  */
-public class JMapPanel extends JMapViewer implements ActionListener {
+public class JMapPanel extends JMapViewer {
 
 	private static final long serialVersionUID = -7269660504108541606L;
 
+	// konstanty akci
+	public final static String ACTION_EDIT = "EDIT";
+	public final static String ACTION_SAVE = "SAVE";
+	public final static String ACTION_CHANGE_TYPE = "CHANGE";
+
+	public final static int MODE_POINT = 0;
+	public final static int MODE_LINESTRING = 1;
+	public final static int MODE_POLYGON = 2;
+
 	// hlavni frame
 	AnimalsDatabase frame;
+
+	// kontroler
+	MapController mapController;
 
 	// databaze
 	private DataBase db;
@@ -44,17 +59,25 @@ public class JMapPanel extends JMapViewer implements ActionListener {
 	// indikace editacniho modu
 	private boolean editMode = false;
 
+	// druh akce ktera se tedka bude delat
+	private int mode = -1;
+
 	// komponenta pro mapu
 	JButton editButton, saveButton;
 	private JComboBox comboElements;
 
+	// data
+	List<List<MapMarker>> mapLinestringList;	// mnozina linestring
+	List<List<MapMarker>> mapPolygonList;	// mnozina polygonu
+
 	public JMapPanel(AnimalsDatabase frame) {
 		super(new MemoryTileCache(), 4);
 
+		// hlavni frame
 		this.frame = frame;
 
 		// kontrolery
-		new MapController(this);
+		mapController = new MapController(this);
 
 		// databaze
 		db = frame.getDb();
@@ -64,7 +87,12 @@ public class JMapPanel extends JMapViewer implements ActionListener {
 		setTileSource(new OsmTileSource.CycleMap());
 		setTileLoader(new OsmTileLoader(this));
 
+		// inicializace tlacitek
 		initializeEditButtons();
+
+		// inicializace datovych slozek
+		mapLinestringList = new LinkedList<List<MapMarker>>();
+		mapPolygonList = new LinkedList<List<MapMarker>>();
 	}
 
 	/**
@@ -79,7 +107,8 @@ public class JMapPanel extends JMapViewer implements ActionListener {
 		// edit tlacitko
 		editButton = new JButton("edit");
 		editButton.setBounds(50, smallSpace, buttonSizeX, buttonSizeY);
-		editButton.addActionListener(this);
+		editButton.setActionCommand(ACTION_EDIT);
+		editButton.addActionListener(mapController);
 		add(editButton);
 
 		// komponenty pro editaci
@@ -87,27 +116,209 @@ public class JMapPanel extends JMapViewer implements ActionListener {
 		// tlacitko pro ukladani
 		saveButton = new JButton("save");
 		saveButton.setBounds(50, smallSpace, buttonSizeX, buttonSizeY);
-		saveButton.addActionListener(this);
+		saveButton.setActionCommand(ACTION_SAVE);
+		saveButton.addActionListener(mapController);
 		add(saveButton);
 
 		// kombo pro vyber elementu
 		String[] elements = {"Výskyt", "Trasa", "Území"};
 		comboElements = new JComboBox(elements);
 		comboElements.setBounds(50 + buttonSizeX + smallSpace, smallSpace, 120, buttonSizeY);
-		// TODO add action listener nebo jaky se tady dava
+		comboElements.setActionCommand(ACTION_CHANGE_TYPE);
+		comboElements.setSelectedIndex(0);
+		setMode(MODE_POINT);
+		comboElements.addActionListener(mapController);
 		add(comboElements);
 
 		setEditMode(false);
 	}
 
+	/**
+	 * Smaze z mapy vsechny data
+	 */
+	public void clear(){
+		setMapLinestringList(new LinkedList<List<MapMarker>>());
+		setMapMarkerList(new LinkedList<MapMarker>());
+		setMapPolygonList(new LinkedList<List<MapMarker>>());
+		setMapRectangleList(new LinkedList<MapRectangle>());
+	}
+
+
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 
-		// TODO pridat moznost kreslit linestring
-		// TODO pridat moznost kreslit polygon
+		for (List<MapMarker> linestring : mapLinestringList) {
+			paintLinestring(g, linestring);
+		}
+
+		for (List<MapMarker> polygon : mapPolygonList) {
+			paintPolygon(g, polygon);
+		}
 	}
 
+	/**
+	 * Vykresleni jedne linestring
+	 * @param g graficky kontext
+	 * @param linestring samotna linestring
+	 */
+	protected void paintLinestring(Graphics g, List<MapMarker> linestring){
+		if(linestring != null){
+
+			Graphics2D g2 = (Graphics2D) g;
+
+			// inicializace linestring
+			GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD, linestring.size());
+
+			// zakresli prvni bod
+			MapMarker firstMarker = linestring.get(0);
+			Point firstPoint = getMapPosition(firstMarker.getLat(), firstMarker.getLon(), false);
+			path.moveTo(firstPoint.x, firstPoint.y);
+
+			// zbytek cary
+			for (MapMarker mapMarker : linestring) {
+				Point p = getMapPosition(mapMarker.getLat(), mapMarker.getLon(), false);
+				path.lineTo(p.x, p.y);
+			}
+
+			g2.draw(path);
+		}
+	}
+
+	/**
+	 * Vykresleni jednoho polygonu
+	 * @param g graficky kontext
+	 * @param polygon samotny polygon
+	 */
+	protected void paintPolygon(Graphics g, List<MapMarker> polygon){
+		if(polygon != null){
+
+			Graphics2D g2 = (Graphics2D) g;
+
+			// inicializace linestring
+			GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD, polygon.size());
+
+			// zakresli prvni bod
+			MapMarker firstMarker = polygon.get(0);
+			Point firstPoint = getMapPosition(firstMarker.getLat(), firstMarker.getLon(), false);
+			path.moveTo(firstPoint.x, firstPoint.y);
+
+			// zbytek cary
+			for (MapMarker mapMarker : polygon) {
+				Point p = getMapPosition(mapMarker.getLat(), mapMarker.getLon(), false);
+				path.lineTo(p.x, p.y);
+			}
+
+			// uzavreni polygonu
+			path.closePath();
+
+			Composite originComposite = g2.getComposite();
+			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) 0.5));
+			g2.setPaint(Color.BLUE);
+			g2.fill(path);
+			g2.setComposite(originComposite);
+			g2.setPaint(Color.BLACK);
+			g2.draw(path);
+		}
+	}
+
+	/**
+	 * Metoda ktera naplni mapu z data z JGeometry
+	 * @param data
+	 */
+	public void setMapData(Map<Integer, JGeometry> data){
+
+		clear();
+		for (Map.Entry<Integer, JGeometry> entry : data.entrySet()){
+		    Log.debug("Geometrie s ID " + entry.getKey() + " je : " + entry.getValue());
+
+		    JGeometry geometry = entry.getValue();
+
+		    switch (geometry.getType()) {
+			case JGeometry.GTYPE_POINT:
+				Log.debug("Geometrie je bod");
+				break;
+			case JGeometry.GTYPE_CURVE:
+				Log.debug("Geometrie je krivka");
+				break;
+			case JGeometry.GTYPE_POLYGON:
+				Log.debug("Geometrie je polygon");
+
+				double[] points = geometry.getOrdinatesArray();
+				Log.debug("Geometrie ma " + geometry.getNumPoints() + " bodu");
+
+				// prevod geometrie na polygon
+				// TODO udelat na to tridu
+				ArrayList<MapMarker> polygon = new ArrayList<MapMarker>();
+				for (int i = 0; i < points.length; i++) {
+					double x = points[i];
+					i++;
+					double y = points[i];
+					MapPoint tmpPoint = new MapPoint(x, y, MapPoint.counter);
+					polygon.add(tmpPoint);
+				}
+				addMapPolygon(polygon);
+
+				break;
+			case JGeometry.GTYPE_MULTIPOINT:
+				Log.debug("Geometrie je mnozina bodu");
+				break;
+			case JGeometry.GTYPE_MULTICURVE:
+				Log.debug("Geometrie je mnozina krivek");
+				break;
+			case JGeometry.GTYPE_MULTIPOLYGON:
+				Log.debug("Geometrie je mnozina polygonu");
+				break;
+
+			default:
+				break;
+			}
+
+
+		}
+	}
+
+	public AnimalsDatabase getFrame() {
+		return frame;
+	}
+
+	public void addMapLinestring(List<MapMarker> linestring){
+		mapLinestringList.add(linestring);
+		repaint();
+	}
+
+	public void removeMapLinestring(List<MapMarker> linestring){
+		mapLinestringList.remove(linestring);
+		repaint();
+	}
+
+	public List<List<MapMarker>> getMapLinestringList() {
+		return mapLinestringList;
+	}
+
+	public void setMapLinestringList(List<List<MapMarker>> mapLinestringList) {
+		this.mapLinestringList = mapLinestringList;
+		repaint();
+	}
+
+	public void addMapPolygon(List<MapMarker> polygon){
+		mapPolygonList.add(polygon);
+		repaint();
+	}
+
+	public void removeMapPolygon(List<MapMarker> polygon){
+		mapPolygonList.remove(polygon);
+		repaint();
+	}
+
+	public List<List<MapMarker>> getMapPolygonList() {
+		return mapPolygonList;
+	}
+
+	public void setMapPolygonList(List<List<MapMarker>> mapPolygonList) {
+		this.mapPolygonList = mapPolygonList;
+		repaint();
+	}
 
 	public boolean isEditMode() {
 		return editMode;
@@ -128,48 +339,11 @@ public class JMapPanel extends JMapViewer implements ActionListener {
 		comboElements.setVisible(visible);
 	}
 
-	@Override
-	public void actionPerformed(ActionEvent e) {
-
-		// zmacknuto edit
-		if (e.getSource() == editButton) {
-
-			AnimalsPanel animalsPanel = frame.getAnimalsPanel();
-
-			// pokud je nejake zvire vybrano
-			if (!animalsPanel.getList().isSelectionEmpty()) {
-				frame.setEnable(false);
-				setEditMode(true);
-			} else {
-				InfoDialog dInfo = new InfoDialog("Musíte vybrat nějaké zvíře");
-				GUIManager.moveToCenter(dInfo, frame);
-				dInfo.setVisible(true);
-			}
-		}
-
-		// zmacknuto save
-		if(e.getSource() == saveButton){
-
-
-			// TODO save elements
-			Log.debug("pro zvire " + frame.getAnimalsPanel().getSelectedAnimal());
-
-			for (MapMarker mapMarker : getMapMarkerList()) {
-				JGeometry.Point point = new Point();
-				point.set(mapMarker.getLat(), mapMarker.getLon());
-
-
-			}
-
-			// TODO odstranit oznaceni bodu/elementu
-
-			// enable list
-			frame.getAnimalsPanel().setEnabled(true);
-
-			frame.setEnable(true);
-			setEditMode(false);
-		}
-
+	public int getMode() {
+		return mode;
 	}
 
+	public void setMode(int mode) {
+		this.mode = mode;
+	}
 }

@@ -8,11 +8,11 @@ import java.sql.SQLException;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.Log;
-import cz.vutbr.fit.pdb03.dialogs.AboutDialog;
 import cz.vutbr.fit.pdb03.dialogs.AnimalDialog;
 import cz.vutbr.fit.pdb03.dialogs.ConnectDialog;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
@@ -111,9 +111,7 @@ public class MenuController implements ActionListener{
 
 		// informacni dialog
 		if(event.getSource() == miAboutInfo){
-			AboutDialog dAbout = new AboutDialog();
-			GUIManager.moveToCenter(dAbout, frame);
-			dAbout.setVisible(true);
+			JOptionPane.showMessageDialog(frame, "Autoři aplikace: dlouhý, široký a bystrozraký", "O aplikaci", JOptionPane.INFORMATION_MESSAGE);
 		}
 
 		// pripojen/odpojeni k databazi

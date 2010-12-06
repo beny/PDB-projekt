@@ -9,7 +9,6 @@ import javax.swing.JList;
 import javax.swing.JSplitPane;
 
 import cz.vutbr.fit.pdb03.controllers.MenuController;
-import cz.vutbr.fit.pdb03.controllers.MouseController;
 import cz.vutbr.fit.pdb03.controllers.WindowController;
 import cz.vutbr.fit.pdb03.dialogs.ConnectDialog;
 import cz.vutbr.fit.pdb03.gui.AnimalsPanel;
@@ -60,7 +59,6 @@ public class AnimalsDatabase extends JFrame  {
 		map = new JMapPanel(this);
 
 		// nastaveni kontroleru
-		new MouseController(this);
 		new WindowController(this);
 		menuController = new MenuController(this);
 
