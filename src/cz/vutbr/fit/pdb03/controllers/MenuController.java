@@ -26,9 +26,9 @@ public class MenuController implements ActionListener{
 
 	// menu items
 	private JMenuBar mBar;
-	private JMenu mDatabase, mAbout, mAnimal, mPreferences;
-	private JMenuItem miAboutInfo, miDatabaseConnection, miDatabaseCreate, miDatabaseSample,
-			miAnimalRefresh, miAnimalAdd, miPreferences;
+	private JMenu mDatabase, mAnimal, mApplication;
+	private JMenuItem miApplicationInfo, miDatabaseConnection, miDatabaseCreate, miDatabaseSample,
+			miAnimalRefresh, miAnimalAdd, miApplicationPreferences;
 
 	// dialog
 	private ConnectDialog dConnect;
@@ -51,6 +51,18 @@ public class MenuController implements ActionListener{
 
 		// hlavniho menu
 		mBar = new JMenuBar();
+
+		// menu aplikace
+		mApplication = new JMenu("Aplikace");
+		mBar.add(mApplication);
+
+		miApplicationPreferences = new JMenuItem("Nastavení aplikace");
+		mApplication.add(miApplicationPreferences);
+		miApplicationPreferences.addActionListener(this);
+
+		miApplicationInfo = new JMenuItem("O aplikaci");
+		miApplicationInfo.addActionListener(this);
+		mApplication.add(miApplicationInfo);
 
 		// menu databaze
 		mDatabase = new JMenu("Databáze");
@@ -80,22 +92,6 @@ public class MenuController implements ActionListener{
 		miAnimalRefresh.addActionListener(this);
 		mAnimal.add(miAnimalRefresh);
 
-		// menu nastaveni
-		mPreferences = new JMenu("Nastavení");
-		mBar.add(mPreferences);
-
-		miPreferences = new JMenuItem("Nastavení aplikace");
-		mPreferences.add(miPreferences);
-		miPreferences.addActionListener(this);
-
-		// menu about
-		mAbout = new JMenu("About");
-		mBar.add(mAbout);
-
-		miAboutInfo = new JMenuItem("O aplikaci");
-		miAboutInfo.addActionListener(this);
-		mAbout.add(miAboutInfo);
-
 		frame.setJMenuBar(mBar);
 	}
 
@@ -119,7 +115,7 @@ public class MenuController implements ActionListener{
 
 
 		// informacni dialog
-		if(event.getSource() == miAboutInfo){
+		if(event.getSource() == miApplicationInfo){
 			JOptionPane.showMessageDialog(frame, "Autoři aplikace: dlouhý, široký a bystrozraký", "O aplikaci", JOptionPane.INFORMATION_MESSAGE);
 		}
 
@@ -180,7 +176,7 @@ public class MenuController implements ActionListener{
 		}
 
 		// obrazovka s nastavenim
-		if(event.getSource() == miPreferences){
+		if(event.getSource() == miApplicationPreferences){
 			PreferencesDialog dPreferences = new PreferencesDialog();
 			GUIManager.moveToCenter(dPreferences, frame);
 			dPreferences.setVisible(true);
