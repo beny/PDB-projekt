@@ -27,7 +27,7 @@ public class PreferencesDialog extends JDialog {
 	private final static int MAX_DATE = 10;
 
 	private JPanel pGPS, pTime;
-	private JButton bMapCoord, bCancel, bSave;
+	private JButton bCancel, bSave;
 	private JLabel lLat, lLon, lFrom, lTo;
 	private JTextField tLat, tLon, tDate, tFrom, tTo;
 	private JRadioButton rbNow, rbData, rbInterval, rbAll;
@@ -38,8 +38,8 @@ public class PreferencesDialog extends JDialog {
 		// vlastnosti okna
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setModal(true);
-		setMinimumSize(new Dimension(500, 300));
-		setPreferredSize(new Dimension(500, 300));
+		setMinimumSize(new Dimension(500, 270));
+		setPreferredSize(new Dimension(500, 270));
 		setResizable(false);
 
 		// tab GPS
@@ -53,13 +53,27 @@ public class PreferencesDialog extends JDialog {
 		tpSections.addTab("GPS", pGPS);
 		tpSections.addTab("Čas", pTime);
 
-		add(tpSections);
-
 		// tlacitka
-		// TODO
 		bCancel = new JButton("Cancel");
 		bSave = new JButton("Save");
 
+		JPanel buttons = new JPanel();
+		buttons.add(bCancel);
+		buttons.add(bSave);
+
+		// layout
+		setLayout(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+
+		gbc.gridx = gbc.gridy = 0;
+		gbc.gridwidth = GridBagConstraints.REMAINDER;
+
+		add(tpSections, gbc);
+
+		gbc.gridwidth = 1;
+		gbc.anchor = GridBagConstraints.LINE_END;
+		gbc.gridy++;
+		add(buttons, gbc);
 	}
 
 	private void initTimeTab() {
@@ -97,9 +111,9 @@ public class PreferencesDialog extends JDialog {
 		pTime.add(rbNow, gbc);
 
 		gbc.gridy++;
-		gbc.gridwidth = 4;
 		pTime.add(rbData, gbc);
-		gbc.gridx = 4;
+		gbc.gridwidth = GridBagConstraints.REMAINDER;
+		gbc.gridx = 2;
 		pTime.add(tDate, gbc);
 
 		gbc.gridwidth = 1;
@@ -149,11 +163,5 @@ public class PreferencesDialog extends JDialog {
 
 		tLon = new JTextField(MAX_COORDS);
 		pGPS.add(tLon, gbc);
-
-		gbc.gridx = 1;
-		gbc.gridy = 2;
-
-		bMapCoord = new JButton("Získej souřadnice z mapy");
-		pGPS.add(bMapCoord, gbc);
 	}
 }
