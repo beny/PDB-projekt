@@ -15,6 +15,7 @@ import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.dialogs.AnimalDialog;
 import cz.vutbr.fit.pdb03.dialogs.ConnectDialog;
+import cz.vutbr.fit.pdb03.dialogs.PreferencesDialog;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
 import cz.vutbr.fit.pdb03.map.JMapPanel;
 
@@ -25,9 +26,9 @@ public class MenuController implements ActionListener{
 
 	// menu items
 	private JMenuBar mBar;
-	private JMenu mDatabase, mAbout, mAnimal;
+	private JMenu mDatabase, mAbout, mAnimal, mPreferences;
 	private JMenuItem miAboutInfo, miDatabaseConnection, miDatabaseCreate, miDatabaseSample,
-			miAnimalRefresh, miAnimalAdd;
+			miAnimalRefresh, miAnimalAdd, miPreferences;
 
 	// dialog
 	private ConnectDialog dConnect;
@@ -78,6 +79,14 @@ public class MenuController implements ActionListener{
 		miAnimalRefresh = new JMenuItem("Obnov seznam zvířat");
 		miAnimalRefresh.addActionListener(this);
 		mAnimal.add(miAnimalRefresh);
+
+		// menu nastaveni
+		mPreferences = new JMenu("Nastavení");
+		mBar.add(mPreferences);
+
+		miPreferences = new JMenuItem("Nastavení aplikace");
+		mPreferences.add(miPreferences);
+		miPreferences.addActionListener(this);
 
 		// menu about
 		mAbout = new JMenu("About");
@@ -168,6 +177,13 @@ public class MenuController implements ActionListener{
 			}
 
 			frame.refreshAnimalsList();
+		}
+
+		// obrazovka s nastavenim
+		if(event.getSource() == miPreferences){
+			PreferencesDialog dPreferences = new PreferencesDialog();
+			GUIManager.moveToCenter(dPreferences, frame);
+			dPreferences.setVisible(true);
 		}
 
 		// pridani zvirete
