@@ -1,6 +1,7 @@
 package cz.vutbr.fit.pdb03.map;
 
 import java.awt.AlphaComposite;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Composite;
 import java.awt.Graphics;
@@ -46,6 +47,10 @@ public class JMapPanel extends JMapViewer {
 	public final static int MODE_LINESTRING = 1;
 	public final static int MODE_POLYGON = 2;
 
+	private final static int MY_POSITION_SIZE = 10;
+
+	private final static BasicStroke stroke = new BasicStroke(1.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND);
+
 	// hlavni frame
 	AnimalsDatabase frame;
 
@@ -68,6 +73,7 @@ public class JMapPanel extends JMapViewer {
 	// data
 	List<List<MapMarker>> mapLinestringList;	// mnozina linestring
 	List<List<MapMarker>> mapPolygonList;	// mnozina polygonu
+	MapMarker myPosition;	// moje poloha
 
 	public JMapPanel(AnimalsDatabase frame) {
 		super(new MemoryTileCache(), 4);
@@ -92,6 +98,10 @@ public class JMapPanel extends JMapViewer {
 		// inicializace datovych slozek
 		mapLinestringList = new LinkedList<List<MapMarker>>();
 		mapPolygonList = new LinkedList<List<MapMarker>>();
+
+		myPosition = new MapPoint(49, 14, MapPoint.counter);
+
+		setDisplayPositionByLatLon(50, 9, 2);
 	}
 
 	/**
@@ -192,12 +202,24 @@ public class JMapPanel extends JMapViewer {
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 
+		// vykresli linestringy
 		for (List<MapMarker> linestring : mapLinestringList) {
 			paintLinestring(g, linestring);
 		}
 
+		// vykresli polygony
 		for (List<MapMarker> polygon : mapPolygonList) {
 			paintPolygon(g, polygon);
+		}
+
+		// vykresli moji polohu
+
+		int sizeHorizontal = MY_POSITION_SIZE / 2;
+		g.setColor(Color.RED);
+		Point myPositionPoint = getMapPosition(myPosition.getLat(), myPosition.getLon());
+		if(myPositionPoint != null){
+			g.fillOval(myPositionPoint.x - sizeHorizontal, myPositionPoint.y - sizeHorizontal,
+					MY_POSITION_SIZE, MY_POSITION_SIZE);
 		}
 	}
 
@@ -225,6 +247,8 @@ public class JMapPanel extends JMapViewer {
 				path.lineTo(p.x, p.y);
 			}
 
+			g2.setColor(Color.BLUE);
+			g2.setStroke(stroke);
 			g2.draw(path);
 		}
 	}
@@ -256,12 +280,12 @@ public class JMapPanel extends JMapViewer {
 			// uzavreni polygonu
 			path.closePath();
 
+			g2.setPaint(Color.BLUE);
+			g2.setStroke(stroke);
 			Composite originComposite = g2.getComposite();
 			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) 0.5));
-			g2.setPaint(Color.BLUE);
 			g2.fill(path);
 			g2.setComposite(originComposite);
-			g2.setPaint(Color.BLACK);
 			g2.draw(path);
 		}
 	}
@@ -305,6 +329,15 @@ public class JMapPanel extends JMapViewer {
 
 	public void setMapPolygonList(List<List<MapMarker>> mapPolygonList) {
 		this.mapPolygonList = mapPolygonList;
+		repaint();
+	}
+
+	public MapMarker getMyPosition() {
+		return myPosition;
+	}
+
+	public void setMyPosition(MapMarker myPosition) {
+		this.myPosition = myPosition;
 		repaint();
 	}
 

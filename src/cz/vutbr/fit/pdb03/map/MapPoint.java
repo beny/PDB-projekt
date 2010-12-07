@@ -17,7 +17,7 @@ public class MapPoint extends MapMarkerDot {
 
 	private int id;
 	private static int pointSize = 5;
-	private static Color color = Color.BLACK;
+	private static Color color = Color.BLUE;
 
 	public static int counter = 0;
 

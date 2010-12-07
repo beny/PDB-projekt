@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Vector;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JSplitPane;
@@ -52,6 +53,7 @@ public class AnimalsDatabase extends JFrame  {
 	public AnimalsDatabase(String title) {
 		super(title);
 
+		setIconImage(new ImageIcon(AnimalsDatabase.class.getResource("images/icon.png")).getImage());
 		// databaze
 		db = new DataBase();
 

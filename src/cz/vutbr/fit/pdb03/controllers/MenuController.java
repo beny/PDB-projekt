@@ -56,7 +56,7 @@ public class MenuController implements ActionListener{
 		mApplication = new JMenu("Aplikace");
 		mBar.add(mApplication);
 
-		miApplicationPreferences = new JMenuItem("Nastavení aplikace");
+		miApplicationPreferences = new JMenuItem("Nastavení");
 		mApplication.add(miApplicationPreferences);
 		miApplicationPreferences.addActionListener(this);
 
@@ -116,7 +116,7 @@ public class MenuController implements ActionListener{
 
 		// informacni dialog
 		if(event.getSource() == miApplicationInfo){
-			JOptionPane.showMessageDialog(frame, "Autoři aplikace: dlouhý, široký a bystrozraký", "O aplikaci", JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(frame, "Autoři aplikace: xizakt00, xsrnec01 a xbenes00", "O aplikaci do předmětu PDB", JOptionPane.INFORMATION_MESSAGE);
 		}
 
 		// pripojen/odpojeni k databazi
@@ -177,7 +177,7 @@ public class MenuController implements ActionListener{
 
 		// obrazovka s nastavenim
 		if(event.getSource() == miApplicationPreferences){
-			PreferencesDialog dPreferences = new PreferencesDialog();
+			PreferencesDialog dPreferences = new PreferencesDialog(frame);
 			GUIManager.moveToCenter(dPreferences, frame);
 			dPreferences.setVisible(true);
 		}

@@ -4,27 +4,37 @@ import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+
+import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
+
+import cz.vutbr.fit.pdb03.AnimalsDatabase;
+import cz.vutbr.fit.pdb03.map.MapPoint;
 
 /**
  * Dialog s nastavenim
  *
  *
  */
-public class PreferencesDialog extends JDialog {
+public class PreferencesDialog extends JDialog implements ActionListener {
 
 	private final static long serialVersionUID = 2726995694418479544L;
 
 	private final static int MAX_COORDS = 12;
 	private final static int MAX_DATE = 10;
+
+	private AnimalsDatabase frame;
 
 	private JPanel pGPS, pTime;
 	private JButton bCancel, bSave;
@@ -33,7 +43,9 @@ public class PreferencesDialog extends JDialog {
 	private JRadioButton rbNow, rbData, rbInterval, rbAll;
 
 
-	public PreferencesDialog() {
+	public PreferencesDialog(AnimalsDatabase frame) {
+
+		this.frame = frame;
 
 		// vlastnosti okna
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -55,7 +67,9 @@ public class PreferencesDialog extends JDialog {
 
 		// tlacitka
 		bCancel = new JButton("Cancel");
+		bCancel.addActionListener(this);
 		bSave = new JButton("Save");
+		bSave.addActionListener(this);
 
 		JPanel buttons = new JPanel();
 		buttons.add(bCancel);
@@ -74,6 +88,9 @@ public class PreferencesDialog extends JDialog {
 		gbc.anchor = GridBagConstraints.LINE_END;
 		gbc.gridy++;
 		add(buttons, gbc);
+
+		// nastaveni udaju o moji pozici
+		setMyPosition(frame.getMap().getMyPosition());
 	}
 
 	private void initTimeTab() {
@@ -163,5 +180,39 @@ public class PreferencesDialog extends JDialog {
 
 		tLon = new JTextField(MAX_COORDS);
 		pGPS.add(tLon, gbc);
+	}
+
+	public void setMyPosition(MapMarker myPosition){
+		tLat.setText(myPosition.getLat() + "");
+		tLon.setText(myPosition.getLon() + "");
+	}
+
+	public MapMarker getMyPosition() throws NumberFormatException{
+		// TODO nejaka kontrola
+		return new MapPoint(Double.parseDouble(tLat.getText()), Double.parseDouble(tLon.getText()), MapPoint.counter);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+
+		// zmacknuto cancel
+		if(e.getSource() == bCancel){
+			dispose();
+		}
+
+		// zmacknuto save
+		if(e.getSource() == bSave){
+
+			try {
+				frame.getMap().setMyPosition(getMyPosition());
+				dispose();
+			} catch (NumberFormatException ex) {
+				JOptionPane.showMessageDialog(this,
+						"Souřadnice nejsou ve správném formátu", "Chyba údajů",
+						JOptionPane.ERROR_MESSAGE);
+			}
+			// TODO ulozeni nastaveni casu
+
+		}
 	}
 }

@@ -1,12 +1,10 @@
 package cz.vutbr.fit.pdb03.controllers;
 
-import java.awt.MenuItem;
 import java.awt.Point;
-import java.awt.PopupMenu;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.awt.geom.GeneralPath;
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +14,6 @@ import javax.swing.JComboBox;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
-import javax.swing.JSeparator;
 
 import oracle.spatial.geometry.JGeometry;
 
@@ -119,6 +116,18 @@ public class MapController extends DefaultMapController implements
 		map.repaint();
 	}
 
+	/**
+	 * Zaokrouhlovaci metoda
+	 * @param d cislo ktere chceme zaokrouhlit
+	 * @param decimalPlace na kolik mist
+	 * @return zaokrouhlene cislo
+	 */
+	public static double round(double d, int decimalPlace) {
+		BigDecimal bd = new BigDecimal(Double.toString(d));
+		bd = bd.setScale(decimalPlace, BigDecimal.ROUND_HALF_UP);
+		return bd.doubleValue();
+	}
+
 	@Override
 	public void mouseClicked(MouseEvent e) {
 
@@ -130,6 +139,7 @@ public class MapController extends DefaultMapController implements
 		// pro leve tlacitko mysi
 		if (e.getButton() == MouseEvent.BUTTON1) {
 
+			// editacni mod
 			if (map.isEditMode()) {
 				switch (map.getMode()) {
 				case JMapPanel.MODE_POINT:
@@ -158,6 +168,20 @@ public class MapController extends DefaultMapController implements
 
 				default:
 					break;
+				}
+			}
+			// needitacni mod
+			else {
+				int changePosition = JOptionPane.showConfirmDialog(
+						frame,
+						"Chcete změnit vaší pozici na souřadnice\n"
+								+ round(clickedCoordinate.getLat(), 4) + " x "
+								+ round(clickedCoordinate.getLon(), 4) + " ?",
+						"Nová pozice", JOptionPane.YES_NO_OPTION,
+						JOptionPane.QUESTION_MESSAGE);
+
+				if(changePosition == JOptionPane.YES_OPTION){
+					map.setMyPosition(clickedMapPoint);
 				}
 			}
 		}
