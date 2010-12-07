@@ -34,6 +34,22 @@ public final class T2SQL {
     private static String mode="";
     private static DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
     private static DateFormat dateFormatIn = new SimpleDateFormat("yyyy/MM/dd'~'HH:mm:ss");
+    /**
+     * String constant for NONSEQUENCED VALIDTIME - no temporal restrictions
+     */
+    public static final String NO_RESTRICTIONS = "NONSEQUENCED VALIDTIME";
+    /**
+     * String constant for VALIDTIME PERIOD - valid interval
+     */
+    public static final String INTERVAL = "VALIDTIME PERIOD";
+    /**
+     * String constant for VALIDTIME DATE - for valid time
+     */
+    public static final String DATETIME = "VALIDTIME DATE";
+    /**
+     * String constant for NOW - current time
+     */
+    public static final String NOW = "";
 
     /**
      * Function sets nonsequenced validtime
@@ -42,7 +58,7 @@ public final class T2SQL {
      * @see #setValidationDates(java.util.Date, java.util.Date)
      */
     public static void setNoTemporalRestrictions(){
-        setMode("NONSEQUENCED VALIDTIME");
+        setMode(NO_RESTRICTIONS);
         validFrom=null;
         validTo=null;
     }
@@ -60,7 +76,7 @@ public final class T2SQL {
     public static void setValidationDates(Date from, Date to){
         validFrom=from;
         validTo=to;
-        setMode("VALIDTIME PERIOD");
+        setMode(INTERVAL);
     }
 
     /**
@@ -71,7 +87,7 @@ public final class T2SQL {
      */
     public static void setCurrentTime(){
         setValidationDates(null,null);
-        setMode("");
+        setMode(NOW);
     }
 
     /**
@@ -83,7 +99,7 @@ public final class T2SQL {
      */
     public static void setValidationDate(Date date){
         setValidationDates(date,date);
-        setMode("VALIDTIME DATE");
+        setMode(DATETIME);
     }
 
     /**
@@ -108,6 +124,10 @@ public final class T2SQL {
      * @see #setNoTemporalRestrictions()
      * @see #setValidationDates(java.util.Date, java.util.Date)
      * @see #setValidationDate(java.util.Date)
+     * @see #DATETIME
+     * @see #INTERVAL
+     * @see #NOW
+     * @see #NO_RESTRICTIONS
      * @return Setted mode
      */
     public static String getMode(){
@@ -125,7 +145,7 @@ public final class T2SQL {
     public static String temporal(String T2SQLString){
         T2SQLString=T2SQLString.trim();
         String SQLString="";
-        if (T2SQLString.startsWith("NONSEQUENCED VALIDTIME ")){
+        if (T2SQLString.startsWith(NO_RESTRICTIONS+" ")){
             SQLString=(T2SQLString.substring(23)).trim();
             if (SQLString.startsWith("DELETE")){
                 SQLString=SQLString.substring(SQLString.indexOf("move_id")+7);
@@ -142,7 +162,7 @@ public final class T2SQL {
                 String geometry=(SQLString.substring(point1u+1,point2u)).trim();
                 SQLString="CALL(animal_movement_update("+geometry+", "+move_id+", null, null))";
             }
-        } else if (T2SQLString.startsWith("VALIDTIME PERIOD [")){
+        } else if (T2SQLString.startsWith(INTERVAL+" [")){
             int point1=T2SQLString.indexOf('[');
             int point2=T2SQLString.indexOf('-',point1);
             int point3=T2SQLString.indexOf(')',point2);
@@ -174,7 +194,7 @@ public final class T2SQL {
                 String geometry=(SQLString.substring(point1u+1,point2u)).trim();
                 SQLString="CALL(animal_movement_update("+geometry+", "+move_id+",'"+dateFormat.format(day_from)+"','"+dateFormat.format(day_to)+"'))";
             }
-        } else if (T2SQLString.startsWith("VALIDTIME DATE ")){
+        } else if (T2SQLString.startsWith(DATETIME+" ")){
             int point1=15;
             while (T2SQLString.charAt(point1)==' '){
                 point1++;
@@ -242,11 +262,11 @@ public final class T2SQL {
      */
     public static String T2SQLprefix(){
         String SQLstring="";
-        if (mode.equals("NONSEQUENCED VALIDTIME")){
+        if (mode.equals(NO_RESTRICTIONS)){
             SQLstring=mode+" ";
-        } else if (mode.equals("VALIDTIME DATE")){
+        } else if (mode.equals(DATETIME)){
             SQLstring=mode+" "+dateFormatIn.format(validFrom)+" ";
-        } else if (mode.equals("VALIDTIME PERIOD")){
+        } else if (mode.equals(INTERVAL)){
             SQLstring=mode+" ["+dateFormatIn.format(validFrom)+" - "+dateFormatIn.format(validTo)+") ";
         }
         return SQLstring;
