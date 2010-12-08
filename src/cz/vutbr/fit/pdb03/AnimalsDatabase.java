@@ -139,7 +139,7 @@ public class AnimalsDatabase extends JFrame  {
 	public void setEnable(boolean enable){
 
 		// disable menu items
-		menuController.setConnectionState(db.isConnected());
+		menuController.setMode(db.isConnected()?MenuController.MODE_CONNECTED:MenuController.MODE_DISCONNECTED);
 		animalsPanel.setEnabled(enable);
 		photosPanel.setEnabled(enable);
 	}

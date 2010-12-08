@@ -49,6 +49,7 @@ public class ListController extends MouseAdapter {
 
 	public void setSelectedAnimal(Animal selectedAnimal) {
 		this.selectedAnimal = selectedAnimal;
+		frame.getMenuController().setMode(MenuController.MODE_ANIMAL);	// nastav ze je zvire vybrano
 	}
 
 
@@ -60,6 +61,9 @@ public class ListController extends MouseAdapter {
 
 			int index = frame.getList().locationToIndex(e.getPoint());
 			ListModel dlm = frame.getList().getModel();
+
+			// povoleni zakazani menu
+			frame.getMenuController().setMode((index != -1)?MenuController.MODE_ANIMAL:MenuController.MODE_ANIMAL_OFF);
 
 			Animal selectedAnimal = (Animal) dlm.getElementAt(index);
 			setSelectedAnimal(selectedAnimal);

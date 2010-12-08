@@ -1,7 +1,6 @@
 package cz.vutbr.fit.pdb03.map;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import oracle.spatial.geometry.JGeometry;
@@ -9,7 +8,6 @@ import oracle.spatial.geometry.JGeometry;
 import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
 
 import cz.vutbr.fit.pdb03.DataBase;
-import cz.vutbr.fit.pdb03.Log;
 
 /**
  * Trida konvertujici moji implementaci souradnic do JGeometry

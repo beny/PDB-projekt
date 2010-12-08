@@ -17,8 +17,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Collection;
-import java.util.ArrayList;
 import oracle.spatial.geometry.JGeometry;
 //import sdoapi.jar from oraclelib.zip/sdo/ located in WIS
 import oracle.jdbc.OracleResultSet;
@@ -1206,6 +1204,7 @@ public class DataBase {
 	 * @see #SEARCH_PHOTO
 	 * @see #deletePicture(int, java.lang.String)
 	 */
+	@SuppressWarnings("deprecation")
 	public int uploadImage(int animal_id, String choosen_table,
 			String filename, int move_id, String description)
 			throws SQLException, IOException {

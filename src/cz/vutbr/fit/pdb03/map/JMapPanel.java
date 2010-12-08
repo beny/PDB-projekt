@@ -25,7 +25,6 @@ import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
 import org.openstreetmap.gui.jmapviewer.interfaces.MapRectangle;
 
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
-import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.controllers.MapController;
 
@@ -57,9 +56,6 @@ public class JMapPanel extends JMapViewer {
 	// kontroler
 	MapController mapController;
 
-	// databaze
-	private DataBase db;
-
 	// indikace editacniho modu
 	private boolean editMode = false;
 
@@ -83,9 +79,6 @@ public class JMapPanel extends JMapViewer {
 
 		// kontrolery
 		mapController = new MapController(this);
-
-		// databaze
-		db = frame.getDb();
 
 		// vlastnosti mapy
 		setPreferredSize(null);
