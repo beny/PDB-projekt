@@ -8,7 +8,6 @@ import java.awt.event.ActionListener;
 import java.sql.SQLException;
 
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -25,7 +24,7 @@ import cz.vutbr.fit.pdb03.Log;
  * @author Ondřej Beneš <ondra.benes@gmail.com>
  *
  */
-public class AnimalDialog extends JDialog implements ActionListener{
+public class AnimalDialog extends DefaultDialog implements ActionListener{
 
 	private static final long serialVersionUID = -3290129275558417391L;
 
@@ -50,6 +49,7 @@ public class AnimalDialog extends JDialog implements ActionListener{
 	AnimalsDatabase parent;
 
 	public AnimalDialog(AnimalsDatabase parent) {
+		super();
 
 		this.parent = parent;
 		db = parent.getDb();
@@ -128,13 +128,9 @@ public class AnimalDialog extends JDialog implements ActionListener{
 		bDelete.setEnabled(false);
 		pContent.add(bDelete, gbc);
 
-		add(pContent);
+		setContentPane(pContent);
 
-		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		setMode(AnimalDialog.INSERT);
 		pack();
-		setResizable(false);
-		setModal(true);
 	}
 
 	/**
@@ -191,7 +187,7 @@ public class AnimalDialog extends JDialog implements ActionListener{
 					System.err.println("Chyba pri vkladani zvirete do DB: " + e.getMessage());
 				}
 
-				parent.refreshAnimalsList();
+				parent.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
 				dispose();
 
 				break;
@@ -224,7 +220,7 @@ public class AnimalDialog extends JDialog implements ActionListener{
 					}
 				}
 
-				parent.refreshAnimalsList();
+				parent.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
 				dispose();
 				break;
 			}
@@ -244,7 +240,7 @@ public class AnimalDialog extends JDialog implements ActionListener{
 				System.err.println("Chyba pri mazani zvirete z DB" + e.getMessage());
 			}
 
-			parent.refreshAnimalsList();
+			parent.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
 			dispose();
 		}
 	}

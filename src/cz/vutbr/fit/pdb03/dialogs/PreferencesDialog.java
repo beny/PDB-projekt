@@ -1,6 +1,5 @@
 package cz.vutbr.fit.pdb03.dialogs;
 
-import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -9,7 +8,6 @@ import java.awt.event.ActionListener;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -27,7 +25,7 @@ import cz.vutbr.fit.pdb03.map.MapPoint;
  *
  *
  */
-public class PreferencesDialog extends JDialog implements ActionListener {
+public class PreferencesDialog extends DefaultDialog implements ActionListener {
 
 	private final static long serialVersionUID = 2726995694418479544L;
 
@@ -44,21 +42,19 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 
 
 	public PreferencesDialog(AnimalsDatabase frame) {
-
+		super();
 		this.frame = frame;
-
-		// vlastnosti okna
-		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		setModal(true);
-		setMinimumSize(new Dimension(500, 270));
-		setPreferredSize(new Dimension(500, 270));
-		setResizable(false);
 
 		// tab GPS
 		initGPSTab();
 
 		// tab Cas
 		initTimeTab();
+
+		JPanel pContent = new JPanel();
+
+		pContent.setLayout(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
 
 		// taby
 		JTabbedPane tpSections = new JTabbedPane();
@@ -75,22 +71,19 @@ public class PreferencesDialog extends JDialog implements ActionListener {
 		buttons.add(bCancel);
 		buttons.add(bSave);
 
-		// layout
-		setLayout(new GridBagLayout());
-		GridBagConstraints gbc = new GridBagConstraints();
-
+		// rozmisteni prvku
 		gbc.gridx = gbc.gridy = 0;
-		gbc.gridwidth = GridBagConstraints.REMAINDER;
+		pContent.add(tpSections, gbc);
 
-		add(tpSections, gbc);
-
-		gbc.gridwidth = 1;
 		gbc.anchor = GridBagConstraints.LINE_END;
 		gbc.gridy++;
-		add(buttons, gbc);
+		pContent.add(buttons, gbc);
 
 		// nastaveni udaju o moji pozici
 		setMyPosition(frame.getMap().getMyPosition());
+
+		setContentPane(pContent);
+		pack();
 	}
 
 	private void initTimeTab() {

@@ -12,13 +12,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JSeparator;
 
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
-import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.dialogs.AnimalDialog;
 import cz.vutbr.fit.pdb03.dialogs.ConnectDialog;
 import cz.vutbr.fit.pdb03.dialogs.PreferencesDialog;
+import cz.vutbr.fit.pdb03.dialogs.SearchByDescriptionDialog;
+import cz.vutbr.fit.pdb03.dialogs.SearchByNameDialog;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
-import cz.vutbr.fit.pdb03.map.JMapPanel;
 
 public class MenuController implements ActionListener{
 
@@ -41,16 +41,10 @@ public class MenuController implements ActionListener{
 			miAnimalArea, miApplicationPreferences, miSearchAll,
 			miSearchByName, miSearchClose, miSearchByDescription,
 			miSearchByPicture, miSearchByPictureDescription,
-			miSearchExtinction, miSearchExpanded;
+			miSearchExtinction, miSearchArea;
 
 	// dialog
 	private ConnectDialog dConnect;
-
-	// databaze
-	DataBase db;
-
-	// mapa
-	JMapPanel map;
 
 	// hlavni okno
 	AnimalsDatabase frame;
@@ -60,9 +54,6 @@ public class MenuController implements ActionListener{
 
 	public MenuController(AnimalsDatabase frame) {
 
-		// init promenych
-		db = frame.getDb();
-		map = frame.getMap();
 		this.frame = frame;
 
 		// hlavniho menu
@@ -132,9 +123,9 @@ public class MenuController implements ActionListener{
 
 		mSearch.add(new JSeparator());
 
-		miSearchExpanded = new JMenuItem("Zvířata s největším územím výskytu");
-		miSearchExpanded.addActionListener(this);
-		mSearch.add(miSearchExpanded);
+		miSearchArea = new JMenuItem("Zvířata s největším územím výskytu");
+		miSearchArea.addActionListener(this);
+		mSearch.add(miSearchArea);
 
 		miSearchExtinction = new JMenuItem("Vyhynulá zvířata");
 		miSearchExtinction.addActionListener(this);
@@ -177,6 +168,57 @@ public class MenuController implements ActionListener{
 		setMode(MODE_ANIMAL_OFF);
 	}
 
+	private void setDatabaseConnection(boolean connected){
+		if(connected){
+			try {
+				frame.getDb().disconnect();
+				Log.info("Disconnected");
+			} catch (SQLException e){
+				System.err.println("Error while disconnection from DB: " + e.getMessage());
+			}
+
+			frame.setEnable(frame.getDb().isConnected());
+		}
+		else {
+			// dialog pro pripojeni
+			dConnect = new ConnectDialog(frame, frame.getDb());
+			dConnect.fillDialog(ConnectDialog.ONDRA); // TODO remove
+
+			GUIManager.moveToCenter(dConnect, frame);
+			dConnect.setVisible(true);
+
+			frame.setEnable(frame.getDb().isConnected());
+		}
+	}
+
+	private void initDatabase(){
+		if(frame.getDb().isConnected()){
+			try{
+				Log.debug("Creating empty database");
+				frame.getDb().createDatabase();
+			} catch (SQLException e){
+				Log.error("Chyba pri vytvareni DB: " + e.getMessage());
+			}
+		}
+
+		frame.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
+	}
+
+	private void initAndFillDatabase(){
+		if(frame.getDb().isConnected()){
+			try {
+				Log.debug("Vytvarim databazi se vzorovymi daty");
+				frame.getDb().fillDatabase();
+			} catch(SQLException e){
+				Log.error("Chyba SQL pri vytvareni databaze se vzorovymi daty: " + e.getMessage());
+			} catch(IOException e){
+				Log.error("Chyba cteni souboru pri vytvareni databaze se vzorovymi daty: " + e.getMessage());
+			}
+		}
+
+		frame.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
+	}
+
 	@Override
 	public void actionPerformed(ActionEvent event) {
 
@@ -188,58 +230,17 @@ public class MenuController implements ActionListener{
 
 		// pripojen/odpojeni k databazi
 		if(event.getSource() == miApplicationDatabaseConnection){
-			if(db.isConnected()){
-				try {
-					db.disconnect();
-					Log.info("Disconnected");
-				} catch (SQLException e){
-					System.err.println("Error while disconnection from DB: " + e.getMessage());
-				}
-
-				frame.setEnable(db.isConnected());
-				// TODO disable GUI
-			}
-			else {
-				// dialog pro pripojeni
-				dConnect = new ConnectDialog(frame, db);
-				dConnect.fillDialog(ConnectDialog.ONDRA); // TODO remove
-
-				GUIManager.moveToCenter(dConnect, frame);
-				dConnect.setVisible(true);
-
-				frame.setEnable(db.isConnected());
-				// TODO enable GUI
-			}
+			setDatabaseConnection(frame.getDb().isConnected());
 		}
 
 		// vytvoreni tabulek v DB
 		if(event.getSource() == miApplicationDatabaseCreate){
-			if(db.isConnected()){
-				try{
-					Log.debug("Creating empty database");
-					db.createDatabase();
-				} catch (SQLException e){
-					Log.error("Chyba pri vytvareni DB: " + e.getMessage());
-				}
-			}
-
-			frame.refreshAnimalsList();
+			initDatabase();
 		}
 
 		// naplneni DB vzorovymi daty
 		if(event.getSource() == miApplicationDatabaseSample){
-			if(db.isConnected()){
-				try {
-					Log.debug("Vytvarim databazi se vzorovymi daty");
-					db.fillDatabase();
-				} catch(SQLException e){
-					Log.error("Chyba SQL pri vytvareni databaze se vzorovymi daty: " + e.getMessage());
-				} catch(IOException e){
-					Log.error("Chyba cteni souboru pri vytvareni databaze se vzorovymi daty: " + e.getMessage());
-				}
-			}
-
-			frame.refreshAnimalsList();
+			initAndFillDatabase();
 		}
 
 		// obrazovka s nastavenim
@@ -255,6 +256,45 @@ public class MenuController implements ActionListener{
 			GUIManager.moveToCenter(dAnimal, frame);
 			dAnimal.setVisible(true);
 		}
+
+		// hledani
+		if(event.getSource() == miSearchAll){
+			frame.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
+		}
+
+		if(event.getSource() == miSearchClose){
+			frame.reloadAnimalsList(AnimalsDatabase.SEARCH_CLOSE);
+		}
+
+		if(event.getSource() == miSearchExtinction){
+			frame.reloadAnimalsList(AnimalsDatabase.SEARCH_EXTINCT);
+		}
+
+		if(event.getSource() == miSearchArea){
+			frame.reloadAnimalsList(AnimalsDatabase.SEARCH_AREA);
+		}
+
+		if(event.getSource() == miSearchByName){
+			SearchByNameDialog dialog = new SearchByNameDialog(frame);
+			GUIManager.moveToCenter(dialog, frame);
+			dialog.setVisible(true);
+		}
+
+		if(event.getSource() == miSearchByDescription){
+			SearchByDescriptionDialog dialog = new SearchByDescriptionDialog(frame);
+			GUIManager.moveToCenter(dialog, frame);
+			dialog.setType(SearchByDescriptionDialog.TYPE_DESCRIPTION);
+			dialog.setVisible(true);
+		}
+
+		if(event.getSource() == miSearchByPictureDescription){
+			SearchByDescriptionDialog dialog = new SearchByDescriptionDialog(frame);
+			GUIManager.moveToCenter(dialog, frame);
+			dialog.setType(SearchByDescriptionDialog.TYPE_PICTURE_DESCRIPTION);
+			dialog.setVisible(true);
+		}
+
+		// TODO hledani podle obrazku
 	}
 
 	public int getMode() {
@@ -285,16 +325,6 @@ public class MenuController implements ActionListener{
 			miAnimalInsertPicture.setEnabled(selected);
 			miAnimalSearch.setEnabled(selected);
 		}
-
-		switch (mode) {
-		case MODE_DISCONNECTED:
-
-			break;
-
-		default:
-			break;
-		}
-		// nastaveni polozky pro pripojeni k databazi
 
 	}
 }
