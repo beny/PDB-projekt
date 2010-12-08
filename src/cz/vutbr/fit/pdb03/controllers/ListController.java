@@ -10,7 +10,6 @@ import javax.swing.ListModel;
 import oracle.spatial.geometry.JGeometry;
 import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
-import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.dialogs.AnimalDialog;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
@@ -28,13 +27,11 @@ public class ListController extends MouseAdapter {
 	 */
 	private JMapPanel map;
 	private AnimalsDatabase frame;
-	DataBase db;
 
 	Animal selectedAnimal;
 
 	public ListController(AnimalsDatabase frame) {
 		this.frame = frame;
-		db = frame.getDb();
 
 		// pridani listeneru
 		map = frame.getMap();
@@ -56,42 +53,46 @@ public class ListController extends MouseAdapter {
 	@Override
 	public void mouseClicked(MouseEvent e) {
 
-		// normalni klik
-		if (e.getButton() == MouseEvent.BUTTON1) {
+		if (frame.getDb().isConnected()) {
+			// normalni klik
+			if (e.getButton() == MouseEvent.BUTTON1) {
 
-			int index = frame.getList().locationToIndex(e.getPoint());
-			ListModel dlm = frame.getList().getModel();
+				int index = frame.getList().locationToIndex(e.getPoint());
+				ListModel dlm = frame.getList().getModel();
 
-			// povoleni zakazani menu
-			frame.getMenuController().setMode((index != -1)?MenuController.MODE_ANIMAL:MenuController.MODE_ANIMAL_OFF);
+				// povoleni zakazani menu
+				frame.getMenuController().setMode(
+						(index != -1) ? MenuController.MODE_ANIMAL
+								: MenuController.MODE_ANIMAL_OFF);
 
-			Animal selectedAnimal = (Animal) dlm.getElementAt(index);
-			setSelectedAnimal(selectedAnimal);
+				Animal selectedAnimal = (Animal) dlm.getElementAt(index);
+				setSelectedAnimal(selectedAnimal);
 
-			try {
-				Map<Integer, JGeometry> spatialInfo = db
-						.selectAppareance(selectedAnimal.getId());
-				map.setMapData(spatialInfo);
-			} catch (SQLException ex) {
-				Log.error("Chyba pri hledani spatial info o zvireti "
-						+ selectedAnimal.getId());
+				try {
+					Map<Integer, JGeometry> spatialInfo = frame.getDb()
+							.selectAppareance(selectedAnimal.getId());
+					map.setMapData(spatialInfo);
+				} catch (SQLException ex) {
+					Log.error("Chyba pri hledani spatial info o zvireti "
+							+ selectedAnimal.getId());
+				}
+
+				Log.debug("Aktivni zvire: " + getSelectedAnimal());
+
 			}
 
-			Log.debug("Aktivni zvire: " + getSelectedAnimal());
+			// pro leve tlacitko mysi dvojklik
+			if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
 
-		}
-
-		// pro leve tlacitko mysi dvojklik
-		if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
-
-			int index = frame.getList().locationToIndex(e.getPoint());
-			frame.getList().ensureIndexIsVisible(index);
-			AnimalDialog dAnimal = new AnimalDialog(frame);
-			GUIManager.moveToCenter(dAnimal, frame);
-			dAnimal.fill(getSelectedAnimal());
-			dAnimal.enableDeleteButton(true);
-			dAnimal.setMode(AnimalDialog.UPDATE);
-			dAnimal.setVisible(true);
+				int index = frame.getList().locationToIndex(e.getPoint());
+				frame.getList().ensureIndexIsVisible(index);
+				AnimalDialog dAnimal = new AnimalDialog(frame);
+				GUIManager.moveToCenter(dAnimal, frame);
+				dAnimal.fill(getSelectedAnimal());
+				dAnimal.enableDeleteButton(true);
+				dAnimal.setMode(AnimalDialog.UPDATE);
+				dAnimal.setVisible(true);
+			}
 		}
 	}
 }

@@ -177,6 +177,25 @@ public class AnimalsDatabase extends JFrame  {
 	}
 
 	/**
+	 * Ukonceni aplikace
+	 */
+	public void exitApp(){
+		if (db.isConnected()) {
+			try {
+				db.disconnect();
+
+				Log.info("Disconnected");
+			} catch (SQLException e) {
+				System.err
+						.println("Error while disconnection from DB: " + e.getMessage());
+			}
+		}
+
+		setVisible(false);
+		dispose();
+	}
+
+	/**
 	 * Nastavovani zda jsou prvky k dispozici dle pripojeni
 	 * @param enable
 	 */

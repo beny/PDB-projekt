@@ -36,7 +36,8 @@ public class MenuController implements ActionListener{
 	private JMenuBar mBar;
 	private JMenu mAnimal, mApplication, mSearch;
 	private JMenuItem miApplicationInfo, miApplicationDatabaseConnection,
-			miApplicationDatabaseCreate, miApplicationDatabaseSample, miAnimalAdd, miAnimalEdit,
+			miApplicationExit, miApplicationDatabaseCreate,
+			miApplicationDatabaseSample, miAnimalAdd, miAnimalEdit,
 			miAnimalDelete, miAnimalInsertPicture, miAnimalSearch,
 			miAnimalArea, miApplicationPreferences, miSearchAll,
 			miSearchByName, miSearchClose, miSearchByDescription,
@@ -88,6 +89,12 @@ public class MenuController implements ActionListener{
 		miApplicationInfo = new JMenuItem("O aplikaci");
 		miApplicationInfo.addActionListener(this);
 		mApplication.add(miApplicationInfo);
+
+		mApplication.add(new JSeparator());
+
+		miApplicationExit = new JMenuItem("Ukončit");
+		miApplicationExit.addActionListener(this);
+		mApplication.add(miApplicationExit);
 
 		// menu hledat
 		mSearch = new JMenu("Hledat");
@@ -248,6 +255,12 @@ public class MenuController implements ActionListener{
 			PreferencesDialog dPreferences = new PreferencesDialog(frame);
 			GUIManager.moveToCenter(dPreferences, frame);
 			dPreferences.setVisible(true);
+		}
+
+
+		// ukonceni aplikace
+		if (event.getSource() == miApplicationExit) {
+			frame.exitApp();
 		}
 
 		// pridani zvirete
