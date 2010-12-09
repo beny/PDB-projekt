@@ -24,7 +24,7 @@ import java.text.SimpleDateFormat;
  *  prefix (NONSEQUENCED VALIDTIME ) is deleted only. SQL is for all records in database.
  * </p>
  *  <SQL> is some SQL language
- *  <DateTime> is Date and Time in format yyyy/MM/dd~HH:mm
+ *  <DateTime> is Date and Time in format yyyy/MM/dd
  *
  * @author Tomáš Ižák <xizakt00@stud.fit.vutbr.cz>
  */
@@ -32,8 +32,8 @@ public final class T2SQL {
     private static Date validFrom=null;
     private static Date validTo=null;
     private static String mode="";
-    private static DateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-    private static DateFormat dateFormatIn = new SimpleDateFormat("yyyy/MM/dd'~'HH:mm:ss");
+    private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");//("dd-MM-yyyy HH:mm:ss");
+    private static DateFormat dateFormatIn = new SimpleDateFormat("yyyy/MM/dd");//("yyyy/MM/dd'~'HH:mm:ss");
     /**
      * String constant for NONSEQUENCED VALIDTIME - no temporal restrictions
      */
@@ -175,10 +175,12 @@ public final class T2SQL {
             SQLString=T2SQLString.substring(point3+1);
             SQLString=SQLString.trim();
             if (SQLString.startsWith("SELECT")){
-                SQLString=SQLString.replace(" WHERE ", " WHERE ((valid_from <= '"+dateFormat.format(day_from)+"' OR valid_from is NULL) AND (valid_to > '"+dateFormat.format(day_from)+"' OR valid_to is NULL)) OR ((valid_from <= '"+dateFormat.format(day_to)+"' OR valid_from is NULL) AND (valid_to > '"+dateFormat.format(day_to)+"' OR valid_to is NULL)) AND ");
+                SQLString=SQLString.replace(" WHERE ", " WHERE (((valid_from <= DATE '"+dateFormat.format(day_from)+"' OR valid_from is NULL) AND (valid_to > DATE '"
+                        +dateFormat.format(day_from)+"' OR valid_to is NULL)) OR ((valid_from <= DATE '"+dateFormat.format(day_to)
+                        +"' OR valid_from is NULL) AND (valid_to > DATE '"+dateFormat.format(day_to)+"' OR valid_to is NULL))) AND ");
             } else if (SQLString.startsWith("INSERT")){
                 SQLString=SQLString.replace("INSERT INTO animal_movement (", "INSERT INTO animal_movement (valid_from,valid_to,");
-                SQLString=SQLString.replace(" VALUES (", " VALUES ('"+dateFormat.format(day_from)+"','"+dateFormat.format(day_to)+"',");
+                SQLString=SQLString.replace(" VALUES (", " VALUES (DATE '"+dateFormat.format(day_from)+"',DATE '"+dateFormat.format(day_to)+"',");
             } else if (SQLString.startsWith("DELETE")){
                 SQLString=SQLString.substring(SQLString.indexOf("move_id")+7);
                 SQLString=(SQLString.substring(SQLString.indexOf("=")+1)).trim();
@@ -207,10 +209,10 @@ public final class T2SQL {
             SQLString=T2SQLString.substring(point2+1);
             SQLString=SQLString.trim();
             if (SQLString.startsWith("SELECT")){
-                SQLString=SQLString.replace(" WHERE ", " WHERE (valid_from <= '"+dateFormat.format(day)+"' OR valid_from is NULL) AND (valid_to > '"+dateFormat.format(day)+"' OR valid_to is NULL) AND ");
+                SQLString=SQLString.replace(" WHERE ", " WHERE (valid_from <= DATE '"+dateFormat.format(day)+"' OR valid_from is NULL) AND (valid_to > DATE '"+dateFormat.format(day)+"' OR valid_to is NULL) AND ");
             } else if (SQLString.startsWith("INSERT")){
                 SQLString=SQLString.replace("INSERT INTO animal_movement (", "INSERT INTO animal_movement (valid_from,");
-                SQLString=SQLString.replace(" VALUES (", " VALUES ('"+dateFormat.format(day)+"',");
+                SQLString=SQLString.replace(" VALUES (", " VALUES (DATE '"+dateFormat.format(day)+"',");
             } else if (SQLString.startsWith("DELETE")){
                 SQLString=SQLString.substring(SQLString.indexOf("move_id")+7);
                 SQLString=(SQLString.substring(SQLString.indexOf("=")+1)).trim();
@@ -231,7 +233,8 @@ public final class T2SQL {
             if (SQLString.startsWith("SELECT")){
                 SQLString=SQLString.replace(" WHERE ", " WHERE (valid_from <= sysdate OR valid_from is NULL) AND (valid_to > sysdate OR valid_to is NULL) AND ");
             } else if (SQLString.startsWith("INSERT")){
-                //no need to
+                SQLString=SQLString.replace("INSERT INTO animal_movement (", "INSERT INTO animal_movement (valid_from,");
+                SQLString=SQLString.replace(" VALUES (", " VALUES (sysdate,");
             } else if (SQLString.startsWith("DELETE")){
                 SQLString=SQLString.substring(SQLString.indexOf("move_id")+7);
                 SQLString=(SQLString.substring(SQLString.indexOf("=")+1)).trim();

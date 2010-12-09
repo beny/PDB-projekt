@@ -692,31 +692,32 @@ public class DataBase {
 				.prepareStatement(T2SQL.temporal(SQLquery));
 		OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
 		searchResult.clear();
+                OraclePreparedStatement opstmt1;
+                OracleResultSet rset1;
 		while (rset.next()) {
 			try {
 				SQLquery = T2SQL.T2SQLprefix()
-						+ "SELECT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat FROM animals a, animal_movement am WHERE a.animal_id=am.animal_id AND am.animal_id<>"
+						+ "SELECT DISTINCT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat FROM animals a, animal_movement am WHERE a.animal_id=am.animal_id AND am.animal_id<>"
 						+ Integer.toString(animal_id)
 						+ " AND SDO_GEOM.SDO_INTERSECTION(am.geometry,?,1) IS NOT NULL";
-				OraclePreparedStatement opstmt1 = (OraclePreparedStatement) con
+				opstmt1 = (OraclePreparedStatement) con
 						.prepareStatement(T2SQL.temporal(SQLquery));
 				opstmt1.setSTRUCT(1, rset.getSTRUCT("geometry"));
-				OracleResultSet rset1 = (OracleResultSet) opstmt1
-						.executeQuery();
+				rset1 = (OracleResultSet) opstmt1.executeQuery();
 				while (rset1.next()) {
 					Animal temp = new Animal();
-					temp.setId(rset1.getInt("a.animal_id"));
-					temp.setSpecies(rset1.getString("a.species"));
-					temp.setSpeciesLat(rset1.getString("a.species_lat"));
-					temp.setGenus(rset1.getString("a.genus"));
-					temp.setGenusLat(rset1.getString("a.genus_lat"));
+					temp.setId(rset1.getInt("animal_id"));
+					temp.setSpecies(rset1.getString("species"));
+					temp.setSpeciesLat(rset1.getString("species_lat"));
+					temp.setGenus(rset1.getString("genus"));
+					temp.setGenusLat(rset1.getString("genus_lat"));
 					if (searchResult.contains(temp) == false)
 						searchResult.add(temp); // correct??
 				}
 				rset1.close();
 				opstmt1.close();
 			} catch (SQLException e) {
-				Log.debug("LEVEL2: " + e.getMessage());
+				Log.error("Database: " + e.getMessage());
 			}
 		}
 		rset.close();
@@ -831,13 +832,13 @@ public class DataBase {
 		OraclePreparedStatement opstmt = null;
 		NumberFormat nf = NumberFormat.getInstance(Locale.ENGLISH);
 		String SQLquery = T2SQL.T2SQLprefix()
-				+ "SELECT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat, MIN(SDO_NN_DISTANCE(1)) AS distance FROM animals a, animal_movement am WHERE ROWNUM <= "
-				+ Integer.toString(MAX_SEARCH_RESULTS)
-				+ " AND a.animal_id=am.animal_id AND SDO_NN(am.geometry,SDO_GEOMETRY(2001,8307,SDO_POINT_TYPE("
-				+ nf.format(location.getX())
+				+ "SELECT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat, MIN(SDO_GEOM.SDO_DISTANCE(am.geometry,SDO_GEOMETRY(2001,8307,SDO_POINT_TYPE("
+                                + nf.format(location.getX())
 				+ ","
 				+ nf.format(location.getY())
-				+ ",NULL),NULL,NULL),'UNIT=kilometer',1)='TRUE' GROUP BY a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat ORDER BY distance";
+                                + ",NULL),NULL,NULL),1,'unit=KM')) AS distance FROM animals a, animal_movement am WHERE ROWNUM <= "
+				+ Integer.toString(MAX_SEARCH_RESULTS)
+				+ " AND a.animal_id=am.animal_id GROUP BY a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat ORDER BY distance";
 		opstmt = (OraclePreparedStatement) con.prepareStatement(T2SQL
 				.temporal(SQLquery));
 		OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
@@ -1278,22 +1279,16 @@ public class DataBase {
 		int id = 0;
 		con.setAutoCommit(false);
 		Statement stat = con.createStatement();
-		String SQLquery = ("SELECT animal_movement_seq.nextval FROM dual");
-		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
-		rset.next();
-		id = rset.getInt("nextval");
-		SQLquery = T2SQL.T2SQLprefix()
-				+ "INSERT INTO animal_movement (move_id,animal_id,geometry) VALUES (?,?,?)";
+		String SQLquery = T2SQL.T2SQLprefix()
+				+ "INSERT INTO animal_movement (animal_id,geometry) VALUES (?,?)";
 		OraclePreparedStatement opstmt = (OraclePreparedStatement) con
 				.prepareStatement(T2SQL.temporal(SQLquery));
-		opstmt.setInt(1, id);
-		opstmt.setInt(2, animal_id);
-		opstmt.setSTRUCT(3, JGeometry.store(j_geom, con));
+		opstmt.setInt(1, animal_id);
+		opstmt.setSTRUCT(2, JGeometry.store(j_geom, con));
 		opstmt.execute();
 		opstmt.close();
 		con.commit();
 		con.setAutoCommit(true);
-		rset.close();
 		stat.close();
 		return;
 	}
@@ -1485,6 +1480,7 @@ public class DataBase {
 		Statement stat = con.createStatement();
 		try {
 			stat.execute("DROP INDEX animal_movement_sidx FORCE");
+                        con.commit();
 		} catch (SQLException e) {
 		}
 		try {
@@ -1524,6 +1520,7 @@ public class DataBase {
 		} catch (SQLException e) {
 		}
 		try {
+                    con.commit();
 			stat.execute("DROP TABLE animals");
 		} catch (SQLException e) {
 		}
@@ -1586,11 +1583,10 @@ public class DataBase {
 	private void createTriggersAndProcedures() throws SQLException {
 		Statement stat = con.createStatement();
 		stat.execute("CREATE OR REPLACE TRIGGER animals_trigger "
-				+ "BEFORE INSERT OR DELETE ON animals FOR EACH ROW "
+				+ "BEFORE INSERT ON animals FOR EACH ROW "
 				+ "BEGIN "
-				+ "  IF INSERTING THEN "
-				+ "    SELECT animals_seq.nextval INTO :NEW.animal_id FROM dual; "
-				+ "  END IF; END;");
+				+ " SELECT animals_seq.nextval INTO :NEW.animal_id FROM dual; "
+				+ "  END;");
 		stat.execute("CREATE OR REPLACE TRIGGER animal_movement_trigger_i "
 				+ "BEFORE INSERT ON animal_movement FOR EACH ROW "
 				+ "BEGIN"
