@@ -5,6 +5,10 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -18,6 +22,7 @@ import javax.swing.JTextField;
 import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
 
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
+import cz.vutbr.fit.pdb03.T2SQL;
 import cz.vutbr.fit.pdb03.map.MapPoint;
 
 /**
@@ -38,7 +43,9 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 	private JButton bCancel, bSave;
 	private JLabel lLat, lLon, lFrom, lTo;
 	private JTextField tLat, tLon, tDate, tFrom, tTo;
-	private JRadioButton rbNow, rbData, rbInterval, rbAll;
+	private JRadioButton rbNow, rbDate, rbInterval, rbAll;
+
+	DateFormat format = new SimpleDateFormat("dd-MM-yyyy");
 
 
 	public PreferencesDialog(AnimalsDatabase frame) {
@@ -79,11 +86,43 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 		gbc.gridy++;
 		pContent.add(buttons, gbc);
 
-		// nastaveni udaju o moji pozici
+		// nastaveni udaju o moji pozici a datech
 		setMyPosition(frame.getMap().getMyPosition());
+		initData();
 
 		setContentPane(pContent);
 		pack();
+	}
+
+	/**
+	 * Naplneni daty
+	 */
+	private void initData(){
+
+		if(T2SQL.getMode() == T2SQL.NOW){
+			rbNow.setSelected(true);
+		}
+		else if(T2SQL.getMode() == T2SQL.NO_RESTRICTIONS){
+			rbAll.setSelected(true);
+		}
+		else if(T2SQL.getMode() == T2SQL.DATETIME){
+			rbDate.setSelected(true);
+
+			if(T2SQL.getValidationDateFrom() != null){
+				tDate.setText(format.format(T2SQL.getValidationDateFrom()));
+			}
+		}
+		else if(T2SQL.getMode() == T2SQL.INTERVAL){
+			rbInterval.setSelected(true);
+
+			if(T2SQL.getValidationDateFrom() != null){
+				tFrom.setText(format.format(T2SQL.getValidationDateFrom()));
+			}
+
+			if(T2SQL.getValidationDateTo() != null){
+				tTo.setText(format.format(T2SQL.getValidationDateTo()));
+			}
+		}
 	}
 
 	private void initTimeTab() {
@@ -96,10 +135,9 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 		gbc.gridx = gbc.gridy = 0;
 
 		rbNow = new JRadioButton("Nyní");
-		rbData = new JRadioButton("Konkrétní datum");
+		rbDate = new JRadioButton("Konkrétní datum");
 		rbInterval = new JRadioButton("V intervalu");
 		rbAll = new JRadioButton("Bez omezení");
-		rbAll.setSelected(true);
 
 		lFrom = new JLabel("Od:");
 		lTo = new JLabel("Do:");
@@ -108,10 +146,13 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 		tFrom = new JTextField(MAX_DATE);
 		tTo = new JTextField(MAX_DATE);
 
+		// nastaveni dat
+
+
 		// seskupeni
 		ButtonGroup bg = new ButtonGroup();
 		bg.add(rbNow);
-		bg.add(rbData);
+		bg.add(rbDate);
 		bg.add(rbInterval);
 		bg.add(rbAll);
 
@@ -121,7 +162,7 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 		pTime.add(rbNow, gbc);
 
 		gbc.gridy++;
-		pTime.add(rbData, gbc);
+		pTime.add(rbDate, gbc);
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
 		gbc.gridx = 2;
 		pTime.add(tDate, gbc);
@@ -181,7 +222,6 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 	}
 
 	public MapMarker getMyPosition() throws NumberFormatException{
-		// TODO nejaka kontrola
 		return new MapPoint(Double.parseDouble(tLat.getText()), Double.parseDouble(tLon.getText()), MapPoint.counter);
 	}
 
@@ -196,16 +236,51 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 		// zmacknuto save
 		if(e.getSource() == bSave){
 
+			boolean error = false;
+
+			// gps
 			try {
 				frame.getMap().setMyPosition(getMyPosition());
-				dispose();
 			} catch (NumberFormatException ex) {
 				JOptionPane.showMessageDialog(this,
 						"Souřadnice nejsou ve správném formátu", "Chyba údajů",
 						JOptionPane.ERROR_MESSAGE);
+				error = true;
 			}
-			// TODO ulozeni nastaveni casu
 
+			// cas
+			if (rbNow.isSelected()) {
+				T2SQL.setCurrentTime();
+			} else if (rbInterval.isSelected()) {
+				try {
+					Date from = format.parse(tFrom.getText());
+					Date to = format.parse(tTo.getText());
+					T2SQL.setValidationDates(from, to);
+				} catch (ParseException ex) {
+					JOptionPane.showMessageDialog(this,
+							"Datum je ve špatném formátu", "Chybné datum",
+							JOptionPane.ERROR_MESSAGE);
+					error = true;
+				}
+			} else if (rbAll.isSelected()) {
+				T2SQL.setNoTemporalRestrictions();
+			} else if (rbDate.isSelected()) {
+				try {
+					Date date = format.parse(tDate.getText());
+					T2SQL.setValidationDate(date);
+					dispose();
+				} catch (ParseException ex) {
+					JOptionPane.showMessageDialog(this,
+							"Datum je ve špatném formátu", "Chybné datum",
+							JOptionPane.ERROR_MESSAGE);
+					error = true;
+				}
+			}
+
+			if(!error){
+				frame.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
+				dispose();
+			}
 		}
 	}
 }
