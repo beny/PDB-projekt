@@ -9,11 +9,11 @@ package cz.vutbr.fit.pdb03;
 public final class Log {
 
 	// debugovaci levely
-	public final static int INFO = 1;
-	public final static int DEBUG = 2;
-	public final static int WARNING = 3;
-	public final static int ERROR = 4;
-	public final static int ALL = 10;
+	private final static int INFO = 1;
+	private final static int DEBUG = 2;
+	private final static int WARNING = 3;
+	private final static int ERROR = 4;
+	private final static int ALL = 10;
 
 	// zvoleny debug level
 	public final static int LEVEL = ALL; // chci vypsat debug, info

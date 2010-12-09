@@ -42,6 +42,7 @@ public class JMapPanel extends JMapViewer {
 	public final static String ACTION_SAVE = "SAVE";
 	public final static String ACTION_CHANGE_TYPE = "CHANGE";
 	public final static String ACTION_CANCEL = "CANCEL";
+	public final static String ACTION_NEXT_OBJECT = "NEXT";
 
 	public final static int MODE_POINT = 0;
 	public final static int MODE_LINESTRING = 1;
@@ -64,7 +65,7 @@ public class JMapPanel extends JMapViewer {
 	private int mode = -1;
 
 	// komponenta pro mapu
-	JButton bEdit, bSave, bCancel;
+	JButton bEdit, bSave, bCancel, bNext;
 	private JComboBox comboElements;
 
 	// data
@@ -103,7 +104,7 @@ public class JMapPanel extends JMapViewer {
 	 */
 	protected void initializeEditButtons(){
 
-		int buttonSizeX = 50;
+		int buttonSizeX = 70;
 		int buttonSizeY = 20;
 		int smallSpace = 10;
 
@@ -136,6 +137,13 @@ public class JMapPanel extends JMapViewer {
 		setMode(MODE_POINT);
 		comboElements.addActionListener(mapController);
 		add(comboElements);
+
+		// ulozeni konkretniho objektu pro zadavani noveho
+		bNext = new JButton("nový objekt");
+		bNext.setBounds(50 + buttonSizeX + smallSpace, smallSpace + 30, 120, buttonSizeY);
+		bNext.setActionCommand(ACTION_NEXT_OBJECT);
+		bNext.addActionListener(mapController);
+		add(bNext);
 
 		setEditMode(false);
 	}
@@ -246,7 +254,7 @@ public class JMapPanel extends JMapViewer {
 				path.lineTo(p.x, p.y);
 			}
 
-			g2.setColor(Color.BLUE);
+			g2.setColor(Color.GREEN);
 			g2.setStroke(stroke);
 			g2.draw(path);
 		}
@@ -279,7 +287,7 @@ public class JMapPanel extends JMapViewer {
 			// uzavreni polygonu
 			path.closePath();
 
-			g2.setPaint(Color.BLUE);
+			g2.setPaint(Color.GREEN);
 			g2.setStroke(stroke);
 			Composite originComposite = g2.getComposite();
 			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) 0.5));
@@ -357,6 +365,7 @@ public class JMapPanel extends JMapViewer {
 		bEdit.setVisible(!visible);
 		bCancel.setVisible(visible);
 		bSave.setVisible(visible);
+		bNext.setVisible(visible);
 		comboElements.setVisible(visible);
 	}
 

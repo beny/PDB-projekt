@@ -122,6 +122,8 @@ public class AnimalsDatabase extends JFrame  {
 
 	}
 
+
+
 	/**
 	 * Hlavni main pro spusteni aplikace
 	 * @param args argumenty z prikazove radky
@@ -139,6 +141,7 @@ public class AnimalsDatabase extends JFrame  {
 		ArrayList<Animal> dbAnimals = new ArrayList<Animal>();
 
 		map.clear();
+		photosPanel.clear();
 		// nalezeni zvirat
 		try{
 
@@ -212,6 +215,13 @@ public class AnimalsDatabase extends JFrame  {
 
 		setVisible(false);
 		dispose();
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		super.finalize();
+
+		exitApp();
 	}
 
 	/**

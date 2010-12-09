@@ -255,10 +255,19 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 				try {
 					Date from = format.parse(tFrom.getText());
 					Date to = format.parse(tTo.getText());
+
+					if(from.compareTo(to) > 0){
+						throw new Exception();
+					}
 					T2SQL.setValidationDates(from, to);
 				} catch (ParseException ex) {
 					JOptionPane.showMessageDialog(this,
 							"Datum je ve špatném formátu (DD-MM-YYYY)", "Chybné datum",
+							JOptionPane.ERROR_MESSAGE);
+					error = true;
+				} catch (Exception ex) {
+					JOptionPane.showMessageDialog(this,
+							"Datum od není před datem do", "Chybné datum",
 							JOptionPane.ERROR_MESSAGE);
 					error = true;
 				}

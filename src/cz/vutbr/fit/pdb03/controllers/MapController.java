@@ -289,6 +289,7 @@ public class MapController extends DefaultMapController implements
 				geometry = ConvertGeo.createPolygon(linestring);
 				break;
 
+
 			// TODO multipoint
 			// TODO multilinestring
 			// TODO multipolygon
@@ -306,5 +307,8 @@ public class MapController extends DefaultMapController implements
 			reloadMapData();
 		}
 
+		if(e.getActionCommand() == JMapPanel.ACTION_NEXT_OBJECT){
+			Log.debug("Tady ulozim a vykreslim jeden hotovy objekt a kreslime dalsi");
+		}
 	}
 }

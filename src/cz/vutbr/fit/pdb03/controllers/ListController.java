@@ -14,6 +14,7 @@ import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.dialogs.AnimalDialog;
+import cz.vutbr.fit.pdb03.dialogs.LoadingDialog;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
 
 /**
@@ -27,13 +28,12 @@ public class ListController extends MouseAdapter implements KeyListener {
 	 * Reference na frame
 	 */
 	private AnimalsDatabase frame;
-
+	private LoadingDialog dLoading;
 	Animal selectedAnimal;
 
 	public ListController(AnimalsDatabase frame) {
 		this.frame = frame;
 	}
-
 
 	public Animal getSelectedAnimal() {
 		return selectedAnimal;
@@ -43,8 +43,48 @@ public class ListController extends MouseAdapter implements KeyListener {
 	public void setSelectedAnimal(Animal selectedAnimal) {
 		this.selectedAnimal = selectedAnimal;
 		frame.getMenuController().setAnimalChosen(true);	// nastav ze je zvire vybrano
+
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				// nastaveni objektu v mape
+				try {
+					Map<Integer, JGeometry> spatialInfo = frame.getDb()
+							.selectAppareance(getSelectedAnimal().getId());
+					frame.getMap().setMapData(spatialInfo);
+				} catch (SQLException ex) {
+					Log.error("Chyba pri hledani spatial info o zvireti "
+							+ getSelectedAnimal().getId());
+				}
+
+				// info o zvireti
+				frame.getPhotosPanel().setAnimalData(getSelectedAnimal());
+				dLoading.dispose();
+			}
+		}).start();
+
+		dLoading = new LoadingDialog();
+		GUIManager.moveToCenter(dLoading, frame);
+		dLoading.setVisible(true);
+
+
+
+		Log.debug("Aktivni zvire: " + getSelectedAnimal());
 	}
 
+	/**
+	 * Zobrazeni dialogu s editaci zvirete
+	 */
+	private void showAnimalDialog(){
+
+		AnimalDialog dAnimal = new AnimalDialog(frame);
+		GUIManager.moveToCenter(dAnimal, frame);
+
+		dAnimal.fill(getSelectedAnimal());
+		dAnimal.enableDeleteButton(true);
+		dAnimal.setMode(AnimalDialog.UPDATE);
+		dAnimal.setVisible(true);
+	}
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
@@ -52,41 +92,19 @@ public class ListController extends MouseAdapter implements KeyListener {
 		if (frame.getDb().isConnected()) {
 			// normalni klik
 			if (e.getButton() == MouseEvent.BUTTON1) {
-
-				int index = frame.getList().locationToIndex(e.getPoint());
-				ListModel dlm = frame.getList().getModel();
-
 				// implicitni zakazni menu
 				frame.getMenuController().setAnimalChosen(false);
 
+				// vyber zvirete podle kliku
+				int index = frame.getList().locationToIndex(e.getPoint());
+				ListModel dlm = frame.getList().getModel();
 				Animal selectedAnimal = (Animal) dlm.getElementAt(index);
 				setSelectedAnimal(selectedAnimal);
-
-				try {
-					Map<Integer, JGeometry> spatialInfo = frame.getDb()
-							.selectAppareance(selectedAnimal.getId());
-					frame.getMap().setMapData(spatialInfo);
-				} catch (SQLException ex) {
-					Log.error("Chyba pri hledani spatial info o zvireti "
-							+ selectedAnimal.getId());
-				}
-
-				Log.debug("Aktivni zvire: " + getSelectedAnimal());
-
 			}
 
 			// pro leve tlacitko mysi dvojklik
 			if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
-
-				int index = frame.getList().locationToIndex(e.getPoint());
-				frame.getList().ensureIndexIsVisible(index);
-				AnimalDialog dAnimal = new AnimalDialog(frame);
-				GUIManager.moveToCenter(dAnimal, frame);
-
-				dAnimal.fill(getSelectedAnimal());
-				dAnimal.enableDeleteButton(true);
-				dAnimal.setMode(AnimalDialog.UPDATE);
-				dAnimal.setVisible(true);
+				showAnimalDialog();
 			}
 		}
 	}

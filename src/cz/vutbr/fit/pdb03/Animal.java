@@ -246,7 +246,20 @@ public class Animal {
 
 	@Override
 	public String toString() {
-		return genus + ", " + species;
+
+		String name = "";
+
+		if(genus != null){
+			name += genus;
+		}
+
+		if(species != null){
+			if(name.length() != 0){
+				name += ", ";
+			}
+			name += species;
+		}
+		return name;
 	}
 
 	// ///////PRIVATE FUNCTIONS
