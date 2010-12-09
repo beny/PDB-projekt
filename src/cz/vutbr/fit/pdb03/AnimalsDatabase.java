@@ -16,6 +16,7 @@ import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
 import cz.vutbr.fit.pdb03.controllers.MenuController;
 import cz.vutbr.fit.pdb03.controllers.WindowController;
 import cz.vutbr.fit.pdb03.dialogs.ConnectDialog;
+import cz.vutbr.fit.pdb03.dialogs.LoadingDialog;
 import cz.vutbr.fit.pdb03.gui.AnimalsPanel;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
 import cz.vutbr.fit.pdb03.gui.PhotosPanel;
@@ -63,6 +64,8 @@ public class AnimalsDatabase extends JFrame  {
 
 	// pomocne promenne pro hledani
 	private String searchGenus, searchSpecies, searchDescription;
+
+	private LoadingDialog dLoading;
 
 	// druh hledani
 
@@ -136,66 +139,80 @@ public class AnimalsDatabase extends JFrame  {
 	/**
 	 * Obnoveni seznamu zvirat
 	 */
-	public void reloadAnimalsList(int searchType){
+	public void reloadAnimalsList(final int searchType){
 
-		ArrayList<Animal> dbAnimals = new ArrayList<Animal>();
+		new Thread(new Runnable() {
 
-		map.clear();
-		photosPanel.clear();
-		// nalezeni zvirat
-		try{
+			@Override
+			public void run() {
 
-			switch (searchType) {
-			case SEARCH_ALL:
-				db.searchAnimals();
-				break;
-			case SEARCH_BY_NAME:
-				db.searchAnimals(getSearchGenus(), getSearchSpecies());
-				break;
-			case SEARCH_BY_DESCRIPTION:
-				db.searchAnimals(getSearchDescription());
-				break;
-			case SEARCH_BY_PICTURE:
-				break; // TODO
-			case SEARCH_BY_PICTURE_DESCRIPTION:
-				db.searchAnimalsByPicture(getSearchDescription());
-				break;
-			case SEARCH_BIGGEST_AREA:
-				db.searchAnimalsByAreaSize();
-				break;
-			case SEARCH_SAME_AREA:
-				int id = getAnimalsPanel().getSelectedAnimal().getId();
-				Log.debug("Hledam zvirata ktere jsou na stejnem uzemi jako "
-						+ getAnimalsPanel().getSelectedAnimal().getGenus());
-				db.searchAnimalsOnArea(id);
-				break;
-			case SEARCH_CLOSE:
-				MapMarker marker = map.getMyPosition();
-				Point2D temp = new Point();
-				temp.setLocation(marker.getLat(), marker.getLon());
-				db.searchNearestAnimals(temp);
-				break;
-			case SEARCH_EXTINCT:
-				db.searchExtinctAnimals();
-				break;
-			default:
-				break;
+				ArrayList<Animal> dbAnimals = new ArrayList<Animal>();
+
+				map.clear();
+				photosPanel.clear();
+				// nalezeni zvirat
+				try{
+
+					switch (searchType) {
+					case SEARCH_ALL:
+						db.searchAnimals();
+						break;
+					case SEARCH_BY_NAME:
+						db.searchAnimals(getSearchGenus(), getSearchSpecies());
+						break;
+					case SEARCH_BY_DESCRIPTION:
+						db.searchAnimals(getSearchDescription());
+						break;
+					case SEARCH_BY_PICTURE:
+						break; // TODO
+					case SEARCH_BY_PICTURE_DESCRIPTION:
+						db.searchAnimalsByPicture(getSearchDescription());
+						break;
+					case SEARCH_BIGGEST_AREA:
+						db.searchAnimalsByAreaSize();
+						break;
+					case SEARCH_SAME_AREA:
+						int id = getAnimalsPanel().getSelectedAnimal().getId();
+						Log.debug("Hledam zvirata ktere jsou na stejnem uzemi jako "
+								+ getAnimalsPanel().getSelectedAnimal().getGenus());
+						db.searchAnimalsOnArea(id);
+						break;
+					case SEARCH_CLOSE:
+						MapMarker marker = map.getMyPosition();
+						Point2D temp = new Point();
+						temp.setLocation(marker.getLat(), marker.getLon());
+						db.searchNearestAnimals(temp);
+						break;
+					case SEARCH_EXTINCT:
+						db.searchExtinctAnimals();
+						break;
+					default:
+						break;
+					}
+
+					dbAnimals = (ArrayList<Animal>) db.searchResult;
+				} catch(SQLException e){
+					Log.error("Chyba pri hledani zvirat: " + e.getMessage());
+				}
+
+				Log.info("Nalezeno "+ dbAnimals + " zvirat");
+
+				// nastaveni novych zvirat
+				vAnimals.clear();
+				for (Animal animal: dbAnimals) {
+					vAnimals.add(animal);
+				}
+
+				animalsPanel.setData(vAnimals);
+
+				dLoading.dispose();
 			}
+		}).start();
 
-			dbAnimals = (ArrayList<Animal>) db.searchResult;
-		} catch(SQLException e){
-			Log.error("Chyba pri hledani zvirat: " + e.getMessage());
-		}
+		dLoading = new LoadingDialog("Probíhá hledání v DB, prosím vyčkejte");
+		GUIManager.moveToCenter(dLoading, this);
+		dLoading.setVisible(true);
 
-		Log.info("Nalezeno "+ dbAnimals + " zvirat");
-
-		// nastaveni novych zvirat
-		vAnimals.clear();
-		for (Animal animal: dbAnimals) {
-			vAnimals.add(animal);
-		}
-
-		animalsPanel.setData(vAnimals);
 	}
 
 	/**

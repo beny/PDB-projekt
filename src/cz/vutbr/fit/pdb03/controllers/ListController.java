@@ -40,6 +40,10 @@ public class ListController extends MouseAdapter implements KeyListener {
 	}
 
 
+	/**
+	 * Nastaveni aktivniho zvirete
+	 * @param selectedAnimal
+	 */
 	public void setSelectedAnimal(Animal selectedAnimal) {
 		this.selectedAnimal = selectedAnimal;
 		frame.getMenuController().setAnimalChosen(true);	// nastav ze je zvire vybrano
@@ -63,11 +67,9 @@ public class ListController extends MouseAdapter implements KeyListener {
 			}
 		}).start();
 
-		dLoading = new LoadingDialog();
+		dLoading = new LoadingDialog("Probíhá nahrávání dat z databáze, prosím vyčkejte");
 		GUIManager.moveToCenter(dLoading, frame);
 		dLoading.setVisible(true);
-
-
 
 		Log.debug("Aktivni zvire: " + getSelectedAnimal());
 	}

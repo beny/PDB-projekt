@@ -16,6 +16,7 @@ import javax.swing.JTextField;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.Log;
+import cz.vutbr.fit.pdb03.gui.GUIManager;
 
 /**
  * Dialog pro pripojeni
@@ -37,6 +38,8 @@ public class ConnectDialog extends DefaultDialog implements ActionListener{
 	private JPasswordField pfPassword;
 	private DataBase db;
 	private AnimalsDatabase frame;
+
+	private LoadingDialog dLoading;
 
 	public ConnectDialog(AnimalsDatabase parent, DataBase db) {
 		super();
@@ -96,17 +99,29 @@ public class ConnectDialog extends DefaultDialog implements ActionListener{
 
 		// zkouska loginu
 		if (event.getSource() == bLogin) {
-			try {
-				db.connect(tUsername.getText(),	String.copyValueOf(pfPassword.getPassword()));
-				Log.info("Connected to database");
-			} catch (Exception e) {
-				// TODO doresit nejak chybne prihlaseni
-				lStatus.setText("Problem with login, try again");
-			}
 
-			frame.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
-			frame.setEnable(true);
-			dispose();
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						db.connect(tUsername.getText(),	String.copyValueOf(pfPassword.getPassword()));
+						Log.info("Connected to database");
+					} catch (Exception e) {
+						// TODO doresit nejak chybne prihlaseni
+						lStatus.setText("Problem with login, try again");
+					}
+
+					frame.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
+					frame.setEnable(true);
+					dLoading.dispose();
+					dispose();
+				}
+			}).start();
+
+			dLoading = new LoadingDialog("Probíhá připojování k DB, prosím vyčkejte");
+			GUIManager.moveToCenter(dLoading, this);
+			dLoading.setVisible(true);
 		}
 	}
 

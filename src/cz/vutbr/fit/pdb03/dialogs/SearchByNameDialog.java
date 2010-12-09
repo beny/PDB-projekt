@@ -5,6 +5,8 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -19,7 +21,7 @@ import cz.vutbr.fit.pdb03.DataBase;
  * @author Ondřej Beneš <ondra.benes@gmail.com>
  *
  */
-public class SearchByNameDialog extends DefaultDialog implements ActionListener{
+public class SearchByNameDialog extends DefaultDialog implements ActionListener, KeyListener {
 
 	private final static long serialVersionUID = 748219567580839044L;
 
@@ -48,7 +50,9 @@ public class SearchByNameDialog extends DefaultDialog implements ActionListener{
 		lSpecies = new JLabel("Species:");
 
 		tGenus = new JTextField(DataBase.MAX_STRING);
+		tGenus.addKeyListener(this);
 		tSpecies = new JTextField(DataBase.MAX_STRING);
+		tSpecies.addKeyListener(this);
 
 		bCancel = new JButton("Storno");
 		bCancel.addActionListener(this);
@@ -82,6 +86,18 @@ public class SearchByNameDialog extends DefaultDialog implements ActionListener{
 		pack();
 	}
 
+	/**
+	 * Vyvolej hledani
+	 * FIXME pri prazdnych polich se nekde zasekne
+	 */
+	private void search(){
+
+		frame.setSearchGenus(tGenus.getText());
+		frame.setSearchSpecies(tSpecies.getText());
+		frame.reloadAnimalsList(AnimalsDatabase.SEARCH_BY_NAME);
+		dispose();
+	}
+
 	@Override
 	public void actionPerformed(ActionEvent e) {
 
@@ -92,11 +108,21 @@ public class SearchByNameDialog extends DefaultDialog implements ActionListener{
 
 		// hledani
 		if(e.getSource() == bSearch){
-			frame.setSearchGenus(tGenus.getText());
-			frame.setSearchSpecies(tSpecies.getText());
-			frame.reloadAnimalsList(AnimalsDatabase.SEARCH_BY_NAME);
-			dispose();
+			search();
 		}
 
 	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		if(e.getKeyCode() == KeyEvent.VK_ENTER){
+			search();
+		}
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {}
 }

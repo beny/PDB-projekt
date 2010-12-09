@@ -18,6 +18,7 @@ import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.Log;
+import cz.vutbr.fit.pdb03.gui.GUIManager;
 
 /**
  * Dialog, pro pridavani a editaci zvirete
@@ -47,6 +48,10 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 	DataBase db;
 
 	AnimalsDatabase frame;
+
+	private LoadingDialog dLoading;
+
+	private Animal animal;
 
 	public AnimalDialog(AnimalsDatabase frame) {
 		super();
@@ -171,7 +176,7 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 	public void actionPerformed(ActionEvent event) {
 
 		// vytvoreni zvirete
-		Animal animal = new Animal();
+		animal = new Animal();
 		try {
 			animal.setId(Integer.parseInt(lId.getText()));
 		} catch(NumberFormatException e){
@@ -186,17 +191,29 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 		// kliknuto na save
 		if(event.getSource() == bSave){
 
-			switch (mode) {
-			case INSERT:
-				frame.addAnimal(animal);
-				dispose();
-				break;
-			case UPDATE:
-				bSave.setText(EDIT);
-				frame.editAnimal(animal);
-				dispose();
-				break;
-			}
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					switch (mode) {
+					case INSERT:
+						frame.addAnimal(animal);
+						dispose();
+						break;
+					case UPDATE:
+						bSave.setText(EDIT);
+						frame.editAnimal(animal);
+						dispose();
+						break;
+					}
+
+					dLoading.dispose();
+				}
+			}).start();
+
+			dLoading = new LoadingDialog("Probíhá připojování k DB, prosím vyčkejte");
+			GUIManager.moveToCenter(dLoading, this);
+			dLoading.setVisible(true);
 		}
 
 		// smazani zaznamu

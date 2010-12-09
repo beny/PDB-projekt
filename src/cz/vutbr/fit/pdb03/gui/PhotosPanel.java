@@ -1,5 +1,6 @@
 package cz.vutbr.fit.pdb03.gui;
 
+import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -33,18 +34,12 @@ public class PhotosPanel extends JTabbedPane {
 	private JScrollPane sInfoTab;
 
 	// popisek jednotlivych info labelu
-	private final static String genus = "Jméno: ";
-	private final static String genusLat = "Jméno latinsky: ";
-	private final static String species = "Druhové jméno: ";
-	private final static String speciesLat = "Druhové jméno latinsky: ";
 	private final static String description = "Popis: ";
 	private final static String distance = "Vzdálenost k nejbližšímu zvířeti: ";
 	private final static String area = "Plocha obývající zvířetem: ";
 
-	private JLabel lGenus, lGenusLat, lSpecies, lSpeciesLat, lDescription,
-			lDistance, lArea;
-	private JLabel lGenus2, lGenusLat2, lSpecies2, lSpeciesLat2, lDistance2,
-			lArea2;
+	private JLabel lDescription, lDistance, lArea;
+	private JLabel lName, lNameLat, lDistance2, lArea2;
 	private JTextArea lDescription2;
 
 	public PhotosPanel(AnimalsDatabase frame) {
@@ -71,71 +66,61 @@ public class PhotosPanel extends JTabbedPane {
 		pInfoTab.setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.insets = new Insets(5, 5, 5, 5);
-		gbc.anchor = GridBagConstraints.FIRST_LINE_END;
+
+		Font fTitle = new Font(Font.SANS_SERIF, Font.BOLD, 15);
+		Font fSubTitle = new Font(Font.SANS_SERIF, Font.BOLD, 12);
+
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.gridwidth = GridBagConstraints.REMAINDER;
+		lName = new JLabel();
+		lName.setFont(fTitle);
+		pInfoTab.add(lName, gbc);
+
+		gbc.gridx = 0;
+		gbc.gridy = 1;
+		lNameLat = new JLabel();
+		lNameLat.setFont(fSubTitle);
+		pInfoTab.add(lNameLat, gbc);
 
 		// labely
+		gbc.anchor = GridBagConstraints.FIRST_LINE_START;
 		gbc.gridx = 0;
-		gbc.gridy++;
-		lGenus = new JLabel(genus);
-		pInfoTab.add(lGenus, gbc);
+		gbc.gridy = 2;
 
 		gbc.gridy++;
-		lGenusLat = new JLabel(genusLat);
-		pInfoTab.add(lGenusLat, gbc);
-
-		gbc.gridy++;
-		lSpecies = new JLabel(species);
-		pInfoTab.add(lSpecies, gbc);
-
-		gbc.gridy++;
-		lSpeciesLat = new JLabel(speciesLat);
-		pInfoTab.add(lSpeciesLat, gbc);
-
-		gbc.gridy++;
+		gbc.gridwidth = GridBagConstraints.REMAINDER;
 		lDescription = new JLabel(description);
+		lDescription.setFont(fSubTitle);
 		pInfoTab.add(lDescription, gbc);
 
-		gbc.gridy++;
-		lDistance = new JLabel(distance);
-		pInfoTab.add(lDistance, gbc);
-
-		gbc.gridy++;
-		lArea = new JLabel(area);
-		pInfoTab.add(lArea, gbc);
-
-		// datove slozky
-		gbc.anchor = GridBagConstraints.LINE_START;
-		gbc.gridx = 1;
-		gbc.gridy = 0;
-		lGenus2 = new JLabel();
-		pInfoTab.add(lGenus2, gbc);
-
-		gbc.gridy++;
-		lGenusLat2 = new JLabel();
-		pInfoTab.add(lGenusLat2, gbc);
-
-		gbc.gridy++;
-		lSpecies2 = new JLabel();
-		pInfoTab.add(lSpecies2, gbc);
-
-		gbc.gridy++;
-		lSpeciesLat2 = new JLabel();
-		pInfoTab.add(lSpeciesLat2, gbc);
-
+		gbc.gridx = 0;
 		gbc.gridy++;
 		lDescription2 = new JTextArea();
 		lDescription2.setWrapStyleWord(true);
 		lDescription2.setLineWrap(true);
 		lDescription2.setEditable(false);
-		lDescription2.setColumns(20);
+		lDescription2.setColumns(40);
 		lDescription2.setOpaque(false);
 		pInfoTab.add(lDescription2, gbc);
 
+		gbc.gridwidth = 1;
 		gbc.gridy++;
+		lDistance = new JLabel(distance);
+		lDistance.setFont(fSubTitle);
+		pInfoTab.add(lDistance, gbc);
+
+		gbc.gridx++;
 		lDistance2 = new JLabel();
 		pInfoTab.add(lDistance2, gbc);
 
+		gbc.gridx = 0;
 		gbc.gridy++;
+		lArea = new JLabel(area);
+		lArea.setFont(fSubTitle);
+		pInfoTab.add(lArea, gbc);
+
+		gbc.gridx++;
 		lArea2 = new JLabel();
 		pInfoTab.add(lArea2, gbc);
 
@@ -155,16 +140,24 @@ public class PhotosPanel extends JTabbedPane {
 		MapMarker m = frame.getMap().getMyPosition();
 		Point2D p = new Point();
 		p.setLocation(m.getLat(), m.getLon());
-		lGenus2.setText(animal.getGenus());
-		lGenusLat2.setText(animal.getGenusLat());
-		lSpecies2.setText(animal.getSpecies());
-		lSpeciesLat2.setText(animal.getSpeciesLat());
+
+		lName.setText(((animal.getGenus() == null) ? "" : animal.getGenus())
+				+ " "
+				+ ((animal.getSpecies() == null) ? "" : animal.getSpecies()));
+		lNameLat.setText(((animal.getGenusLat() == null) ? "" : animal
+				.getGenusLat())
+				+ " "
+				+ ((animal.getSpeciesLat() == null) ? "" : animal
+						.getSpeciesLat()));
 
 		try {
 			lDescription2.setText(animal.getDescription(frame.getDb()));
-			lDistance2.setText(animal.getNearestAppareance(frame.getDb(), p)
-					+ " km");
-			lArea2.setText(animal.getAppareanceArea(frame.getDb()) + " km2");
+
+			int distance = (int) Math.round(animal.getNearestAppareance(frame.getDb(), p));
+			int area = (int) Math.round(animal.getAppareanceArea(frame.getDb()));
+
+			lDistance2.setText(((distance == -1)?" - ":distance + " km"));
+			lArea2.setText(((area == -1)?" - ":area + " km2"));
 		} catch (SQLException ex) {
 			Log.error("Chyba pri ziskavani udaju o zvireti z DB");
 		}
@@ -174,10 +167,8 @@ public class PhotosPanel extends JTabbedPane {
 	 * Vycisteni formulare
 	 */
 	public void clear() {
-		lGenus2.setText("");
-		lGenusLat2.setText("");
-		lSpecies2.setText("");
-		lSpeciesLat2.setText("");
+		lName.setText("");
+		lNameLat.setText("");
 		lDescription2.setText("");
 		lDistance2.setText("");
 		lArea2.setText("");

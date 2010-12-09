@@ -12,7 +12,7 @@ public class LoadingDialog extends DefaultDialog {
 
 	private static final long serialVersionUID = -7777460264482052284L;
 
-	public LoadingDialog() {
+	public LoadingDialog(String message) {
 
 //		setUndecorated(true);
 
@@ -27,7 +27,7 @@ public class LoadingDialog extends DefaultDialog {
 		pContent.add(progress, gbc);
 
 		gbc.gridy++;
-		JLabel info = new JLabel("Probíhá nahrávání z databáze, prosím vyčkejte", JLabel.CENTER);
+		JLabel info = new JLabel(message, JLabel.CENTER);
 		pContent.add(info, gbc);
 
 		setContentPane(pContent);
