@@ -46,8 +46,17 @@ public class DataBase {
 			+ File.separator + "pdb03" + File.separator + "example"
 			+ File.separator + "";
 
+        /**
+         * Maximální délka názvu
+         */
 	public final static int MAX_STRING = 25;
+        /**
+         * Maximální délka popisu
+         */
 	public final static int MAX_LONG_STRING = 1500;
+        /**
+         * SRID prostorových dat - geo souřadnice
+         */
 	public final static int SRID = 8307;
 	public final static int DIMENSIONS = 2;
 
@@ -57,11 +66,11 @@ public class DataBase {
 	private Connection con = null;
 
 	/**
-	 * use this string for accesing to table with photos of animals
+	 * Název tabulky s fotografiemi zvířat
 	 *
 	 * @see #deletePicture(int, java.lang.String)
 	 * @see #deleteIndex(java.lang.String)
-	 * @see #uploadImage(int, java.lang.String, java.lang.String)
+         * @see #uploadImage(int, java.lang.String, java.lang.String, int, java.lang.String) 
 	 * @see #createIndex(java.lang.String)
 	 * @see #searchAnimal(java.lang.String, java.lang.String)
 	 * @see #EXCREMENT_PHOTO
@@ -71,14 +80,12 @@ public class DataBase {
 	public final static String ANIMAL_PHOTO = "animal_photo";
 
 	/**
-	 * use this string for accesing to table with photos of excrements of
-	 * animals
+	 * Název tabulky s fotkami trusu
 	 *
 	 * @see #deletePicture(int, java.lang.String)
 	 * @see #deleteIndex(java.lang.String)
-	 * @see #uploadImage(int, java.lang.String, java.lang.String)
+         * @see #uploadImage(int, java.lang.String, java.lang.String, int, java.lang.String) 
 	 * @see #createIndex(java.lang.String)
-	 * @see #searchAnimal(java.lang.String, java.lang.String)
 	 * @see #ANIMAL_PHOTO
 	 * @see #FEET_PHOTO
 	 * @see #SEARCH_PHOTO
@@ -86,13 +93,12 @@ public class DataBase {
 	public final static String EXCREMENT_PHOTO = "excrement_photo";
 
 	/**
-	 * use this string for accesing to table with photos of foot of animals
+	 * Název tabulky s obrázkami stop
 	 *
 	 * @see #deletePicture(int, java.lang.String)
 	 * @see #deleteIndex(java.lang.String)
-	 * @see #uploadImage(int, java.lang.String, java.lang.String)
+         * @see #uploadImage(int, java.lang.String, java.lang.String, int, java.lang.String)
 	 * @see #createIndex(java.lang.String)
-	 * @see #searchAnimal(java.lang.String, java.lang.String)
 	 * @see #EXCREMENT_PHOTO
 	 * @see #ANIMAL_PHOTO
 	 * @see #SEARCH_PHOTO
@@ -100,11 +106,11 @@ public class DataBase {
 	public final static String FEET_PHOTO = "footprint";
 
 	/**
-	 * use this string for accesing to table for searching according pictures
+	 * Název tabulky s fotkami, ve kterých chceme hledat
 	 *
 	 * @see #deletePicture(int, java.lang.String)
 	 * @see #deleteIndex(java.lang.String)
-	 * @see #uploadImage(int, java.lang.String, java.lang.String)
+	 * @see #uploadImage(int, java.lang.String, java.lang.String, int, java.lang.String)
 	 * @see #createIndex(java.lang.String)
 	 * @see #searchAnimal(java.lang.String, java.lang.String)
 	 * @see #EXCREMENT_PHOTO
@@ -124,22 +130,29 @@ public class DataBase {
 	private final static int MAX_SEARCH_RESULTS = 50;
 
 	/**
-	 * Data storage after searching
+	 * Kolekce pro uložení výsledků hledání
 	 *
 	 * @see #MAX_SEARCH_RESULTS
-	 * @see #searchAnimal(java.lang.String, java.lang.String)
+	 * @see #searchAnimals()
+         * @see #searchAnimals(java.lang.String)
+         * @see #searchAnimals(int)
+         * @see #searchAnimalsByAreaSize()
+         * @see #searchAnimalsByPicture(java.lang.String)
+         * @see #searchAnimalsByPicture(java.lang.String, java.lang.String)
+         * @see #searchExtinctAnimals()
+         * @see #searchNearestAnimals(java.awt.geom.Point2D) 
 	 * @see #searchAnimals(java.lang.String, java.lang.String)
 	 * @see #searchNearestAnimals(java.awt.geom.Point2D)
 	 */
 	public Collection<Animal> searchResult = new ArrayList<Animal>();
 
 	/**
-	 * Function for connectin to Oracle database
+	 * Funkce pro připojení Oracle databáze
 	 *
 	 * @param username
-	 *            username for database connection
+	 *            uživatelské jméno
 	 * @param password
-	 *            password for database connection
+	 *            heslo
 	 * @throws SQLException
 	 * @see #disconnect()
 	 * @see #isConnected()
@@ -151,7 +164,7 @@ public class DataBase {
 	}
 
 	/**
-	 * Function for disconnecting from database
+	 * Funkce pro odpojení databáze
 	 *
 	 * @see #connect(java.lang.String, java.lang.String)
 	 * @see #isConnected()
@@ -164,8 +177,7 @@ public class DataBase {
 	}
 
 	/**
-	 * Function for creating dabase - no need to destroy previous database
-	 * objects - this function cares of that.
+	 * Funkce pro (znovu)vytvoření databáze
 	 *
 	 * @see #deleteDatabase()
 	 * @see #createIndex(java.lang.String)
@@ -174,7 +186,6 @@ public class DataBase {
 	 * @throws SQLException
 	 */
 	public void createDatabase() throws SQLException {
-		Log.debug("Recreating database...");
 		deleteDatabase();
 		Log.debug("Database deleted!");
 		Statement stat = con.createStatement();
@@ -211,14 +222,12 @@ public class DataBase {
 		}
 		stat.execute("CREATE INDEX animal_movement_sidx ON animal_movement (geometry) indextype is MDSYS.SPATIAL_INDEX");
 		stat.close();
-		Log.debug("Preparing for creating sequences");
 		createSequences();
-		Log.debug("Preparing for creating triggers and procedures");
 		createTriggersAndProcedures();
 	}
 
 	/**
-	 * Function will recreate database and will load example data
+	 * Funkce pro (znovu)vytvoření databáze a nahrání vzorových dat
 	 *
 	 * @throws SQLException
 	 * @throws IOException
@@ -332,16 +341,14 @@ public class DataBase {
 	}
 
 	/**
-	 * SIMPLE function if needed to determine, if system is connected.
+	 * Funkce zjistí, zda, je připojení aktivní
 	 *
 	 * @see #connect(java.lang.String, java.lang.String)
 	 * @see #disconnect()
-	 * @return true if connection is alive, 0 if not connected
+	 * @return true pokud připojeno, false pokud nepřipojeno
 	 */
 	public boolean isConnected() {
-
 		boolean connected = false;
-
 		if (con == null) {
 			return false;
 		} else {
@@ -355,7 +362,6 @@ public class DataBase {
 				connected = false;
 			}
 		}
-
 		if (connected) {
 			return true;
 		} else {
@@ -365,13 +371,13 @@ public class DataBase {
 
 	// Functions for queriing databse
 	/**
-	 * Function for searching distance of nearest animal from current position
+	 * Funkce pro nalezení vzdálenosti od nejbližšího výskytu zvířete
 	 *
 	 * @param animal_id
-	 *            ID of an animal
+	 *            ID zvířete
 	 * @param location
-	 *            Location of an user
-	 * @return Distance in km (-1 if nothing found)
+	 *            Poloha uživatele
+	 * @return Vzdálenost v km (-1 pokud výskyt není)
 	 * @throws SQLException
 	 */
 	public Double getNearestAppareance(int animal_id, Point2D location)
@@ -399,11 +405,11 @@ public class DataBase {
 	}
 
 	/**
-	 * Function determines appareance area
+	 * Funkce zjistí rozlohu území obývaného zvířetem
 	 *
 	 * @param animal_id
-	 *            ID of an animal
-	 * @return Appareance in km2 (-1 if nothing found)
+	 *            ID zvířete
+	 * @return Rozloha v km2 (-1 pokud nic není)
 	 * @throws SQLException
 	 */
 	public Double getAppareanceArea(int animal_id) throws SQLException {
@@ -423,12 +429,12 @@ public class DataBase {
 	}
 
 	/**
-	 * Function using for searching animals according their photos
+	 * Funkce pro nalezení zvířete dle fotky
 	 *
 	 * @param filename
-	 *            filename of picture
+	 *            cesta k souboru
 	 * @param tablename
-	 *            In which tablename we want to search
+	 *            název tabulky ve které hledat
 	 * @see #ANIMAL_PHOTO
 	 * @see #EXCREMENT_PHOTO
 	 * @see #FEET_PHOTO
@@ -472,7 +478,7 @@ public class DataBase {
 	}
 
 	/**
-	 * Function for searching animals by their id
+	 * Funkce pro nalezení zvířete dle id
 	 *
 	 * @see #searchResult
 	 * @throws SQLException
@@ -500,16 +506,15 @@ public class DataBase {
 	}
 
 	/**
-	 * Function for searching animals by their names - choose one notation -
-	 * latin or other language - do not blend! No need to fill both params,
-	 * replace blank param by null or "".
+	 * Funkce pro nalezení zvířete dle jména. Netřeba zadávat obě políčka.
+         * Nemíchat české a latinské názvy - vybrat jen jednu možnost.
 	 *
 	 * @see #MAX_SEARCH_RESULTS
 	 * @see #searchResult
 	 * @param genus
-	 *            genus name of an animal
+	 *            rodové jméno
 	 * @param species
-	 *            species name of an animal
+	 *            druhové jméno
 	 * @throws SQLException
 	 */
 	public void searchAnimals(String genus, String species) throws SQLException {
@@ -563,12 +568,12 @@ public class DataBase {
 	}
 
 	/**
-	 * Searches animals by their description
+	 * Funkce pro hledání zvířat dle popisu
 	 *
 	 * @see #MAX_SEARCH_RESULTS
 	 * @see #searchResult
 	 * @param description
-	 *            Your earch string. If null, nothing is found.
+	 *            řetězec, jehož část je v popisu zvířete
 	 * @throws SQLException
 	 */
 	public void searchAnimals(String description) throws SQLException {
@@ -599,14 +604,14 @@ public class DataBase {
 	}
 
 	/**
-	 * Searches animal by their photo description
+	 * Funkce pro hledání zvířat dle popisu fotky
 	 *
 	 * @see #ANIMAL_PHOTO
 	 * @see #EXCREMENT_PHOTO
 	 * @see #FEET_PHOTO
 	 * @see #MAX_SEARCH_RESULTS
 	 * @param description
-	 *            Your dearch string. If null, nothing is found.
+	 *            řetězec, jehož část je v popisku fotky zvířete
 	 * @throws SQLException
 	 */
 	public void searchAnimalsByPicture(String description) throws SQLException {
@@ -679,9 +684,11 @@ public class DataBase {
 	}
 
 	/**
-	 * searches animals in areas of an animal appareance
+	 * Funkce nalezne zvířata vyskytující se
+         * na stejném území jako zvolené zvíře
 	 *
 	 * @param animal_id
+         *          ID zvířete
 	 * @throws SQLException
 	 */
 	public void searchAnimalsOnArea(int animal_id) throws SQLException {
@@ -726,7 +733,9 @@ public class DataBase {
 	}
 
 	/**
-	 * Function finds all animals in database
+	 * Funkce najde všechna zvířata v databázi
+         *
+         * @see #searchResult
 	 *
 	 * @throws SQLException
 	 */
@@ -751,7 +760,7 @@ public class DataBase {
 	}
 
 	/**
-	 * Searches animals according area size
+	 * Funkce najde zvířata s největší rozlohou výskytu a seřadí je
 	 *
 	 * @see #searchResult
 	 * @see T2SQL
@@ -786,8 +795,9 @@ public class DataBase {
 	}
 
 	/**
-	 * Finds extinct animals for temporal settings
+	 * Najde zvířata, která nemají žádný výskyt (jsou vyhynulá)
 	 *
+         * @see T2SQL
 	 * @see #searchResult
 	 * @throws SQLException
 	 */
@@ -818,14 +828,13 @@ public class DataBase {
 	}
 
 	/**
-	 * Searches for nearest animals - result of searching is stored in
-	 * searchResult
+	 * Funkce najde nejblíže se vyskytující zvířata od pozice uživatele
 	 *
 	 * @see #MAX_SEARCH_RESULTS
 	 * @see #searchResult
 	 * @see T2SQL
 	 * @param location
-	 *            Current location of user
+	 *            Pozice uživatele
 	 * @throws SQLException
 	 */
 	public void searchNearestAnimals(Point2D location) throws SQLException {
@@ -858,11 +867,13 @@ public class DataBase {
 	}
 
 	/**
-	 * Function for determine if animal is already in database
+	 * Funkce zjistí, zda není zvíře již v databázi
 	 *
 	 * @param genus
+         *          české nebo latinské rodové jméno
 	 * @param species
-	 * @return true if animal already exists, false if doesn't
+         *          české nebo latinské druhové jméno
+	 * @return true zvíře existuje, false neexistuje
 	 * @throws SQLException
 	 */
 	public boolean animalExists(String genus, String species)
@@ -890,20 +901,19 @@ public class DataBase {
 	}
 
 	/**
-	 * Selects a random thumbnail or all photos of an animal, it's used for an
-	 * illustrating found results
+	 * Vrátí jednu nebo všechny fotky zvířete
 	 *
 	 * @see #ANIMAL_PHOTO
 	 * @see #EXCREMENT_PHOTO
 	 * @see #FEET_PHOTO
 	 *
 	 * @param id
-	 *            ID of an animal
+	 *            ID zvířete
 	 * @param all
-	 *            true if return all pictures of an animal, false if return only
-	 *            one thumbnail
+	 *            true - všechny obrázky
+         *            false - pouze 1 náhodný obrázek
 	 * @param choosen_table
-	 *            from which table we want pictures
+	 *            Tabulka ze které vybrat data
 	 * @return HashMap<Integer photo_id,OrdImage photo>
 	 * @throws SQLException
 	 */
@@ -933,11 +943,10 @@ public class DataBase {
 	}
 
 	/**
-	 * Finds pictures associated to concrete geometry position - finds in all
-	 * tables
+	 * Najde fotky náležející určité geometrické entitě
 	 *
 	 * @param move_id
-	 *            ID of a geometry
+	 *            ID geometrie
 	 * @return Map<Integer,OrdImage>
 	 * @throws SQLException
 	 */
@@ -978,14 +987,14 @@ public class DataBase {
 	}
 
 	/**
-	 * Returns points which belongs to a current animal
+	 * Vrátí geometrii zvířete
 	 * <p>
 	 * http://download.oracle.com/docs/cd/B19306_01/appdev.102/b14373/oracle/
 	 * spatial/geometry/JGeometry.html
 	 * </p>
 	 *
 	 * @param animal_id
-	 *            id of current animal
+	 *            id zvířete
 	 * @return HashMap<Integer,JGeometry> list of points belongs to current
 	 *         animal
 	 * @throws SQLException
@@ -1010,12 +1019,12 @@ public class DataBase {
 	}
 
 	/**
-	 * Returns animal appareance of whole genus
+	 * Vrátí geometrie výskytu pro celý rod zvířete
 	 *
 	 * @param genus
-	 *            Genus of an animal
+	 *            Rodové jméno zvířete
 	 * @param genus_lat
-	 *            Latin genus of an animal
+	 *            Latinské rodové jméno
 	 * @return HashMap<int move_id, JGeometry geometry>
 	 * @throws SQLException
 	 */
@@ -1042,15 +1051,12 @@ public class DataBase {
 	// UPDATE functions
 
 	/**
-	 * Function for updating spatial data (invalidating old data and inserting
-	 * and validating new data using stored procedure)
+	 * Funkce pro úpravu geometrických entit
 	 *
 	 * @param move_id
-	 *            ID of geometry record
-	 * @param animal_id
-	 *            ID of an animal
+	 *            ID geometrie
 	 * @param j_geom
-	 *            JGeometry object
+	 *            JGeometry objekt
 	 * @throws SQLException
 	 * @see T2SQL
 	 */
@@ -1067,14 +1073,20 @@ public class DataBase {
 	}
 
 	/**
-	 * Function for updating selected animal
+	 * Funkce pro úpravu zvoleného zvířete
 	 *
 	 * @param animal_id
+         *          ID zvířete
 	 * @param genus
+         *          rodové jméno
 	 * @param species
+         *          druhové jméno
 	 * @param genus_lat
+         *          latinské rodové jméno
 	 * @param species_lat
+         *          latinské druhové jméno
 	 * @param description
+         *          popis zvířete
 	 * @throws SQLException
 	 */
 	public void updateAnimal(int animal_id, String genus, String species,
@@ -1096,7 +1108,7 @@ public class DataBase {
 	}
 
 	/**
-	 * Function for updating an animal
+	 * Funkce pro úpravu zvířete
 	 *
 	 * @param anima
 	 * @throws SQLException
@@ -1121,10 +1133,10 @@ public class DataBase {
 	// DELETE functions
 
 	/**
-	 * Function for deleting (invalidating) spatial object
+	 * Funkce pro smazání geometrie
 	 *
 	 * @param move_id
-	 *            ID of a spatial object
+	 *            ID geometrie
 	 * @throws SQLException
 	 * @see T2SQL
 	 */
@@ -1134,14 +1146,13 @@ public class DataBase {
 				+ "DELETE FROM animal_movement WHERE move_id="
 				+ Integer.toString(move_id)));
 		stat.close();
-
 	}
 
 	/**
-	 * Function for deleting an animal (with it's pictures and movemets -
-	 * trigger)
+	 * Funkce pro smazání zvířete
 	 *
 	 * @param animal_id
+         *          id zvířete
 	 * @throws SQLException
 	 */
 	public void deleteAnimal(int animal_id) throws SQLException {
@@ -1156,18 +1167,18 @@ public class DataBase {
 	}
 
 	/**
-	 * Function for deleting picture from database
+	 * Funkce pro smazání fotky z databáze
 	 *
 	 * @param photo_id
-	 *            ID of a photo
+	 *            ID fotky
 	 * @param table_name
-	 *            Name of a table we want to delete from
+	 *            Jméno tabulky ze které chceme mazat fotku
 	 * @throws SQLException
 	 * @see #ANIMAL_PHOTO
 	 * @see #EXCREMENT_PHOTO
 	 * @see #FEET_PHOTO
 	 * @see #SEARCH_PHOTO
-	 * @see #uploadImage(int, java.lang.String, java.lang.String)
+	 * @see #uploadImage(int, java.lang.String, java.lang.String, int, java.lang.String) 
 	 */
 	public void deletePicture(int photo_id, String table_name)
 			throws SQLException {
@@ -1184,19 +1195,19 @@ public class DataBase {
 	// INSERT functions
 
 	/**
-	 * Uploads image into choosen table
+	 * Upload fotky do zvolené tabulky
 	 *
 	 * @param animal_id
-	 *            ID of an animal
+	 *            ID zvířete
 	 * @param choosen_table
-	 *            table name we want to upload in
+	 *            Jméno zvolené tabulky
 	 * @param filename
-	 *            Filename of a picture for upload
+	 *            Cesta k souboru s obrázkem
 	 * @param move_id
-	 *            If it belongs to a geometry, this is it's id, else 0
+	 *            Číslo geometrie, ke které fotka patří - 0, pokud nikam nepatří
 	 * @param description
-	 *            Description of an picture
-	 * @return integer with new photo_id
+	 *            Popis fotky
+	 * @return integer s novým id fotky
 	 * @throws SQLException
 	 * @throws IOException
 	 * @see #ANIMAL_PHOTO
@@ -1265,12 +1276,12 @@ public class DataBase {
 	}
 
 	/**
-	 * Saves JGeometry into database
+	 * Uloží JGeometry do databáze
 	 *
 	 * @param animal_id
-	 *            ID of concrete animal
+	 *            ID zvířete
 	 * @param j_geom
-	 *            JGeometry object
+	 *            JGeometry objekt
 	 * @throws SQLException
 	 * @see T2SQL
 	 */
@@ -1294,13 +1305,18 @@ public class DataBase {
 	}
 
 	/**
-	 * Function for inserting new animals into database
+	 * Funkce pro vložení nového zvířete do databáze
 	 *
 	 * @param genus
+         *          rodové jméno
 	 * @param species
+         *          druhové jméno
 	 * @param genus_lat
+         *          latinské rodové jméno
 	 * @param species_lat
+         *          latinské druhové jméno
 	 * @param description
+         *          popis zvířete
 	 * @throws SQLException
 	 * @see #deleteAnimal(int)
 	 * @see #insertAnimal(cz.vutbr.fit.pdb03.Animal)
@@ -1325,18 +1341,18 @@ public class DataBase {
 	}
 
 	/**
-	 * Updates photo description in table of photos
+	 * Upraví popis fotky
 	 *
 	 * @param photo_id
-	 *            Photo ID
+	 *            ID fotky
 	 * @param tablename
-	 *            Name of table with pictures
+	 *            Jméno zvolené tabulky
 	 * @see #ANIMAL_PHOTO
 	 * @see #EXCREMENT_PHOTO
 	 * @see #FEET_PHOTO
 	 * @see #getPhotoDescription(int, java.lang.String)
 	 * @param description
-	 *            Description of a photo
+	 *            Popis fotky zvířete
 	 * @throws SQLException
 	 */
 	public void setPhotoDescription(int photo_id, String tablename,
@@ -1354,14 +1370,14 @@ public class DataBase {
 	}
 
 	/**
-	 * Updates association to geometry.
+	 * Upraví přidělení fotky ke geometrii
 	 *
 	 * @param photo_id
-	 *            ID of a photo
+	 *            ID fotky
 	 * @param tablename
-	 *            Name of a photo table
+	 *            Jméno zvolené tabulky fotek
 	 * @param move_id
-	 *            ID of a geometry
+	 *            ID nově zvolené geometrie - 0 pokud k ničemu
 	 * @see #ANIMAL_PHOTO
 	 * @see #EXCREMENT_PHOTO
 	 * @see #FEET_PHOTO
@@ -1382,10 +1398,10 @@ public class DataBase {
 	}
 
 	/**
-	 * Alternative function for inserting animal into database
+	 * Funkce pro vložení zvířete do databáze
 	 *
 	 * @param animal
-	 *            object Animal
+	 *            objekt Animal
 	 * @throws SQLException
 	 * @see Animal
 	 * @see #insertAnimal(java.lang.String, java.lang.String, java.lang.String,
@@ -1410,12 +1426,41 @@ public class DataBase {
 		stat.close();
 	}
 
+        /**
+	 * Vrátí popis fotky
+	 *
+	 * @param photo_id
+	 *            ID fotky
+	 * @param tablename
+	 *            Jméno zvolené tabulky fotek
+	 * @see #ANIMAL_PHOTO
+	 * @see #EXCREMENT_PHOTO
+	 * @see #FEET_PHOTO
+	 * @see #setPhotoDescription(int, java.lang.String, java.lang.String)
+	 * @return Popisek fotky
+	 * @throws SQLException
+	 */
+	public String getPhotoDescription(int photo_id, String tablename)
+			throws SQLException {
+		Statement stat = con.createStatement();
+		String SQLquery = "SELECT description FROM " + tablename
+				+ " WHERE photo_id=" + Integer.toString(photo_id);
+		OracleResultSet rset = null;
+		rset = (OracleResultSet) stat.executeQuery(SQLquery);
+		SQLquery = "";
+		rset.next();
+		SQLquery = rset.getString("description");
+		rset.close();
+		stat.close();
+		return SQLquery;
+	}
+
 	// Protected functions
 	/**
-	 * Function for receiving animal description from database
+	 * Funkce pro získání popisu zvířete z databáze
 	 *
 	 * @param animal_id
-	 *            ID of an animal
+	 *            ID zvířete
 	 * @return String with description
 	 * @throws SQLException
 	 */
@@ -1430,35 +1475,6 @@ public class DataBase {
 			SQLquery = rset.getString("description");
 			break;
 		}
-		rset.close();
-		stat.close();
-		return SQLquery;
-	}
-
-	/**
-	 * Returns description for photo
-	 *
-	 * @param photo_id
-	 *            Photo ID
-	 * @param tablename
-	 *            Tablename of photo table
-	 * @see #ANIMAL_PHOTO
-	 * @see #EXCREMENT_PHOTO
-	 * @see #FEET_PHOTO
-	 * @see #setPhotoDescription(int, java.lang.String, java.lang.String)
-	 * @return
-	 * @throws SQLException
-	 */
-	public String getPhotoDescription(int photo_id, String tablename)
-			throws SQLException {
-		Statement stat = con.createStatement();
-		String SQLquery = "SELECT description FROM " + tablename
-				+ " WHERE photo_id=" + Integer.toString(photo_id);
-		OracleResultSet rset = null;
-		rset = (OracleResultSet) stat.executeQuery(SQLquery);
-		SQLquery = "";
-		rset.next();
-		SQLquery = rset.getString("description");
 		rset.close();
 		stat.close();
 		return SQLquery;

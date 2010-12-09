@@ -4,26 +4,57 @@ import java.awt.geom.Point2D;
 import java.sql.SQLException;
 
 /**
- * Object for saving informations about animal
+ * Objekt pro uložení informací o zvířeti
  *
  * @author Tomáš Ižák <xizakt00@stud.fit.vutbr.cz>
  */
 public class Animal {
 
-	// basic informations about animal
+	//základní informace o zvířeti
 	private int id = 0;
+        /**
+         * Rodové jméno
+         */
 	private String genus = "";
+        /**
+         * Druhové jméno
+         */
 	private String species = "";
+        /**
+         * Rodové jméno latinsky
+         */
 	private String genusLat = "";
+        /**
+         * Druhové jméno latinsky
+         */
 	private String speciesLat = "";
+        /**
+         * Popis zvířete
+         */
 	private String description = "";
 	private Double nearestAppareance = -1.0;
 	private Double appareanceArea = -1.0;
 
+        /**
+         * Konstruktor
+         */
 	public Animal(){
 
 	}
 
+        /**
+         * Konstruktor
+         * @param genus
+         *          Rodové jméno
+         * @param species
+         *          Druhové jméno
+         * @param genusLat
+         *          Rodové jméno latinsky
+         * @param speciesLat
+         *          Druhové jméno latinsky
+         * @param description
+         *          Popis zvířete
+         */
 	public Animal(String genus, String species, String genusLat,
 			String speciesLat, String description) {
 		this.genus = genus;
@@ -39,50 +70,95 @@ public class Animal {
 	}
 
 	// //////GETRS, SETRS
+        /**
+         * Vrátí Id zvířete
+         * @return id zvířete
+         */
 	public int getId() {
 		return id;
 	}
 
+        /**
+         * Nastaví id zvířete
+         * @param id
+         *          ID zvířete
+         */
 	public void setId(int id) {
 		this.id = id;
 	}
 
+        /**
+         * Získá rodové jméno
+         * @return rodové jméno
+         */
 	public String getGenus() {
 		return genus;
 	}
 
+        /**
+         * Nastaví rodové jméno
+         * @param genus
+         *          rodové jméno
+         */
 	public void setGenus(String genus) {
 		this.genus = genus;
 	}
 
+        /**
+         * Získá druhové jméno
+         * @return druhové jméno
+         */
 	public String getSpecies() {
 		return species;
 	}
 
+        /**
+         * Nastaví druhové jméno
+         * @param species
+         *          druhové jméno
+         */
 	public void setSpecies(String species) {
 		this.species = species;
 	}
 
+        /**
+         * Zjistí latinské rodové jméno
+         * @return latinské rodové jméno
+         */
 	public String getGenusLat() {
 		return genusLat;
 	}
 
+        /**
+         * Nastaví latinské rodové jméno
+         * @param genusLat
+         *          latinské rodové jméno
+         */
 	public void setGenusLat(String genusLat) {
 		this.genusLat = genusLat;
 	}
 
+        /**
+         * Získá latinské druhové jméno
+         * @return latinské druhové jméno
+         */
 	public String getSpeciesLat() {
 		return speciesLat;
 	}
 
+        /**
+         * Nastaví latinské druhové jméno
+         * @param speciesLat
+         *          Latinské druhové jméno
+         */
 	public void setSpeciesLat(String speciesLat) {
 		this.speciesLat = speciesLat;
 	}
 
 	// //////OTHER PUBLIC FUNCTIONS
 	/**
-	 * use this function while inserting and updating
-	 *
+         * Získá popis zvířete
+	 * Používat při vkládání a modifikaci - spíše nepoužívat
 	 * @return description of an animal
 	 */
 	public String getDescription() {
@@ -90,23 +166,20 @@ public class Animal {
 	}
 
 	/**
-	 * Sets description of an animal
-	 *
+	 * Nastaví popis zvířete	 *
 	 * @param description
-	 *            description of an animal
+	 *            popis zvířete
 	 */
 	public void setDescription(String description) {
 		this.description = description;
 	}
 
 	/**
-	 * Returns description of current animal use this function only during
-	 * selecting (not inserting or updating - may occurs losing data)
-	 *
+	 * Vrátí popis zvířete - používat při zobrazování dat (ne při vkládání a modifikaci - může dojít ke ztrátě dat)
 	 * @param data
-	 *            Current DataBase
+	 *            Připojená databáze
 	 * @see DataBase#getDescription(int)
-	 * @return description of current animal
+	 * @return Popis zvířete
 	 * @throws SQLException
 	 */
 	public String getDescription(DataBase data) throws SQLException {
@@ -116,14 +189,14 @@ public class Animal {
 	}
 
 	/**
-	 * Returns distance of nearest appareance of current animal (km)
+	 * Vrátí nejbližší vzdálenost k výskytu zvířete (v km)
 	 *
 	 * @param data
-	 *            current DataBase
+	 *            Připojená databáze
 	 * @param location
-	 *            current user location
+	 *            Pozice uživatele
 	 * @see DataBase#getNearestAppareance(int, java.awt.geom.Point2D)
-	 * @return distance of nearest appareance of current animal (km)
+	 * @return Vzdálenost k výskytu zvířete v kilometrech
 	 * @throws SQLException
 	 */
 	public Double getNearestAppareance(DataBase data, Point2D location)
@@ -134,12 +207,12 @@ public class Animal {
 	}
 
 	/**
-	 * Returns appareance area of current animal (km2)
+	 * Vrátí rozlohu zvířete (v km2)
 	 *
 	 * @param data
 	 *            current DataBase
 	 * @see DataBase#getAppareanceArea(int)
-	 * @return appareance area of current animal (km2)
+	 * @return rozloha (km2)
 	 * @throws SQLException
 	 */
 	public Double getAppareanceArea(DataBase data) throws SQLException {
@@ -149,12 +222,11 @@ public class Animal {
 	}
 
 	/**
-	 * Call everytime, when spatial data of current animal were changed
+	 * Zavolat po každé změně prostorových dat (změna časových údajů - vložení, modifikace a smazání entit)
 	 *
 	 * @see DataBase#deleteSpatialData(int)
 	 * @see DataBase#insertAppareance(int, oracle.spatial.geometry.JGeometry)
-	 * @see DataBase#updateAppareance(int, int,
-	 *      oracle.spatial.geometry.JGeometry)
+	 * @see DataBase#updateAppareance(int, oracle.spatial.geometry.JGeometry) 
 	 * @see T2SQL#setCurrentTime()
 	 * @see T2SQL#setNoTemporalRestrictions()
 	 * @see T2SQL#setValidationDate(java.util.Date)
@@ -166,17 +238,12 @@ public class Animal {
 	}
 
 	/**
-	 * Call everytime, when actual position data were changed
+	 * Zavolat pokaždé, kdy dojde ke změně GPS pozice uživatele
 	 */
 	public void positionDataChanged() {
 		freeNearestAppareance();
 	}
 
-	/**
-	 * Converts animal object into string
-	 *
-	 * @return string with name of an animal
-	 */
 	@Override
 	public String toString() {
 		return genus + ", " + species;

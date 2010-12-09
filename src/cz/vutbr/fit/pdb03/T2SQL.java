@@ -6,25 +6,25 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 // TODO overit delete a ze to vsechno dela co ma
 /**
- * Class for T2SQL support
- * Defines new language T2SQL (TimeToSQL). It's something like simple TSQL2 or TimeDB
+ * Třída pro práci s jazykem T2SQL
+ * Definuje nový jazyk T2SQL (TimeToSQL). Něco jako jednoduchý TSQL2 nebo TimeDB
  * <p>
- * It's defined like this:
+ * Definice:
  * </p><p>
- * - VALIDTIME PERIOD [<DateTime>,<DateTime>) <SQL>
- *  transforms SQL for valid records only (which are valid in some time which is in interval)
+ * - VALIDTIME PERIOD [<Date>,<Date>) <SQL>
+ *  transformuje SQL pouze pro platná data (objevují se někde v časovém intervalu)
  * </p><p>
- * - VALIDTIME DATE <DateTime> <SQL>
- *  transforms SQL for valid records only (which are valid in that time)
+ * - VALIDTIME DATE <Date> <SQL>
+ *  transformuje SQL pouze pro platná data (platná v určitém čase)
  * </p><p>
  * - <SQL>
- *  transforms SQL for valid records only (which are valid in current time)
+ *  transformuje SQL pouze pro platná data (platná v aktuálním okamžiku)
  * </p><p>
  * - NONSEQUENCED VALIDTIME <SQL>
- *  prefix (NONSEQUENCED VALIDTIME ) is deleted only. SQL is for all records in database.
+ *  pouze odebrán prefix (NONSEQUENCED VALIDTIME ). SQL nad všemi daty v databázi.
  * </p>
- *  <SQL> is some SQL language
- *  <DateTime> is Date and Time in format yyyy/MM/dd
+ *  <SQL> je příkaz v jazyce SQL
+ *  <Date> je čas ve formátu yyyy/MM/dd
  *
  * @author Tomáš Ižák <xizakt00@stud.fit.vutbr.cz>
  */
@@ -35,24 +35,24 @@ public final class T2SQL {
     private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");//("dd-MM-yyyy HH:mm:ss");
     private static DateFormat dateFormatIn = new SimpleDateFormat("yyyy/MM/dd");//("yyyy/MM/dd'~'HH:mm:ss");
     /**
-     * String constant for NONSEQUENCED VALIDTIME - no temporal restrictions
+     * Konstanta pro NONSEQUENCED VALIDTIME - bez časového omezení
      */
     public static final String NO_RESTRICTIONS = "NONSEQUENCED VALIDTIME";
     /**
-     * String constant for VALIDTIME PERIOD - valid interval
+     * Konstanta pro VALIDTIME PERIOD - platné v časovém intervalu
      */
     public static final String INTERVAL = "VALIDTIME PERIOD";
     /**
-     * String constant for VALIDTIME DATE - for valid time
+     * Konstanta pro VALIDTIME DATE - platné v určitém čase
      */
     public static final String DATETIME = "VALIDTIME DATE";
     /**
-     * String constant for NOW - current time
+     * konstanta pro NOW - platné v aktuálním okamžiku
      */
     public static final String NOW = "";
 
     /**
-     * Function sets nonsequenced validtime
+     * Funkce odstraní časové omezení
      * @see #setCurrentTime()
      * @see #setValidationDate(java.util.Date)
      * @see #setValidationDates(java.util.Date, java.util.Date)
@@ -64,14 +64,14 @@ public final class T2SQL {
     }
 
     /**
-     * Function sets VALIDTIME PERIOD
+     * Funkce nastaví VALIDTIME PERIOD
      * @see #setCurrentTime()
      * @see #setNoTemporalRestrictions()
      * @see #setValidationDate(java.util.Date)
      * @param from
-     *          Validtime begins
+     *          Začátek platnosti
      * @param to
-     *          Validtime ends
+     *          Konec platnosti
      */
     public static void setValidationDates(Date from, Date to){
         validFrom=from;
@@ -80,7 +80,7 @@ public final class T2SQL {
     }
 
     /**
-     * Functions sets showing only valid data for actual moment
+     * Funkce nastaví platnost dat pouze pro aktuální okamžik
      * @see #setNoTemporalRestrictions()
      * @see #setValidationDate(java.util.Date)
      * @see #setValidationDates(java.util.Date, java.util.Date)
@@ -91,7 +91,7 @@ public final class T2SQL {
     }
 
     /**
-     * Function sets showing only valid data for wanted date
+     * Funkce nastaví platnost dat vůči určitému datu
      * @param date
      * @see #setCurrentTime()
      * @see #setNoTemporalRestrictions()
@@ -103,23 +103,23 @@ public final class T2SQL {
     }
 
     /**
-     * To find out FROM validation date
-     * @return Setted validation date 'From'
+     * Zjistí počátek platnosti dat
+     * @return Datum platnosti od
      */
     public static Date getValidationDateFrom(){
         return validFrom;
     }
 
     /**
-     * To find out TO validation date
-     * @return Setted validation date 'To'
+     * Zjištění konce platnosti
+     * @return konec platnosti
      */
     public static Date getValidationDateTo(){
         return validTo;
     }
 
     /**
-     * To find out which mode is setted
+     * Zjištěné módu
      * @see #setCurrentTime()
      * @see #setNoTemporalRestrictions()
      * @see #setValidationDates(java.util.Date, java.util.Date)
@@ -128,19 +128,19 @@ public final class T2SQL {
      * @see #INTERVAL
      * @see #NOW
      * @see #NO_RESTRICTIONS
-     * @return Setted mode
+     * @return Nastavený mód
      */
     public static String getMode(){
         return mode;
     }
 
     /**
-     * Conversion from T2SQL notation to SQL notation
-     * Works for SELECT, INSERT, UPDATE and DELETE
-     * RESTRICTIONS: simple querying, DELETE and UPDATE have format ...WHERE move_id=<number>
+     * Konverze z jazyka T2SQL do SQL
+     * Pracuje se SELECT, INSERT, UPDATE and DELETE
+     * Omezení: jednoduché dotazy, DELETE a UPDATE mají formát ...WHERE move_id=<číslo>
      * @param T2SQLString
-     *          T2SQL string
-     * @return SQL string
+     *          T2SQL příkaz
+     * @return SQL příkaz
      */
     public static String temporal(String T2SQLString){
         T2SQLString=T2SQLString.trim();
@@ -256,8 +256,8 @@ public final class T2SQL {
     }
 
     /**
-     * Generates T2SQL validation prefix
-     * @return T2SQL string
+     * Vytváří T2SQL prefix
+     * @return T2SQL prefix
      * @see #setCurrentTime()
      * @see #setNoTemporalRestrictions()
      * @see #setValidationDate(java.util.Date)
@@ -276,9 +276,9 @@ public final class T2SQL {
     }
 
     /**
-     * Function sets temporal mode
+     * Funkce nastaví mód temporálních dat
      * @param mode1
-     *          String with desired mode
+     *          Zvolený mód
      */
     private static void setMode(String mode1){
         mode=mode1;
