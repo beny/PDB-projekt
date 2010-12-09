@@ -1,5 +1,7 @@
 package cz.vutbr.fit.pdb03.controllers;
 
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.SQLException;
@@ -13,29 +15,23 @@ import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.dialogs.AnimalDialog;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
-import cz.vutbr.fit.pdb03.map.JMapPanel;
 
 /**
  * Trida zajistujici odchyceni klikani do mapy
  * @author Ondřej Beneš <ondra.benes@gmail.com>
  *
  */
-public class ListController extends MouseAdapter {
+public class ListController extends MouseAdapter implements KeyListener {
 
 	/**
-	 * Reference na mapu (pro funkce pocitani pozice a pod)
+	 * Reference na frame
 	 */
-	private JMapPanel map;
 	private AnimalsDatabase frame;
 
 	Animal selectedAnimal;
 
 	public ListController(AnimalsDatabase frame) {
 		this.frame = frame;
-
-		// pridani listeneru
-		map = frame.getMap();
-
 	}
 
 
@@ -69,7 +65,7 @@ public class ListController extends MouseAdapter {
 				try {
 					Map<Integer, JGeometry> spatialInfo = frame.getDb()
 							.selectAppareance(selectedAnimal.getId());
-					map.setMapData(spatialInfo);
+					frame.getMap().setMapData(spatialInfo);
 				} catch (SQLException ex) {
 					Log.error("Chyba pri hledani spatial info o zvireti "
 							+ selectedAnimal.getId());
@@ -94,4 +90,38 @@ public class ListController extends MouseAdapter {
 			}
 		}
 	}
+
+
+	@Override
+	public void keyPressed(KeyEvent e) {}
+
+	@Override
+	public void keyReleased(KeyEvent e){
+		// odchyceni klavesy nahoru ci dolu
+		if(e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN){
+			Log.debug("Byla zmacknuta klavesa: nahoru ");
+
+			ListModel dlm = frame.getList().getModel();
+
+			// implicitni zakazni menu
+			frame.getMenuController().setAnimalChosen(false);
+
+			Animal selectedAnimal = (Animal) dlm.getElementAt(frame.getList().getSelectedIndex());
+			setSelectedAnimal(selectedAnimal);
+
+			try {
+				Map<Integer, JGeometry> spatialInfo = frame.getDb()
+						.selectAppareance(selectedAnimal.getId());
+				frame.getMap().setMapData(spatialInfo);
+			} catch (SQLException ex) {
+				Log.error("Chyba pri hledani spatial info o zvireti "
+						+ selectedAnimal.getId());
+			}
+
+			Log.debug("Aktivni zvire: " + getSelectedAnimal());
+		}
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {}
 }

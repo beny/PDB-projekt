@@ -28,6 +28,7 @@ public class AnimalsPanel extends JScrollPane {
 		lAnimals = new JList();
 		frame.setList(lAnimals);
 		lAnimals.addMouseListener(listController);
+		lAnimals.addKeyListener(listController);
 
 		// vlastnosti
 		setViewportView(lAnimals);

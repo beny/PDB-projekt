@@ -41,6 +41,7 @@ public class JMapPanel extends JMapViewer {
 	public final static String ACTION_EDIT = "EDIT";
 	public final static String ACTION_SAVE = "SAVE";
 	public final static String ACTION_CHANGE_TYPE = "CHANGE";
+	public final static String ACTION_CANCEL = "CANCEL";
 
 	public final static int MODE_POINT = 0;
 	public final static int MODE_LINESTRING = 1;
@@ -63,7 +64,7 @@ public class JMapPanel extends JMapViewer {
 	private int mode = -1;
 
 	// komponenta pro mapu
-	JButton editButton, saveButton;
+	JButton bEdit, bSave, bCancel;
 	private JComboBox comboElements;
 
 	// data
@@ -107,20 +108,25 @@ public class JMapPanel extends JMapViewer {
 		int smallSpace = 10;
 
 		// edit tlacitko
-		editButton = new JButton("edit");
-		editButton.setBounds(50, smallSpace, buttonSizeX, buttonSizeY);
-		editButton.setActionCommand(ACTION_EDIT);
-		editButton.addActionListener(mapController);
-		add(editButton);
+		bEdit = new JButton("uprav");
+		bEdit.setBounds(50, smallSpace, buttonSizeX, buttonSizeY);
+		bEdit.setActionCommand(ACTION_EDIT);
+		bEdit.addActionListener(mapController);
+		add(bEdit);
+
+		bCancel = new JButton("zruš");
+		bCancel.setBounds(50, smallSpace + 30, buttonSizeX, buttonSizeY);
+		bCancel.setActionCommand(ACTION_CANCEL);
+		bCancel.addActionListener(mapController);
+		add(bCancel);
 
 		// komponenty pro editaci
-
 		// tlacitko pro ukladani
-		saveButton = new JButton("save");
-		saveButton.setBounds(50, smallSpace, buttonSizeX, buttonSizeY);
-		saveButton.setActionCommand(ACTION_SAVE);
-		saveButton.addActionListener(mapController);
-		add(saveButton);
+		bSave = new JButton("ulož");
+		bSave.setBounds(50, smallSpace, buttonSizeX, buttonSizeY);
+		bSave.setActionCommand(ACTION_SAVE);
+		bSave.addActionListener(mapController);
+		add(bSave);
 
 		// kombo pro vyber elementu
 		String[] elements = {"Výskyt", "Trasa", "Území"};
@@ -348,8 +354,9 @@ public class JMapPanel extends JMapViewer {
 		editMode = visible;
 
 		// komponenty
-		editButton.setVisible(!visible);
-		saveButton.setVisible(visible);
+		bEdit.setVisible(!visible);
+		bCancel.setVisible(visible);
+		bSave.setVisible(visible);
 		comboElements.setVisible(visible);
 	}
 

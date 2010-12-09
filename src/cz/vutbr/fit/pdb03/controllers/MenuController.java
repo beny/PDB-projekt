@@ -168,6 +168,21 @@ public class MenuController implements ActionListener{
 	}
 
 	/**
+	 * Nastaveni menu pri editaci
+	 * @param enabled
+	 */
+	public void setEditMode(boolean enabled) {
+		mAnimal.setEnabled(!enabled);
+		mSearch.setEnabled(!enabled);
+
+		miApplicationDatabaseConnection.setEnabled(!enabled);
+		miApplicationDatabaseCreate.setEnabled(!enabled);
+		miApplicationDatabaseSample.setEnabled(!enabled);
+		miApplicationPreferences.setEnabled(!enabled);
+
+	}
+
+	/**
 	 * Nastaveni menu podle pripojeni
 	 * @param connected
 	 */
@@ -352,8 +367,15 @@ public class MenuController implements ActionListener{
 		}
 
 		// smazani zvirete
-		if(event.getSource() == miAnimalDelete){
-			frame.deleteAnimal(frame.getAnimalsPanel().getSelectedAnimal());
+		if (event.getSource() == miAnimalDelete) {
+			int result = JOptionPane.showConfirmDialog(frame,
+					"Chcete opravdu odstranit toto zvíře?",
+					"Odstranění zvířete", JOptionPane.YES_NO_OPTION,
+					JOptionPane.QUESTION_MESSAGE);
+
+			if (result == JOptionPane.YES_OPTION) {
+				frame.deleteAnimal(frame.getAnimalsPanel().getSelectedAnimal());
+			}
 		}
 
 		// TODO hledani podle obrazku

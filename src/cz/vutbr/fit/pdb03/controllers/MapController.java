@@ -70,6 +70,38 @@ public class MapController extends DefaultMapController implements
 	}
 
 	/**
+	 * Znovu nacte data a zobrazi na mape
+	 */
+	private void reloadMapData(){
+
+		// odstran vse z mapy
+		map.clear();
+
+		// nacti vsechny data ulozena k prave vybranemu zvireti
+		Map<Integer, JGeometry> data = null;
+		try {
+			data = db.selectAppareance(frame.getAnimalsPanel()
+					.getSelectedAnimal().getId());
+		} catch (SQLException ex) {
+			Log.error("Chyba pri ziskavani geometrii u zvirete: "
+					+ ex.getMessage());
+		}
+
+		// vykresli vsechny data ke zvireti
+		map.setMapData(data);
+
+		// enable list
+		frame.setEnable(true);
+
+		// zrusit edit mod u mapy
+		map.setEditMode(false);
+
+		// zrusit mod u menu
+		frame.getMenuController().setEditMode(false);
+
+	}
+
+	/**
 	 * Metoda ktera maze body podle toho kam se kliklo
 	 *
 	 * @param clicked
@@ -229,9 +261,15 @@ public class MapController extends DefaultMapController implements
 			if (!animalsPanel.getList().isSelectionEmpty()) {
 				frame.setEnable(false);
 				map.setEditMode(true);
+				frame.getMenuController().setEditMode(true);
 			} else {
 				JOptionPane.showMessageDialog(frame, "Musíte vybrat nějaké zvíře", "Vyber zvíře", JOptionPane.ERROR_MESSAGE);
 			}
+		}
+
+		// cancel
+		if(e.getActionCommand() == JMapPanel.ACTION_CANCEL){
+			reloadMapData();
 		}
 
 		// zmacknuto save
@@ -250,6 +288,10 @@ public class MapController extends DefaultMapController implements
 			case JMapPanel.MODE_POLYGON:
 				geometry = ConvertGeo.createPolygon(linestring);
 				break;
+
+			// TODO multipoint
+			// TODO multilinestring
+			// TODO multipolygon
 			}
 
 			// ulozeni do DB
@@ -261,27 +303,7 @@ public class MapController extends DefaultMapController implements
 						+ ex.getMessage());
 			}
 
-			// odstran vse z mapy
-			map.clear();
-
-			// nacti vsechny data ulozena k prave vybranemu zvireti
-			Map<Integer, JGeometry> data = null;
-			try {
-				data = db.selectAppareance(frame.getAnimalsPanel()
-						.getSelectedAnimal().getId());
-			} catch (SQLException ex) {
-				Log.error("Chyba pri ziskavani geometrii u zvirete: "
-						+ ex.getMessage());
-			}
-
-			// vykresli vsechny data ke zvireti
-			map.setMapData(data);
-
-			// enable list
-			frame.setEnable(true);
-
-			// zrusit edit mod u mapy
-			map.setEditMode(false);
+			reloadMapData();
 		}
 
 	}

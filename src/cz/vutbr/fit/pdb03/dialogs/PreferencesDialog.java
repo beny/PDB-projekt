@@ -243,7 +243,7 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 				frame.getMap().setMyPosition(getMyPosition());
 			} catch (NumberFormatException ex) {
 				JOptionPane.showMessageDialog(this,
-						"Souřadnice nejsou ve správném formátu", "Chyba údajů",
+						"Souřadnice nejsou ve správném formátu (XX.XXXX)", "Chyba údajů",
 						JOptionPane.ERROR_MESSAGE);
 				error = true;
 			}
@@ -258,7 +258,7 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 					T2SQL.setValidationDates(from, to);
 				} catch (ParseException ex) {
 					JOptionPane.showMessageDialog(this,
-							"Datum je ve špatném formátu", "Chybné datum",
+							"Datum je ve špatném formátu (DD-MM-YYYY)", "Chybné datum",
 							JOptionPane.ERROR_MESSAGE);
 					error = true;
 				}
@@ -271,7 +271,7 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 					dispose();
 				} catch (ParseException ex) {
 					JOptionPane.showMessageDialog(this,
-							"Datum je ve špatném formátu", "Chybné datum",
+							"Datum je ve špatném formátu (DD-MM-YYYY)", "Chybné datum",
 							JOptionPane.ERROR_MESSAGE);
 					error = true;
 				}
