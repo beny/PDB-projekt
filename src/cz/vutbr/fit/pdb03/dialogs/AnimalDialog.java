@@ -46,13 +46,13 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 
 	DataBase db;
 
-	AnimalsDatabase parent;
+	AnimalsDatabase frame;
 
-	public AnimalDialog(AnimalsDatabase parent) {
+	public AnimalDialog(AnimalsDatabase frame) {
 		super();
 
-		this.parent = parent;
-		db = parent.getDb();
+		this.frame = frame;
+		db = frame.getDb();
 
 		// hlavni panel
 		pContent = new JPanel(new GridBagLayout());
@@ -66,6 +66,7 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 		// TODO vyresit predavani ID lepe
 		lId = new JLabel();
 		lId.setVisible(false);
+		lId.setText("0");
 		pContent.add(lId, gbc);
 
 		lGenus = new JLabel("Genus:");
@@ -169,58 +170,30 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 	@Override
 	public void actionPerformed(ActionEvent event) {
 
+		// vytvoreni zvirete
+		Animal animal = new Animal();
+		try {
+			animal.setId(Integer.parseInt(lId.getText()));
+		} catch(NumberFormatException e){
+			Log.error("Chyba pri parsovani ID");
+		}
+		animal.setGenus(tGenus.getText());
+		animal.setGenusLat(tGenusLat.getText());
+		animal.setSpecies(tSpecies.getText());
+		animal.setSpeciesLat(tSpeciesLat.getText());
+		animal.setDescription(taDescription.getText());
+
 		// kliknuto na save
 		if(event.getSource() == bSave){
 
-			Animal animal;
-
 			switch (mode) {
 			case INSERT:
-
-				animal = new Animal(tGenus.getText(),
-						tGenusLat.getText(), tSpecies.getText(),
-						tSpeciesLat.getText(), taDescription.getText());
-
-				try {
-					db.insertAnimal(animal);
-				} catch (SQLException e) {
-					System.err.println("Chyba pri vkladani zvirete do DB: " + e.getMessage());
-				}
-
-				parent.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
+				frame.addAnimal(animal);
 				dispose();
-
 				break;
 			case UPDATE:
-
 				bSave.setText(EDIT);
-				int id = 0;
-
-				try{
-					id = Integer.parseInt(lId.getText());
-					db.searchAnimals(id);
-				} catch (NumberFormatException e) {
-					System.err.println("Chyba pri editaci zvirete, neexistujici ID: " + e.getMessage());
-				} catch (SQLException e) {
-					System.err.println("Chyba hledani zvirete podle ID v DB: " + e.getMessage());
-				}
-
-				if (id != 0) {
-
-					animal = new Animal(id, tGenus.getText(),
-							tGenusLat.getText(), tSpecies.getText(),
-							tSpeciesLat.getText(), taDescription.getText());
-
-					Log.debug("Id zvirete ktere chci ulozit:" + id);
-
-					try {
-						db.updateAnimal(animal);
-					} catch (SQLException e) {
-						System.err.println("Chyba hledani zvirete podle ID v DB: " + e.getMessage());
-					}
-				}
-
-				parent.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
+				frame.editAnimal(animal);
 				dispose();
 				break;
 			}
@@ -228,19 +201,7 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 
 		// smazani zaznamu
 		if(event.getSource() == bDelete){
-
-			int id = 0;
-			try{
-				id = Integer.parseInt(lId.getText());
-				db.deleteAnimal(id);
-				Log.debug("Mazu zvire s ID " + id);
-			} catch (NumberFormatException e) {
-				System.err.println("Chyba pri editaci zvirete, neexistujici ID: " + e.getMessage());
-			} catch (SQLException e) {
-				System.err.println("Chyba pri mazani zvirete z DB" + e.getMessage());
-			}
-
-			parent.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
+			frame.deleteAnimal(animal);
 			dispose();
 		}
 	}

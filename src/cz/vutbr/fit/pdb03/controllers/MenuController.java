@@ -26,12 +26,6 @@ public class MenuController implements ActionListener{
 	public final static String CONNECT_TO_DB = "Připojit k databázi";
 	public final static String DISCONNECT_FROM_DB = "Odpojit od databáze";
 
-	public final static int MODE_DISCONNECTED = 0;
-	public final static int MODE_CONNECTED = 1;
-	public final static int MODE_ANIMAL = 2;
-	public final static int MODE_ANIMAL_OFF = 3;
-
-
 	// menu items
 	private JMenuBar mBar;
 	private JMenu mAnimal, mApplication, mSearch;
@@ -49,9 +43,6 @@ public class MenuController implements ActionListener{
 
 	// hlavni okno
 	AnimalsDatabase frame;
-
-	// mod menu
-	int mode = MODE_DISCONNECTED;
 
 	public MenuController(AnimalsDatabase frame) {
 
@@ -172,9 +163,40 @@ public class MenuController implements ActionListener{
 
 		frame.setJMenuBar(mBar);
 
-		setMode(MODE_ANIMAL_OFF);
+		setConnected(false);
+		setAnimalChosen(false);
 	}
 
+	/**
+	 * Nastaveni menu podle pripojeni
+	 * @param connected
+	 */
+	public void setConnected(boolean connected) {
+		miApplicationDatabaseConnection.setText(connected?DISCONNECT_FROM_DB:CONNECT_TO_DB);
+		miApplicationDatabaseSample.setEnabled(connected);
+		miApplicationDatabaseCreate.setEnabled(connected);
+
+		mSearch.setEnabled(connected);
+		mAnimal.setEnabled(connected);
+
+	}
+
+	/**
+	 * Nastaveni zda je vybrano zvire ci ne
+	 * @param selected
+	 */
+	public void setAnimalChosen(boolean selected) {
+		miAnimalArea.setEnabled(false); // TODO dodelat
+		miAnimalDelete.setEnabled(selected);
+		miAnimalEdit.setEnabled(selected);
+		miAnimalInsertPicture.setEnabled(selected);
+		miAnimalSearch.setEnabled(selected);
+	}
+
+	/**
+	 * Podle pripojeni zobrazi ci nezobrazi dialog
+	 * @param connected
+	 */
 	private void setDatabaseConnection(boolean connected){
 		if(connected){
 			try {
@@ -198,6 +220,9 @@ public class MenuController implements ActionListener{
 		}
 	}
 
+	/**
+	 * Inicializace databaze
+	 */
 	private void initDatabase(){
 		if(frame.getDb().isConnected()){
 			try{
@@ -211,6 +236,9 @@ public class MenuController implements ActionListener{
 		frame.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
 	}
 
+	/**
+	 * Inicializace a naplneni databaze
+	 */
 	private void initAndFillDatabase(){
 		if(frame.getDb().isConnected()){
 			try {
@@ -284,7 +312,11 @@ public class MenuController implements ActionListener{
 		}
 
 		if(event.getSource() == miSearchArea){
-			frame.reloadAnimalsList(AnimalsDatabase.SEARCH_AREA);
+			frame.reloadAnimalsList(AnimalsDatabase.SEARCH_BIGGEST_AREA);
+		}
+
+		if(event.getSource() == miAnimalSearch){
+			frame.reloadAnimalsList(AnimalsDatabase.SEARCH_SAME_AREA);
 		}
 
 		if(event.getSource() == miSearchByName){
@@ -307,37 +339,23 @@ public class MenuController implements ActionListener{
 			dialog.setVisible(true);
 		}
 
+		// editace zvirete
+		if(event.getSource() == miAnimalEdit){
+
+			AnimalDialog dAnimal = new AnimalDialog(frame);
+			GUIManager.moveToCenter(dAnimal, frame);
+
+			dAnimal.fill(frame.getAnimalsPanel().getSelectedAnimal());
+			dAnimal.enableDeleteButton(true);
+			dAnimal.setMode(AnimalDialog.UPDATE);
+			dAnimal.setVisible(true);
+		}
+
+		// smazani zvirete
+		if(event.getSource() == miAnimalDelete){
+			frame.deleteAnimal(frame.getAnimalsPanel().getSelectedAnimal());
+		}
+
 		// TODO hledani podle obrazku
-	}
-
-	public int getMode() {
-		return mode;
-	}
-
-	public void setMode(int mode) {
-		this.mode = mode;
-
-		// pripojeno ci ne
-		if(mode == MODE_CONNECTED || mode == MODE_DISCONNECTED){
-			boolean connected = (mode == MODE_CONNECTED)?true:false;
-			miApplicationDatabaseConnection.setText(connected?DISCONNECT_FROM_DB:CONNECT_TO_DB);
-			miApplicationDatabaseSample.setEnabled(connected);
-			miApplicationDatabaseCreate.setEnabled(connected);
-
-			mSearch.setEnabled(connected);
-			mAnimal.setEnabled(connected);
-		}
-
-		// povoleni operaci pri vybrani zvirete
-		if(mode == MODE_ANIMAL || mode == MODE_ANIMAL_OFF){
-
-			boolean selected = (mode == MODE_ANIMAL)?true:false;
-			miAnimalArea.setEnabled(selected);
-			miAnimalDelete.setEnabled(selected);
-			miAnimalEdit.setEnabled(selected);
-			miAnimalInsertPicture.setEnabled(selected);
-			miAnimalSearch.setEnabled(selected);
-		}
-
 	}
 }

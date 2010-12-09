@@ -39,8 +39,9 @@ public class AnimalsDatabase extends JFrame  {
 	public final static int SEARCH_BY_PICTURE = 3;
 	public final static int SEARCH_BY_PICTURE_DESCRIPTION = 4;
 	public final static int SEARCH_CLOSE = 5;
-	public final static int SEARCH_AREA = 6;
+	public final static int SEARCH_BIGGEST_AREA = 6;
 	public final static int SEARCH_EXTINCT = 7;
+	public final static int SEARCH_SAME_AREA = 8;
 
 	// komponenty jednotlivych casti hlavniho okna
 	PhotosPanel photosPanel;
@@ -142,20 +143,38 @@ public class AnimalsDatabase extends JFrame  {
 		try{
 
 			switch (searchType) {
-			case SEARCH_ALL: db.searchAnimals();break;
-			case SEARCH_BY_NAME: db.searchAnimals(getSearchGenus(), getSearchSpecies()); break;
-			case SEARCH_BY_DESCRIPTION: db.searchAnimals(getSearchDescription()); break;
-			case SEARCH_BY_PICTURE: break; // TODO
-			case SEARCH_BY_PICTURE_DESCRIPTION: db.searchAnimalsByPicture(getSearchDescription()); break;
-			case SEARCH_AREA: db.searchAnimalsByAreaSize();	break;
+			case SEARCH_ALL:
+				db.searchAnimals();
+				break;
+			case SEARCH_BY_NAME:
+				db.searchAnimals(getSearchGenus(), getSearchSpecies());
+				break;
+			case SEARCH_BY_DESCRIPTION:
+				db.searchAnimals(getSearchDescription());
+				break;
+			case SEARCH_BY_PICTURE:
+				break; // TODO
+			case SEARCH_BY_PICTURE_DESCRIPTION:
+				db.searchAnimalsByPicture(getSearchDescription());
+				break;
+			case SEARCH_BIGGEST_AREA:
+				db.searchAnimalsByAreaSize();
+				break;
+			case SEARCH_SAME_AREA:
+				int id = getAnimalsPanel().getSelectedAnimal().getId();
+				Log.debug("Hledam zvirata ktere jsou na stejnem uzemi jako "
+						+ getAnimalsPanel().getSelectedAnimal().getGenus());
+				db.searchAnimalsOnArea(id);
+				break;
 			case SEARCH_CLOSE:
 				MapMarker marker = map.getMyPosition();
 				Point2D temp = new Point();
 				temp.setLocation(marker.getLat(), marker.getLon());
 				db.searchNearestAnimals(temp);
 				break;
-			case SEARCH_EXTINCT: db.searchExtinctAnimals(); break;
-
+			case SEARCH_EXTINCT:
+				db.searchExtinctAnimals();
+				break;
 			default:
 				break;
 			}
@@ -196,13 +215,72 @@ public class AnimalsDatabase extends JFrame  {
 	}
 
 	/**
+	 * Pridani zvirete do DB
+	 * @param animal
+	 */
+	public void addAnimal(Animal animal){
+
+		try {
+			db.insertAnimal(animal);
+		} catch (SQLException e) {
+			Log.error("Chyba pri vkladani zvirete do DB: " + e.getMessage());
+		}
+
+		reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
+	}
+
+
+	/**
+	 * Metoda upravujici zvire v DB
+	 * @param old
+	 */
+	public void editAnimal(Animal animal){
+
+		int id = animal.getId();
+
+		// podiva se zda v DB existuje
+		try{
+			db.searchAnimals(id);
+		} catch (SQLException e) {
+			System.err.println("Chyba hledani zvirete podle ID v DB: " + e.getMessage());
+		}
+
+		if (id != 0) {
+			Log.debug("Id zvirete ktere chci ulozit:" + id);
+
+			try {
+				db.updateAnimal(animal);
+			} catch (SQLException e) {
+				System.err.println("Chyba hledani zvirete podle ID v DB: " + e.getMessage());
+			}
+		}
+
+		reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
+	}
+
+	/**
+	 * Odstraneni zvirete z DB
+	 * @param animal
+	 */
+	public void deleteAnimal(Animal animal){
+		try{
+			db.deleteAnimal(animal.getId());
+			Log.debug("Mazu zvire s ID " + animal.getId());
+		} catch (SQLException e) {
+			System.err.println("Chyba pri mazani zvirete z DB" + e.getMessage());
+		}
+
+		reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
+	}
+
+	/**
 	 * Nastavovani zda jsou prvky k dispozici dle pripojeni
 	 * @param enable
 	 */
 	public void setEnable(boolean enable){
 
-		// disable menu items
-		menuController.setMode(db.isConnected()?MenuController.MODE_CONNECTED:MenuController.MODE_DISCONNECTED);
+		// disable/enable menu items
+		menuController.setConnected(db.isConnected());
 		animalsPanel.setEnabled(enable);
 		photosPanel.setEnabled(enable);
 	}
