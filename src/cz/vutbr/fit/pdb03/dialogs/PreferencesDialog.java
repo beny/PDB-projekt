@@ -19,11 +19,9 @@ import javax.swing.JRadioButton;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 
-import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
-
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.T2SQL;
-import cz.vutbr.fit.pdb03.map.MapPoint;
+import cz.vutbr.fit.pdb03.map.JEntity;
 
 /**
  * Dialog s nastavenim
@@ -216,13 +214,14 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 		pGPS.add(tLon, gbc);
 	}
 
-	public void setMyPosition(MapMarker myPosition){
+	public void setMyPosition(JEntity myPosition){
 		tLat.setText(myPosition.getLat() + "");
 		tLon.setText(myPosition.getLon() + "");
 	}
 
-	public MapMarker getMyPosition() throws NumberFormatException{
-		return new MapPoint(Double.parseDouble(tLat.getText()), Double.parseDouble(tLon.getText()), MapPoint.counter);
+	public JEntity getMyPosition() throws NumberFormatException {
+		return new JEntity(Double.parseDouble(tLat.getText()),
+				Double.parseDouble(tLon.getText()));
 	}
 
 	@Override

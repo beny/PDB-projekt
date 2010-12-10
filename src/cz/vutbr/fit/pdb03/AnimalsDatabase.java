@@ -11,8 +11,6 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JSplitPane;
 
-import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
-
 import cz.vutbr.fit.pdb03.controllers.MenuController;
 import cz.vutbr.fit.pdb03.controllers.WindowController;
 import cz.vutbr.fit.pdb03.dialogs.ConnectDialog;
@@ -20,6 +18,7 @@ import cz.vutbr.fit.pdb03.dialogs.LoadingDialog;
 import cz.vutbr.fit.pdb03.gui.AnimalsPanel;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
 import cz.vutbr.fit.pdb03.gui.PhotosPanel;
+import cz.vutbr.fit.pdb03.map.JEntity;
 import cz.vutbr.fit.pdb03.map.JMapPanel;
 
 /**
@@ -148,7 +147,7 @@ public class AnimalsDatabase extends JFrame  {
 
 				ArrayList<Animal> dbAnimals = new ArrayList<Animal>();
 
-				map.clear();
+				map.clearMapData();
 				photosPanel.clear();
 				// nalezeni zvirat
 				try{
@@ -178,9 +177,9 @@ public class AnimalsDatabase extends JFrame  {
 						db.searchAnimalsOnArea(id);
 						break;
 					case SEARCH_CLOSE:
-						MapMarker marker = map.getMyPosition();
+						JEntity myPosition = map.getMyPosition();
 						Point2D temp = new Point();
-						temp.setLocation(marker.getLat(), marker.getLon());
+						temp.setLocation(myPosition.getLat(), myPosition.getLon());
 						db.searchNearestAnimals(temp);
 						break;
 					case SEARCH_EXTINCT:

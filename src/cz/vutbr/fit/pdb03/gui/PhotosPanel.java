@@ -19,6 +19,7 @@ import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
 import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.Log;
+import cz.vutbr.fit.pdb03.map.JEntity;
 
 /**
  * Trida zajistujici panel s fotkama a info
@@ -137,7 +138,7 @@ public class PhotosPanel extends JTabbedPane {
 	 */
 	public void setAnimalData(Animal animal) {
 
-		MapMarker m = frame.getMap().getMyPosition();
+		JEntity m = frame.getMap().getMyPosition();
 		Point2D p = new Point();
 		p.setLocation(m.getLat(), m.getLon());
 
