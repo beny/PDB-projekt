@@ -1790,7 +1790,7 @@ public class DataBase {
                         +T2SQL.dateFormat.format(T2SQL.getValidationDateTo())
                         +"' OR b.valid_to is NULL)))";
             }
-            Log.info(SQLquery);
+            //Log.info(SQLquery);
             OracleResultSet rset = null;
             rset = (OracleResultSet) stat.executeQuery(SQLquery);
             Double result = 0.0;

@@ -251,10 +251,10 @@ public final class T2SQL {
                 String move_id=(SQLString.substring(point3u+1)).trim();
                 if (move_id.indexOf(' ')>0) move_id.substring(0, move_id.indexOf(' '));
                 String geometry=(SQLString.substring(point1u+1,point2u)).trim();
-                SQLString="CALL(animal_movement_update("+geometry+", "+move_id+",sysdate,sysdate)";
+                SQLString="CALL(animal_movement_update("+geometry+", "+move_id+",sysdate,sysdate))";
             }
         }
-        Log.debug("*"+SQLString);
+        //Log.debug("*"+SQLString);
         return SQLString;
     }
 
