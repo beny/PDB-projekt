@@ -220,9 +220,9 @@ public class DataBase {
 		stat.execute("CREATE TABLE animal_movement (move_id NUMBER PRIMARY KEY, animal_id NUMBER REFERENCES animals(animal_id) ON DELETE CASCADE, geometry MDSYS.SDO_GEOMETRY, valid_from DATE, valid_to DATE)");
 		con.commit();
 		try {
-			stat.execute("INSERT INTO USER_SDO_GEOM_METADATA VALUES ('animal_movement','geometry',SDO_DIM_ARRAY(SDO_DIM_ELEMENT('LONGITUDE',-180,180,100),SDO_DIM_ELEMENT('LATITUDE',-90, 90,100)),8307)");
-		} catch (SQLException e) {
-		}
+			stat.execute("INSERT INTO USER_SDO_GEOM_METADATA VALUES ('animal_movement','geometry',SDO_DIM_ARRAY(SDO_DIM_ELEMENT('LONGITUDE',-180,180,0.5),SDO_DIM_ELEMENT('LATITUDE',-90, 90,0.5)),8307)");
+                        con.commit();
+		} catch (SQLException e) {}
 		stat.execute("CREATE INDEX animal_movement_sidx ON animal_movement (geometry) indextype is MDSYS.SPATIAL_INDEX");
 		stat.close();
 		createSequences();
@@ -387,13 +387,13 @@ public class DataBase {
 			throws SQLException {
 		Statement stat = con.createStatement();
 		NumberFormat nf = NumberFormat.getInstance(Locale.ENGLISH);
-		String SQLquery = "SELECT SDO_NN_DISTANCE(1) AS distance FROM animal_movement WHERE ROWNUM <= 1 AND animal_id="
-				+ Integer.toString(animal_id)
-				+ " AND SDO_NN(geometry, SDO_GEOMETRY(2001,8307,SDO_POINT_TYPE("
+		String SQLquery = "SELECT SDO_GEOM.SDO_DISTANCE(geometry, SDO_GEOMETRY(2001,8307,SDO_POINT_TYPE("
 				+ nf.format(location.getX())
 				+ ","
 				+ nf.format(location.getY())
-				+ ",NULL),NULL,NULL),'UNIT=kilometer',1)='TRUE' ORDER BY distance";
+				+ ",NULL),NULL,NULL),1,'UNIT=kilometer') AS distance FROM animal_movement WHERE animal_id="
+				+ Integer.toString(animal_id)
+                                + " ORDER BY distance ASC";
 		OracleResultSet rset = null;
 		rset = (OracleResultSet) stat.executeQuery(T2SQL.temporal(T2SQL
 				.T2SQLprefix() + SQLquery));
@@ -428,7 +428,8 @@ public class DataBase {
 		}
 		rset.close();
 		stat.close();
-		return result;
+                //Log.debug(Double.toString(result)+" - "+Double.toString(getIntersectionsArea(animal_id)));
+		return result-getIntersectionsArea(animal_id);
 	}
 
 	/**
@@ -522,8 +523,8 @@ public class DataBase {
 	 */
 	public void searchAnimals(String genus, String species) throws SQLException {
 		OraclePreparedStatement opstmt = null;
-		String SQLquery = "SELECT animal_id,genus,species,genus_lat,species_lat FROM animals WHERE ROWNUM <= "
-				+ Integer.toString(MAX_SEARCH_RESULTS) + " AND ";
+		String SQLquery = "SELECT animal_id,genus,species,genus_lat,species_lat FROM animals "
+                        + "WHERE ROWNUM <= " + Integer.toString(MAX_SEARCH_RESULTS) + " AND ";
 		if (genus == null ? "" == null : genus.equals("")) {
 			if (species == null ? "" == null : species.equals(""))
 				return;
@@ -764,7 +765,7 @@ public class DataBase {
 
 	/**
 	 * Funkce najde zvířata s největší rozlohou výskytu a seřadí je
-	 *
+	 * TODO: ošetřit překrývající se polygony,rozloha úsečky
 	 * @see #searchResult
 	 * @see T2SQL
 	 * @throws SQLException
@@ -1458,7 +1459,6 @@ public class DataBase {
 		return SQLquery;
 	}
 
-	// Protected functions
 	/**
 	 * Funkce pro získání popisu zvířete z databáze
 	 *
@@ -1467,7 +1467,7 @@ public class DataBase {
 	 * @return String with description
 	 * @throws SQLException
 	 */
-	protected String getDescription(int animal_id) throws SQLException {
+	public String getDescription(int animal_id) throws SQLException {
 		Statement stat = con.createStatement();
 		String SQLquery = "SELECT description FROM animals WHERE animal_id="
 				+ Integer.toString(animal_id);
@@ -1749,11 +1749,59 @@ public class DataBase {
 		String[] inst = sb.toString().split(";");
 		Statement st = con.createStatement();
 		for (int i = 0; i < inst.length; i++) {
-			if (!inst[i].trim().equals("")) {
-				st.executeUpdate(inst[i]);
-				// System.out.println(">>"+inst[i]); //TODO delete
-			}
+			if (!inst[i].trim().equals("")) st.executeUpdate(inst[i]);
 		}
 	}
 
+        /**
+         * Funkce pro zjištění překrývající se rozlohu polygonů stejného zvířete
+         * Omezení: vždy maximálně dva překrývající se polygony v jednom místě, jinak nesprávné výsledky
+         * @param animal_id
+         *          Id zvířete
+         * @return Překrývající se rozloha (km2)
+         * @throws SQLException
+         */
+        private Double getIntersectionsArea(int animal_id) throws SQLException{
+            Statement stat = con.createStatement();
+            String SQLquery = "SELECT SUM(SDO_GEOM.SDO_AREA(SDO_GEOM.SDO_INTERSECTION(a.geometry,b.geometry,0.1),0.1,'unit=SQ_KM')) AS area "
+                    + "FROM animal_movement a, animal_movement b WHERE a.animal_id=" + Integer.toString(animal_id)
+                    + " AND b.animal_id=" + Integer.toString(animal_id) + " AND a.move_id<b.move_id";
+            if (T2SQL.getMode().equals(T2SQL.NOW)){
+                SQLquery=SQLquery + " AND (((a.valid_from <= sysdate OR a.valid_from is NULL) AND "
+                        + "(a.valid_to > sysdate OR a.valid_to is NULL)) OR ((a.valid_from <= sysdate OR "
+                        + "a.valid_from is NULL) AND (a.valid_to > sysdate OR a.valid_to is NULL)))";
+                SQLquery=SQLquery + " AND (((b.valid_from <= sysdate OR b.valid_from is NULL) AND "
+                        + "(b.valid_to > sysdate OR b.valid_to is NULL)) OR ((b.valid_from <= sysdate OR "
+                        + "b.valid_from is NULL) AND (b.valid_to > sysdate OR b.valid_to is NULL)))";
+            } else if (T2SQL.getMode().equals(T2SQL.INTERVAL) || T2SQL.getMode().equals(T2SQL.DATETIME)){
+                SQLquery=SQLquery + " AND (((a.valid_from <= DATE '"
+                        +T2SQL.dateFormat.format(T2SQL.getValidationDateFrom())
+                        +"' OR a.valid_from is NULL) AND (a.valid_to > DATE '"
+                        +T2SQL.dateFormat.format(T2SQL.getValidationDateFrom())
+                        +"' OR a.valid_to is NULL)) OR ((a.valid_from <= DATE '"
+                        +T2SQL.dateFormat.format(T2SQL.getValidationDateTo())
+                        +"' OR a.valid_from is NULL) AND (a.valid_to > DATE '"
+                        +T2SQL.dateFormat.format(T2SQL.getValidationDateTo())
+                        +"' OR a.valid_to is NULL)))";
+                SQLquery=SQLquery + " AND (((b.valid_from <= DATE '"
+                        +T2SQL.dateFormat.format(T2SQL.getValidationDateFrom())
+                        +"' OR b.valid_from is NULL) AND (b.valid_to > DATE '"
+                        +T2SQL.dateFormat.format(T2SQL.getValidationDateFrom())
+                        +"' OR b.valid_to is NULL)) OR ((b.valid_from <= DATE '"
+                        +T2SQL.dateFormat.format(T2SQL.getValidationDateTo())
+                        +"' OR b.valid_from is NULL) AND (b.valid_to > DATE '"
+                        +T2SQL.dateFormat.format(T2SQL.getValidationDateTo())
+                        +"' OR b.valid_to is NULL)))";
+            }
+            //Log.info(SQLquery);
+            OracleResultSet rset = null;
+            rset = (OracleResultSet) stat.executeQuery(SQLquery);
+            Double result = 0.0;
+            while (rset.next()) {
+            	result = result + rset.getDouble("area");
+            }
+            rset.close();
+            stat.close();
+            return result;
+        }
 }

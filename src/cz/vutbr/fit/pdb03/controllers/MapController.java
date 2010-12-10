@@ -122,7 +122,7 @@ public class MapController extends DefaultMapController implements
 
 			// uprava starsich entit
 			for (JEntity geometry : data) {
-//				frame.getDb().updateAppareance(geometry.getId(), geometry);
+				frame.getDb().updateAppareance(geometry.getId(), geometry);
 			}
 		} catch (SQLException ex) {
 			Log.error("Chyba pri ukladani geometrie do DB: " + ex.getMessage());
@@ -226,7 +226,7 @@ public class MapController extends DefaultMapController implements
 					map.repaint();
 					Log.debug("bod " + close);
 					mContext.add(new JSeparator());
-					JMenuItem move = new JMenuItem("Chyť bod " + close.getId());
+					JMenuItem move = new JMenuItem("Chyť bod");
 					move.addActionListener(new ActionListener() {
 
 						@Override

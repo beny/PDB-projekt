@@ -201,9 +201,26 @@ public class JMapPanel extends JMapViewer {
 			}
 		}
 
-//		for (JEntity entity : tempData) {
-//
-//		}
+		for (JEntity entity : tempData) {
+			switch (entity.getType()) {
+			case JEntity.GTYPE_POINT:
+				// zmer vzdalenost
+				newDistance = diffPoint(hitPoint, entity);
+				break;
+//			case JEntity.GTYPE_MULTIPOINT: paintMultiPoint(g, entity); break;
+//			case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
+//			case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity); break;
+//			case JEntity.GTYPE_POLYGON: paintPolygon(g, entity); break;
+//			case JEntity.GTYPE_MULTIPOLYGON: paintMultiPolygon(g, entity); break;
+			default:
+				break;
+			}
+
+			// pokud je bliz, zvol tento
+			if(newDistance < distance){
+				close = entity;
+			}
+		}
 
 		return close;
 	}

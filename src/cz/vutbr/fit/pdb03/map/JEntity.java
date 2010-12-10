@@ -18,8 +18,7 @@ public class JEntity extends JGeometry {
 	/**
 	 * ID entity v databazi
 	 */
-	private int id;
-
+	private int id = 0;
 
 	public JEntity(JGeometry geometry, int id){
 		this(geometry.getType(),
