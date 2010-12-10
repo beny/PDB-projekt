@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JComboBox;
@@ -13,7 +14,8 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
-import javax.swing.RepaintManager;
+
+import oracle.spatial.geometry.JGeometry;
 
 import org.openstreetmap.gui.jmapviewer.Coordinate;
 import org.openstreetmap.gui.jmapviewer.DefaultMapController;
@@ -112,18 +114,104 @@ public class MapController extends DefaultMapController implements
 		List<JEntity> tempData = map.getTempData();
 		List<JEntity> data = map.getData();
 
+		// ulozeni novych entit
+		int numPoints = 0;
+		int numCurves = 0;
+		int numPolygons = 0;
+		for (JEntity geometry : tempData) {
+			switch (geometry.getType()) {
+			case JEntity.GTYPE_POINT:
+				numPoints++;
+				break;
+			case JEntity.GTYPE_CURVE:
+				numCurves++;
+				break;
+			case JEntity.GTYPE_POLYGON:
+				numPolygons++;
+				break;
+			default:
+				break;
+			}
+		}
+
+		Log.debug("Nalezeno " + numPoints + " bodu");
+		Log.debug("Nalezeno " + numCurves + " krivek");
+		Log.debug("Nalezeno " + numPolygons + " polygonu");
+
+		// docasne pole
+		JEntity point = null;
+		JEntity curve = null;
+		JEntity polygon = null;
+		List<JEntity> points = new LinkedList<JEntity>();
+		List<JEntity> curves = new LinkedList<JEntity>();
+		List<JEntity> polygons = new LinkedList<JEntity>();
+
+		// priprava novych geometrii
+		for (JEntity geometry : tempData) {
+
+			if (geometry.getType() == JEntity.GTYPE_POINT){
+				if(numPoints == 1){
+					point = geometry;
+				}
+				else if(numPoints > 1){
+					points.add(geometry);
+				}
+			}
+
+			if (geometry.getType() == JEntity.GTYPE_CURVE) {
+				if(numCurves == 1){
+					curves.add(geometry);
+				}
+				else if(numCurves > 1){
+					curves.add(geometry);
+				}
+			}
+			if (geometry.getType() == JEntity.GTYPE_POLYGON) {
+				if(numPolygons == 1){
+					polygon = geometry;
+				}
+				else {
+					polygons.add(geometry);
+				}
+			}
+		}
+
+		// ulozne promenne
+		List<JGeometry> saveData = new LinkedList<JGeometry>();
+		if(numPoints > 1){
+			saveData.add(JEntity.createMultiPoint(points));
+		} else if(numPoints == 1) {
+			saveData.add(point);
+		}
+
+		if(numCurves > 1){
+			saveData.add(JEntity.createMultiCurve(curves));
+		} else if(numCurves == 1) {
+			saveData.add(curve);
+		}
+
+		if(numPolygons > 1){
+			saveData.add(JEntity.createMultiPolygon(polygons));
+		} else if(numPolygons == 1){
+			saveData.add(polygon);
+		}
+
+
 		try {
-			// ulozeni novych entit
-			for (JEntity geometry : tempData) {
+			// ulozeni geometrii
+			for (JGeometry geometry : saveData) {
 				frame.getDb().insertAppareance(
 						frame.getAnimalsPanel().getSelectedAnimal().getId(),
 						geometry);
 			}
+			Log.debug("Ulozeno " + saveData.size() + " geometrii");
 
 			// uprava starsich entit
 			for (JEntity geometry : data) {
 				frame.getDb().updateAppareance(geometry.getId(), geometry);
 			}
+
+			Log.debug("Upraveno " + data.size() + " geometrii");
 		} catch (SQLException ex) {
 			Log.error("Chyba pri ukladani geometrie do DB: " + ex.getMessage());
 		}
@@ -163,7 +251,6 @@ public class MapController extends DefaultMapController implements
 
 		// prekresleni bodu pod mys
 		if(gotPoint){
-			Log.debug("presouvam bod");
 			close.movePoint(clickedCoordinate.getLat(),
 					clickedCoordinate.getLon());
 			map.repaint();
@@ -232,6 +319,8 @@ public class MapController extends DefaultMapController implements
 						@Override
 						public void actionPerformed(ActionEvent arg0) {
 							gotPoint = true;
+
+							Log.debug("Bod " + close + " chycen");
 							map.setEditButtonsEnabled(false);
 							close.movePoint(clickedCoordinate.getLat(),
 									clickedCoordinate.getLon());

@@ -108,6 +108,7 @@ public class JMapPanel extends JMapViewer {
 
 		// data
 		data = new LinkedList<JEntity>();
+		tempData = new LinkedList<JEntity>();
 		myPosition = new JEntity(DEFAULT_LAT, DEFAULT_LON);
 
 		// vycentrovani
@@ -243,6 +244,7 @@ public class JMapPanel extends JMapViewer {
 	 */
 	public void clearMapData(){
 		data.clear();
+		tempData.clear();
 		repaint();
 	}
 
@@ -252,6 +254,7 @@ public class JMapPanel extends JMapViewer {
 	 */
 	public void setMapData(List<JEntity> data){
 		this.data = data;
+		Log.debug("Nacteno " + data.size() + " geometrii");
 		repaint();
 	}
 
@@ -278,7 +281,7 @@ public class JMapPanel extends JMapViewer {
 		for (JEntity entity : data) {
 			switch (entity.getType()) {
 			case JEntity.GTYPE_POINT: paintPoint(g, entity); break;
-//			case JEntity.GTYPE_MULTIPOINT: paintMultiPoint(g, entity); break;
+			case JEntity.GTYPE_MULTIPOINT: paintMultiPoint(g, entity); break;
 //			case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
 //			case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity); break;
 //			case JEntity.GTYPE_POLYGON: paintPolygon(g, entity); break;
@@ -296,8 +299,9 @@ public class JMapPanel extends JMapViewer {
 				case JEntity.GTYPE_POINT:
 					paintPoint(g, entity);
 					break;
-				// case JEntity.GTYPE_MULTIPOINT: paintMultiPoint(g, entity);
-				// break;
+				case JEntity.GTYPE_MULTIPOINT:
+					paintMultiPoint(g, entity);
+					break;
 				// case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
 				// case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity);
 				// break;
@@ -323,7 +327,7 @@ public class JMapPanel extends JMapViewer {
 	protected void paintMyPoint(Graphics g, JEntity myPoint) {
 		Graphics2D g2 = (Graphics2D) g;
 		Point2D p = myPoint.getJavaPoint();
-		Point mp = getMapPosition(p.getX(), p.getY(), true);
+		Point mp = getMapPosition(p.getX(), p.getY(), false);
 
 		g2.setColor(MY_POINT_COLOR);
 		g2.fillOval(mp.x - MY_POINT_SIZE / 2, mp.y - MY_POINT_SIZE / 2,
@@ -338,7 +342,7 @@ public class JMapPanel extends JMapViewer {
 	protected void paintPoint(Graphics g, JEntity point){
 		Graphics2D g2 = (Graphics2D) g;
 		Point2D p = point.getJavaPoint();
-		Point mp = getMapPosition(p.getX(), p.getY(), true);
+		Point mp = getMapPosition(p.getX(), p.getY(), false);
 
 		// pokud je pobliz mys
 		if(point == close && isEditMode()){
@@ -357,13 +361,11 @@ public class JMapPanel extends JMapViewer {
 	 * @param points
 	 */
 	protected void paintMultiPoint(Graphics g, JEntity points) {
-		Object[] groups = points.getOrdinatesOfElements();
 
-		for (Object point : groups) {
-			Point mp = getMapPosition(((double[])point)[0], ((double[])point)[1]);
-			paintPoint(g, new JEntity(mp.getX(), mp.getY()));
+		List<JEntity> data = JEntity.convert(points.getOrdinatesArray());
+		for (JEntity point : data) {
+			paintPoint(g, point);
 		}
-
 	}
 
 	/**
