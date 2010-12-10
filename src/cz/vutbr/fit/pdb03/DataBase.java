@@ -1,12 +1,13 @@
 package cz.vutbr.fit.pdb03;
 
+import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
-import java.awt.geom.Point2D;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -15,15 +16,17 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import oracle.spatial.geometry.JGeometry;
-//import sdoapi.jar from oraclelib.zip/sdo/ located in WIS
-import oracle.jdbc.OracleResultSet;
+
 import oracle.jdbc.OraclePreparedStatement;
-//import ordim.jar from oraclelib.zip/oraclelib/ord located in WIS
+import oracle.jdbc.OracleResultSet;
 import oracle.ord.im.OrdImage;
 import oracle.ord.im.OrdImageSignature;
+import oracle.spatial.geometry.JGeometry;
+import cz.vutbr.fit.pdb03.map.JEntity;
 
 /**
  * Knihovna pro práci s databází
@@ -70,7 +73,7 @@ public class DataBase {
 	 *
 	 * @see #deletePicture(int, java.lang.String)
 	 * @see #deleteIndex(java.lang.String)
-         * @see #uploadImage(int, java.lang.String, java.lang.String, int, java.lang.String) 
+         * @see #uploadImage(int, java.lang.String, java.lang.String, int, java.lang.String)
 	 * @see #createIndex(java.lang.String)
 	 * @see #searchAnimal(java.lang.String, java.lang.String)
 	 * @see #EXCREMENT_PHOTO
@@ -84,7 +87,7 @@ public class DataBase {
 	 *
 	 * @see #deletePicture(int, java.lang.String)
 	 * @see #deleteIndex(java.lang.String)
-         * @see #uploadImage(int, java.lang.String, java.lang.String, int, java.lang.String) 
+         * @see #uploadImage(int, java.lang.String, java.lang.String, int, java.lang.String)
 	 * @see #createIndex(java.lang.String)
 	 * @see #ANIMAL_PHOTO
 	 * @see #FEET_PHOTO
@@ -140,7 +143,7 @@ public class DataBase {
          * @see #searchAnimalsByPicture(java.lang.String)
          * @see #searchAnimalsByPicture(java.lang.String, java.lang.String)
          * @see #searchExtinctAnimals()
-         * @see #searchNearestAnimals(java.awt.geom.Point2D) 
+         * @see #searchNearestAnimals(java.awt.geom.Point2D)
 	 * @see #searchAnimals(java.lang.String, java.lang.String)
 	 * @see #searchNearestAnimals(java.awt.geom.Point2D)
 	 */
@@ -1000,7 +1003,7 @@ public class DataBase {
 	 * @throws SQLException
 	 * @see T2SQL
 	 */
-	public Map<Integer, JGeometry> selectAppareance(int animal_id)
+	public List<JEntity> selectAppareance(int animal_id)
 			throws SQLException {
 		Statement stat = con.createStatement();
 		String SQLquery = T2SQL.T2SQLprefix()
@@ -1008,10 +1011,10 @@ public class DataBase {
 				+ "WHERE animal_id=" + Integer.toString(animal_id);
 		OracleResultSet rset = (OracleResultSet) stat.executeQuery(T2SQL
 				.temporal(SQLquery));
-		HashMap<Integer, JGeometry> data = new HashMap<Integer, JGeometry>();
+		LinkedList<JEntity> data = new LinkedList<JEntity>();
 		while (rset.next()) {
-			data.put(rset.getInt("move_id"), JGeometry
-					.load((oracle.sql.STRUCT) rset.getSTRUCT("geometry")));
+			JEntity entity = new JEntity(JGeometry.load((oracle.sql.STRUCT) rset.getSTRUCT("geometry")), rset.getInt("move_id"));
+			data.add(entity);
 		}
 		rset.close();
 		stat.close();
@@ -1178,7 +1181,7 @@ public class DataBase {
 	 * @see #EXCREMENT_PHOTO
 	 * @see #FEET_PHOTO
 	 * @see #SEARCH_PHOTO
-	 * @see #uploadImage(int, java.lang.String, java.lang.String, int, java.lang.String) 
+	 * @see #uploadImage(int, java.lang.String, java.lang.String, int, java.lang.String)
 	 */
 	public void deletePicture(int photo_id, String table_name)
 			throws SQLException {

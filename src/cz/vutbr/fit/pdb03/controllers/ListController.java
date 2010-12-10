@@ -5,17 +5,17 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.SQLException;
-import java.util.Map;
+import java.util.List;
 
 import javax.swing.ListModel;
 
-import oracle.spatial.geometry.JGeometry;
 import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.dialogs.AnimalDialog;
 import cz.vutbr.fit.pdb03.dialogs.LoadingDialog;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
+import cz.vutbr.fit.pdb03.map.JEntity;
 
 /**
  * Trida zajistujici odchyceni klikani do mapy
@@ -53,7 +53,7 @@ public class ListController extends MouseAdapter implements KeyListener {
 			public void run() {
 				// nastaveni objektu v mape
 				try {
-					Map<Integer, JGeometry> spatialInfo = frame.getDb()
+					List<JEntity> spatialInfo = frame.getDb()
 							.selectAppareance(getSelectedAnimal().getId());
 					frame.getMap().setMapData(spatialInfo);
 				} catch (SQLException ex) {
@@ -130,7 +130,7 @@ public class ListController extends MouseAdapter implements KeyListener {
 			setSelectedAnimal(selectedAnimal);
 
 			try {
-				Map<Integer, JGeometry> spatialInfo = frame.getDb()
+				List<JEntity> spatialInfo = frame.getDb()
 						.selectAppareance(selectedAnimal.getId());
 				frame.getMap().setMapData(spatialInfo);
 			} catch (SQLException ex) {
