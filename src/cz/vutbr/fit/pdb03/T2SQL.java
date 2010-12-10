@@ -32,7 +32,10 @@ public final class T2SQL {
     private static Date validFrom=null;
     private static Date validTo=null;
     private static String mode="";
-    private static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");//("dd-MM-yyyy HH:mm:ss");
+    /**
+     * Formát data pro vložení do dotazu
+     */
+    public static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");//("dd-MM-yyyy HH:mm:ss");
     private static DateFormat dateFormatIn = new SimpleDateFormat("yyyy/MM/dd");//("yyyy/MM/dd'~'HH:mm:ss");
     /**
      * Konstanta pro NONSEQUENCED VALIDTIME - bez časového omezení
@@ -204,7 +207,7 @@ public final class T2SQL {
             int point2=T2SQLString.indexOf(' ',point1);
             Date day=null;
             try{
-                day=dateFormatIn.parse(T2SQLString.substring(point1, point2-1));
+                day=dateFormatIn.parse(T2SQLString.substring(point1, point2));
             } catch(ParseException e){ }
             SQLString=T2SQLString.substring(point2+1);
             SQLString=SQLString.trim();
