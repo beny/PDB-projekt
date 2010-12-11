@@ -63,6 +63,35 @@ public class JEntity extends JGeometry {
 	}
 
 	/**
+	 * Presun objekt obsahujici vic bodu
+	 * @param lat
+	 * @param lon
+	 */
+	public void moveMultiPoint(double lat, double lon) {
+		// TODO overit pro ostatni entity
+
+		List<JEntity> points = convert(getOrdinatesArray());
+
+		// najdi prvni bod a presun jej
+		JEntity firstPoint = points.get(0);
+		double diffX = firstPoint.getLat() - lat;
+		double diffY = firstPoint.getLon() - lon;
+		firstPoint.movePoint(lat, lon);
+
+		// presun ostatni body
+		for (JEntity point : points) {
+			if(point == firstPoint) continue;	// preskoc prvni bod
+			point.movePoint(point.getLat() - diffX, point.getLon() - diffY);
+		}
+
+		// zpet ulozit do entity
+		JGeometry geom = JGeometry.createMultiPoint(convert(points), DIMENSION,
+				SRID);
+		ordinates = geom.getOrdinatesArray();
+
+	}
+
+	/**
 	 * Najde nejblizsi bod k bodu
 	 * @param hitPoint
 	 * @param entity
@@ -70,14 +99,15 @@ public class JEntity extends JGeometry {
 	 */
 	public double diffPoint(java.awt.Point hitPoint, JMapPanel map) {
 		java.awt.Point entityPoint = map.getMapPosition(getLat(), getLon(),
-				true);
+				false);
 		return Point2D.distance(hitPoint.getX(), hitPoint.getY(),
 				entityPoint.getX(), entityPoint.getY());
 	}
 
 	@Override
 	public String toString() {
-		return "id: " + getId() + ", type: " + getType();
+		return "id: " + getId() + ", type: " + getType() + ", coords: " + x
+				+ " x " + y;
 	}
 
 	/**

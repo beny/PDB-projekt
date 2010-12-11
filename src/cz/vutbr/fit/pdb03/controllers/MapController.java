@@ -269,8 +269,18 @@ public class MapController extends DefaultMapController implements
 			Point movePoint = e.getPoint();
 			Coordinate moveCoords = map.getPosition(movePoint);
 
-			hitEntity.movePoint(moveCoords.getLat(), moveCoords.getLon());
+			switch (hitEntity.getType()) {
+			case JEntity.GTYPE_POINT:
+				hitEntity.movePoint(moveCoords.getLat(), moveCoords.getLon());
+				break;
+			case JEntity.GTYPE_MULTIPOINT:
+				hitEntity.moveMultiPoint(moveCoords.getLat(),
+						moveCoords.getLon());
+				break;
 			// TODO ostatni entity
+			}
+
+
 
 			map.repaint();
 		}
@@ -281,8 +291,8 @@ public class MapController extends DefaultMapController implements
 
 		// bod v nekolika formatech
 		final Point clickedPoint = e.getPoint();
-		final Coordinate clickedCoordinate = map.getPosition(clickedPoint);
-		final JEntity clickedJEntity = new JEntity(clickedCoordinate.getLat(), clickedCoordinate.getLon());
+		final Coordinate clickedCoords = map.getPosition(clickedPoint);
+		final JEntity clickedJEntity = new JEntity(clickedCoords.getLat(), clickedCoords.getLon());
 
 		// pro leve tlacitko mysi
 		if (e.getButton() == MouseEvent.BUTTON1) {
@@ -302,9 +312,10 @@ public class MapController extends DefaultMapController implements
 			else if (map.isEditMode()) {
 				switch (map.getDrawMode()) {
 				case JMapPanel.MODE_POINT:
-					Log.debug("Kreslim novy bod " + clickedCoordinate);
-					map.addPoint(clickedJEntity); break;
-
+					Log.debug("Kreslim novy bod " + clickedCoords);
+					map.addPoint(clickedJEntity);
+					break;
+					// TODO ostatni entity
 				default:
 					break;
 				}
@@ -313,8 +324,6 @@ public class MapController extends DefaultMapController implements
 
 		// pro prave tlacitko mysi
 		if (e.getButton() == MouseEvent.BUTTON3) {
-
-			// kontextove menu
 			JPopupMenu mContext = new JPopupMenu();
 
 			// posun bod
@@ -339,10 +348,24 @@ public class MapController extends DefaultMapController implements
 							if (hitEntity.getId() != 0) {
 								map.updateEntity(hitEntity);
 							}
-							hitEntity.movePoint(clickedCoordinate.getLat(),
-									clickedCoordinate.getLon());
 
-							// TODO move ostanich entit
+							// posun podle typu
+							switch (hitEntity.getType()) {
+							case JEntity.GTYPE_POINT:
+								hitEntity.movePoint(clickedCoords.getLat(),
+										clickedCoords.getLon());
+								break;
+							case JEntity.GTYPE_MULTIPOINT:
+
+								hitEntity.moveMultiPoint(
+										clickedCoords.getLat(),
+										clickedCoords.getLon());
+								break;
+								// TODO ostatni entity
+							default:
+								break;
+							}
+
 
 							Log.debug("Geometrie " + hitEntity + " chycena");
 							map.repaint();

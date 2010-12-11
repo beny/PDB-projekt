@@ -200,45 +200,43 @@ public class JMapPanel extends JMapViewer {
 	public void detectHit(Point clickedPoint) {
 
 		// pomocne promenne
-		double distance = MAX_DISTANCE;
-		double newDistance = 0;
+		double minDistance = MAX_DISTANCE;
+		double distance = 0;
 		JEntity tempHit = null;
 		hitEntity = null;
 
 		// pro puvodni data
 		for (JEntity entity : data) {
-			newDistance = getDistance(entity, clickedPoint);
+			distance = getMinDistance(entity, clickedPoint);
 
 			// pokud je bliz, zvol tento
-			if (newDistance < distance) {
+			if (distance < minDistance) {
 				tempHit = entity;
-				distance = newDistance;
+				minDistance = distance;
 			}
 		}
 
 		// pridana data
 		for (JEntity entity : insertData) {
-			newDistance = getDistance(entity, clickedPoint);
+			distance = getMinDistance(entity, clickedPoint);
 
 			// pokud je bliz, zvol tento
-			if (newDistance < distance) {
+			if (distance < minDistance) {
 				tempHit = entity;
-				distance = newDistance;
+				minDistance = distance;
 			}
 		}
 
 		// zmenena data
 		for (JEntity entity : updateData) {
-			newDistance = getDistance(entity, clickedPoint);
+			distance = getMinDistance(entity, clickedPoint);
 
 			// pokud je bliz, zvol tento
-			if (newDistance < distance) {
+			if (distance < minDistance) {
 				tempHit = entity;
-				distance = newDistance;
+				minDistance = distance;
 			}
 		}
-
-
 
 		// vyber nejblizsi
 		if(tempHit != null){
@@ -252,27 +250,41 @@ public class JMapPanel extends JMapViewer {
 	}
 
 	/**
-	 * Ziska vzdalenost od kliku
+	 * Ziska vzdalenost nejblizsiho bodu dane entity k bodu. Na zaklade toho se
+	 * pote vybere nejblizsi entita
+	 *
 	 * @param entity
 	 * @param clickedPoint
-	 * @return
+	 * @return vzdalenost
 	 */
-	private double getDistance(JEntity entity, Point clickedPoint){
+	private double getMinDistance(JEntity entity, Point clickedPoint) {
 		double distance = MAX_DISTANCE;
-		entity.setSelected(false); // predpokladejme ze neni hit
+
+		// predpokladejme ze neni hit
+		entity.setSelected(false);
+
+		// najdi nejblizsi bod jakekoliv entity
 		switch (entity.getType()) {
 		case JEntity.GTYPE_POINT:
 			distance = entity.diffPoint(clickedPoint, this);
-			Log.debug("testuju bod " + entity + " je vzdaleny "
-					+ distance);
+			Log.debug("testuju bod " + entity + " je vzdaleny " + distance);
 			break;
-		// TODO
-		// case JEntity.GTYPE_MULTIPOINT: paintMultiPoint(g, entity); break;
-		// case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
-		// case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity); break;
-		// case JEntity.GTYPE_POLYGON: paintPolygon(g, entity); break;
-		// case JEntity.GTYPE_MULTIPOLYGON: paintMultiPolygon(g, entity);
-		// break;
+		case JEntity.GTYPE_MULTIPOINT:
+			List<JEntity> points = JEntity.convert(entity.getOrdinatesArray());
+
+			double minDistance = MAX_DISTANCE;
+			for (JEntity p : points) {
+				distance = p.diffPoint(clickedPoint, this);
+				if(distance < minDistance){
+					minDistance = distance;
+				}
+			}
+			distance = minDistance;
+			break;
+		// case JEntity.GTYPE_CURVE: // TODO break;
+		// case JEntity.GTYPE_MULTICURVE: // TODO break;
+		// case JEntity.GTYPE_POLYGON: // TODO break;
+		// case JEntity.GTYPE_MULTIPOLYGON: // TODO break;
 		default:
 			break;
 		}
@@ -447,6 +459,7 @@ public class JMapPanel extends JMapViewer {
 
 		List<JEntity> data = JEntity.convert(points.getOrdinatesArray());
 		for (JEntity point : data) {
+			point.setSelected(points.isSelected());	// pripadne oznaceni bodu
 			paintPoint(g, point);
 		}
 	}
@@ -470,7 +483,7 @@ public class JMapPanel extends JMapViewer {
 		path.moveTo(first.getX(), first.getY());
 
 		for (int i = 0; i < points.length; i++) {
-			Point2D p = getMapPosition(points[i+1], points[i++]);
+			Point2D p = getMapPosition(points[i+1], points[i++], false);
 			// TODO zvyrazeni bodu
 			path.lineTo(p.getX(), p.getY());
 		}
@@ -506,7 +519,7 @@ public class JMapPanel extends JMapViewer {
 		Log.debug("Body polygonu: " + points);
 
 		for (int i = 0; i < points.length; i++) {
-			Point2D p = getMapPosition(points[i+1], points[i++]);
+			Point2D p = getMapPosition(points[i+1], points[i++], false);
 			// TODO zvyrazeni bodu
 			path.lineTo(p.getX(), p.getY());
 		}
