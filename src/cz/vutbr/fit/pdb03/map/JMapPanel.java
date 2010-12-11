@@ -61,8 +61,6 @@ public class JMapPanel extends JMapViewer {
 	// maximalni distance, ktera se bere v uvahu
 	private final static double MAX_DISTANCE = POINT_SIZE/2;
 
-
-
 	// hlavni frame
 	AnimalsDatabase frame;
 
@@ -79,15 +77,15 @@ public class JMapPanel extends JMapViewer {
 	JButton bEdit, bSave, bCancel, bNext;
 	private JComboBox comboElements;
 
+	// detekce kolize
+	private JEntity hitEntity;
+
 	// data
 	JEntity myPosition;	// moje poloha
-	List<JEntity> data;
-	List<JEntity> tempData;
-
-	// detekce bodu
-	JEntity close;
-	double distance;
-	double newDistance;
+	List<JEntity> data;	// puvodni data
+	List<JEntity> insertData;	// nova data
+	List<JEntity> updateData;	// zmenena data
+	List<JEntity> deleteData;	// odstranene entity
 
 	public JMapPanel(AnimalsDatabase frame) {
 		super(new MemoryTileCache(), 4);
@@ -104,21 +102,20 @@ public class JMapPanel extends JMapViewer {
 		setTileLoader(new OsmTileLoader(this));
 
 		// inicializace tlacitek
-		initializeEditButtons();
+		initEditButtons();
 
-		// data
-		data = new LinkedList<JEntity>();
-		tempData = new LinkedList<JEntity>();
-		myPosition = new JEntity(DEFAULT_LAT, DEFAULT_LON);
+		// inicializace dat
+		initData();
 
 		// vycentrovani
 		setDisplayPositionByLatLon(DEFAULT_LAT, DEFAULT_LON, DEFAULT_ZOOM);
 	}
 
+
 	/**
 	 * Inicializace editacnich tlacitek
 	 */
-	protected void initializeEditButtons(){
+	private void initEditButtons(){
 
 		int buttonSizeX = 70;
 		int buttonSizeY = 20;
@@ -165,6 +162,125 @@ public class JMapPanel extends JMapViewer {
 	}
 
 	/**
+	 * Prvnotni inicializace dat
+	 */
+	private void initData(){
+		data = new LinkedList<JEntity>();
+		insertData = new LinkedList<JEntity>();
+		updateData = new LinkedList<JEntity>();
+		deleteData = new LinkedList<JEntity>();
+		myPosition = new JEntity(DEFAULT_LAT, DEFAULT_LON);
+	}
+
+	/**
+	 * Vycisteni pomocnych poli
+	 */
+	public void clearTempData(){
+		insertData.clear();
+		updateData.clear();
+		deleteData.clear();
+	}
+
+
+	/**
+	 * Smaze z mapy vsechny data
+	 */
+	public void clearMap(){
+		data.clear();
+		clearTempData();
+		repaint();
+	}
+
+
+	/**
+	 * Detekce nejblizsiho bodu/entity
+	 * @param clickedPoint
+	 * @return
+	 */
+	public void detectHit(Point clickedPoint) {
+
+		// pomocne promenne
+		double distance = MAX_DISTANCE;
+		double newDistance = 0;
+		JEntity tempHit = null;
+		hitEntity = null;
+
+		// pro puvodni data
+		for (JEntity entity : data) {
+			newDistance = getDistance(entity, clickedPoint);
+
+			// pokud je bliz, zvol tento
+			if (newDistance < distance) {
+				tempHit = entity;
+				distance = newDistance;
+			}
+		}
+
+		// pridana data
+		for (JEntity entity : insertData) {
+			newDistance = getDistance(entity, clickedPoint);
+
+			// pokud je bliz, zvol tento
+			if (newDistance < distance) {
+				tempHit = entity;
+				distance = newDistance;
+			}
+		}
+
+		// zmenena data
+		for (JEntity entity : updateData) {
+			newDistance = getDistance(entity, clickedPoint);
+
+			// pokud je bliz, zvol tento
+			if (newDistance < distance) {
+				tempHit = entity;
+				distance = newDistance;
+			}
+		}
+
+
+
+		// vyber nejblizsi
+		if(tempHit != null){
+			tempHit.setSelected(true);
+			hitEntity = tempHit;
+			repaint();
+		}
+
+		// TODO insert data
+		// TODO update data
+	}
+
+	/**
+	 * Ziska vzdalenost od kliku
+	 * @param entity
+	 * @param clickedPoint
+	 * @return
+	 */
+	private double getDistance(JEntity entity, Point clickedPoint){
+		double distance = MAX_DISTANCE;
+		entity.setSelected(false); // predpokladejme ze neni hit
+		switch (entity.getType()) {
+		case JEntity.GTYPE_POINT:
+			distance = entity.diffPoint(clickedPoint, this);
+			Log.debug("testuju bod " + entity + " je vzdaleny "
+					+ distance);
+			break;
+		// TODO
+		// case JEntity.GTYPE_MULTIPOINT: paintMultiPoint(g, entity); break;
+		// case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
+		// case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity); break;
+		// case JEntity.GTYPE_POLYGON: paintPolygon(g, entity); break;
+		// case JEntity.GTYPE_MULTIPOLYGON: paintMultiPolygon(g, entity);
+		// break;
+		default:
+			break;
+		}
+
+		return distance;
+	}
+
+	/**
 	 * Metoda disablujici tlacitka v mape
 	 * @param enabled
 	 */
@@ -173,79 +289,6 @@ public class JMapPanel extends JMapViewer {
 		bNext.setEnabled(enabled);
 		bSave.setEnabled(enabled);
 		comboElements.setEnabled(enabled);
-	}
-
-	public JEntity detectHit(Point hitPoint){
-
-
-		close = null;
-		distance = MAX_DISTANCE;
-
-		for (JEntity entity : data) {
-			switch (entity.getType()) {
-			case JEntity.GTYPE_POINT:
-				// zmer vzdalenost
-				newDistance = diffPoint(hitPoint, entity);
-				break;
-//			case JEntity.GTYPE_MULTIPOINT: paintMultiPoint(g, entity); break;
-//			case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
-//			case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity); break;
-//			case JEntity.GTYPE_POLYGON: paintPolygon(g, entity); break;
-//			case JEntity.GTYPE_MULTIPOLYGON: paintMultiPolygon(g, entity); break;
-			default:
-				break;
-			}
-
-			// pokud je bliz, zvol tento
-			if(newDistance < distance){
-				close = entity;
-			}
-		}
-
-		for (JEntity entity : tempData) {
-			switch (entity.getType()) {
-			case JEntity.GTYPE_POINT:
-				// zmer vzdalenost
-				newDistance = diffPoint(hitPoint, entity);
-				break;
-//			case JEntity.GTYPE_MULTIPOINT: paintMultiPoint(g, entity); break;
-//			case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
-//			case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity); break;
-//			case JEntity.GTYPE_POLYGON: paintPolygon(g, entity); break;
-//			case JEntity.GTYPE_MULTIPOLYGON: paintMultiPolygon(g, entity); break;
-			default:
-				break;
-			}
-
-			// pokud je bliz, zvol tento
-			if(newDistance < distance){
-				close = entity;
-			}
-		}
-
-		return close;
-	}
-
-	/**
-	 * Najde nejblizsi bod k bodu
-	 * @param hitPoint
-	 * @param entity
-	 * @return
-	 */
-	private double diffPoint(Point hitPoint, JEntity entity) {
-		Point entityPoint = getMapPosition(entity.getLat(), entity.getLon(),
-				true);
-		return Point2D.distance(hitPoint.getX(), hitPoint.getY(),
-				entityPoint.getX(), entityPoint.getY());
-	}
-
-	/**
-	 * Smaze z mapy vsechny data
-	 */
-	public void clearMapData(){
-		data.clear();
-		tempData.clear();
-		repaint();
 	}
 
 	/**
@@ -258,19 +301,39 @@ public class JMapPanel extends JMapViewer {
 		repaint();
 	}
 
-	/**
-	 * Inicializace temp dat
-	 */
-	public void initTempData(){
-		tempData = new LinkedList<JEntity>();
-	}
+
 
 	/**
 	 * Pridavani bodu pri vkladani noveho elementu
 	 * @param point
 	 */
-	public void tempAddPoint(JEntity point){
-		tempData.add(point);
+	public void addPoint(JEntity point){
+		// TODO predelat na entity
+		insertData.add(point);
+		repaint();
+	}
+
+	/**
+	 * Presun polozky mezi upravene
+	 * @param entity
+	 */
+	public void updateEntity(JEntity entity){
+		data.remove(entity);
+		insertData.remove(entity);
+		updateData.add(entity);
+		repaint();
+	}
+
+	/**
+	 * Vlozeni entity do mazani
+	 * @param entity
+	 */
+	public void deleteEntity(JEntity entity){
+		data.remove(entity);
+		insertData.remove(entity);
+		updateData.remove(entity);
+		deleteData.add(entity);
+
 		repaint();
 	}
 
@@ -294,7 +357,8 @@ public class JMapPanel extends JMapViewer {
 
 		// pokud je v editacnim modu, kresli i nove vykreslene body
 		if (isEditMode()) {
-			for (JEntity entity : tempData) {
+			// nove vlozene
+			for (JEntity entity : insertData) {
 				switch (entity.getType()) {
 				case JEntity.GTYPE_POINT:
 					paintPoint(g, entity);
@@ -311,7 +375,26 @@ public class JMapPanel extends JMapViewer {
 				default:
 					break;
 				}
+			}
 
+			// updatovane
+			for (JEntity entity : updateData) {
+				switch (entity.getType()) {
+				case JEntity.GTYPE_POINT:
+					paintPoint(g, entity);
+					break;
+				case JEntity.GTYPE_MULTIPOINT:
+					paintMultiPoint(g, entity);
+					break;
+				// case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
+				// case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity);
+				// break;
+				// case JEntity.GTYPE_POLYGON: paintPolygon(g, entity); break;
+				// case JEntity.GTYPE_MULTIPOLYGON: paintMultiPolygon(g,
+				// entity); break;
+				default:
+					break;
+				}
 			}
 		}
 
@@ -344,8 +427,8 @@ public class JMapPanel extends JMapViewer {
 		Point2D p = point.getJavaPoint();
 		Point mp = getMapPosition(p.getX(), p.getY(), false);
 
-		// pokud je pobliz mys
-		if(point == close && isEditMode()){
+		// pokud bod vybran
+		if(point.isSelected()){
 			g2.setColor(POINT_SELECTED_COLOR);
 		}
 		else {
@@ -540,6 +623,8 @@ public class JMapPanel extends JMapViewer {
 	 */
 	public void setEditMode(boolean visible){
 
+		setEditButtonsEnabled(true);
+
 		// mod
 		editMode = visible;
 
@@ -568,11 +653,23 @@ public class JMapPanel extends JMapViewer {
 		this.data = data;
 	}
 
-	public List<JEntity> getTempData() {
-		return tempData;
+	public List<JEntity> getInsertData() {
+		return insertData;
+	}
+
+	public List<JEntity> getUpdateData() {
+		return updateData;
+	}
+
+	public List<JEntity> getDeleteData() {
+		return deleteData;
 	}
 
 	public void setTempData(List<JEntity> tempData) {
-		this.tempData = tempData;
+		insertData = tempData;
+	}
+
+	public JEntity getHitEntity() {
+		return hitEntity;
 	}
 }

@@ -147,7 +147,7 @@ public class AnimalsDatabase extends JFrame  {
 
 				ArrayList<Animal> dbAnimals = new ArrayList<Animal>();
 
-				map.clearMapData();
+				map.clearMap();
 				photosPanel.clear();
 				// nalezeni zvirat
 				try{

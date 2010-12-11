@@ -13,7 +13,6 @@ import javax.swing.JComboBox;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
-import javax.swing.JSeparator;
 
 import oracle.spatial.geometry.JGeometry;
 
@@ -35,14 +34,14 @@ public class MapController extends DefaultMapController implements
 	/**
 	 * Detekce pohybu
 	 */
-	private boolean gotPoint = false;
+	private boolean gotEntity = false;
 
 	// hlavni frame
 	private AnimalsDatabase frame;
 	private JMapPanel map;
 
 	// pomocne promenne
-	private JEntity close = null;
+	private JEntity hitEntity = null;
 
 	public MapController(JMapPanel map) {
 		super(map);
@@ -59,7 +58,7 @@ public class MapController extends DefaultMapController implements
 	private void reloadMapData(){
 
 		// odstran vse z mapy
-		map.clearMapData();
+		map.clearMap();
 
 		// nacti vsechny data ulozena k prave vybranemu zvireti
 		List<JEntity> data = null;
@@ -91,7 +90,7 @@ public class MapController extends DefaultMapController implements
 	private void editAction() {
 
 		// inicializace docasnych dat
-		map.initTempData();
+		map.clearTempData();
 
 		// musi byt vybrano zvire
 		if (!frame.getAnimalsPanel().getList().isSelectionEmpty()) {
@@ -111,14 +110,52 @@ public class MapController extends DefaultMapController implements
 	private void saveAction() {
 
 		// ziskani nakreslenych entit
-		List<JEntity> tempData = map.getTempData();
-		List<JEntity> data = map.getData();
+		List<JEntity> insertData = map.getInsertData();
+		List<JEntity> updateData = map.getUpdateData();
+		List<JEntity> deleteData = map.getDeleteData();
 
 		// ulozeni novych entit
+		List<JGeometry> saveInsertData = checkMulti(insertData);
+		try {
+			// vlozeni geometrii
+			for (JGeometry geometry : saveInsertData) {
+				frame.getDb().insertAppareance(
+						frame.getAnimalsPanel().getSelectedAnimal().getId(),
+						geometry);
+			}
+			Log.debug("Vlozeno " + saveInsertData.size() + " geometrii");
+
+			//  uprava entit
+			for (JEntity geometry : updateData){
+				frame.getDb().updateAppareance(geometry.getId(), geometry);
+			}
+			Log.debug("Upraveno " + updateData.size() + " geometrii");
+
+			//  smazani entit
+			for (JEntity geometry : deleteData){
+				frame.getDb().deleteSpatialData(geometry.getId());
+			}
+			Log.debug("Smazano " + deleteData.size() + " geometrii");
+
+		} catch (SQLException ex) {
+			Log.error("Chyba pri ukladani geometrie do DB: " + ex.getMessage());
+		}
+
+		reloadMapData();
+	}
+
+	/**
+	 * Prevod vlozenych entit na entity a multi-entity
+	 * @param data
+	 * @return
+	 */
+	private List<JGeometry> checkMulti(List<JEntity> data){
+
+		// detekce multi entit
 		int numPoints = 0;
 		int numCurves = 0;
 		int numPolygons = 0;
-		for (JEntity geometry : tempData) {
+		for (JEntity geometry : data) {
 			switch (geometry.getType()) {
 			case JEntity.GTYPE_POINT:
 				numPoints++;
@@ -134,9 +171,9 @@ public class MapController extends DefaultMapController implements
 			}
 		}
 
-		Log.debug("Nalezeno " + numPoints + " bodu");
-		Log.debug("Nalezeno " + numCurves + " krivek");
-		Log.debug("Nalezeno " + numPolygons + " polygonu");
+//		Log.debug("Nalezeno " + numPoints + " bodu");
+//		Log.debug("Nalezeno " + numCurves + " krivek");
+//		Log.debug("Nalezeno " + numPolygons + " polygonu");
 
 		// docasne pole
 		JEntity point = null;
@@ -147,7 +184,7 @@ public class MapController extends DefaultMapController implements
 		List<JEntity> polygons = new LinkedList<JEntity>();
 
 		// priprava novych geometrii
-		for (JEntity geometry : tempData) {
+		for (JEntity geometry : data) {
 
 			if (geometry.getType() == JEntity.GTYPE_POINT){
 				if(numPoints == 1){
@@ -177,46 +214,26 @@ public class MapController extends DefaultMapController implements
 		}
 
 		// ulozne promenne
-		List<JGeometry> saveData = new LinkedList<JGeometry>();
+		List<JGeometry> saveInsertData = new LinkedList<JGeometry>();
 		if(numPoints > 1){
-			saveData.add(JEntity.createMultiPoint(points));
+			saveInsertData.add(JEntity.createMultiPoint(points));
 		} else if(numPoints == 1) {
-			saveData.add(point);
+			saveInsertData.add(point);
 		}
 
 		if(numCurves > 1){
-			saveData.add(JEntity.createMultiCurve(curves));
+			saveInsertData.add(JEntity.createMultiCurve(curves));
 		} else if(numCurves == 1) {
-			saveData.add(curve);
+			saveInsertData.add(curve);
 		}
 
 		if(numPolygons > 1){
-			saveData.add(JEntity.createMultiPolygon(polygons));
+			saveInsertData.add(JEntity.createMultiPolygon(polygons));
 		} else if(numPolygons == 1){
-			saveData.add(polygon);
+			saveInsertData.add(polygon);
 		}
 
-
-		try {
-			// ulozeni geometrii
-			for (JGeometry geometry : saveData) {
-				frame.getDb().insertAppareance(
-						frame.getAnimalsPanel().getSelectedAnimal().getId(),
-						geometry);
-			}
-			Log.debug("Ulozeno " + saveData.size() + " geometrii");
-
-			// uprava starsich entit
-			for (JEntity geometry : data) {
-				frame.getDb().updateAppareance(geometry.getId(), geometry);
-			}
-
-			Log.debug("Upraveno " + data.size() + " geometrii");
-		} catch (SQLException ex) {
-			Log.error("Chyba pri ukladani geometrie do DB: " + ex.getMessage());
-		}
-
-		reloadMapData();
+		return saveInsertData;
 	}
 
 	/**
@@ -245,14 +262,16 @@ public class MapController extends DefaultMapController implements
 	public void mouseMoved(MouseEvent e) {
 		super.mouseMoved(e);
 
-		// bod v nekolika formatech
-		final Point clickedPoint = e.getPoint();
-		final Coordinate clickedCoordinate = map.getPosition(clickedPoint);
-
 		// prekresleni bodu pod mys
-		if(gotPoint){
-			close.movePoint(clickedCoordinate.getLat(),
-					clickedCoordinate.getLon());
+		if(gotEntity){
+
+			// bod v nekolika formatech
+			Point movePoint = e.getPoint();
+			Coordinate moveCoords = map.getPosition(movePoint);
+
+			hitEntity.movePoint(moveCoords.getLat(), moveCoords.getLon());
+			// TODO ostatni entity
+
 			map.repaint();
 		}
 	}
@@ -269,9 +288,13 @@ public class MapController extends DefaultMapController implements
 		if (e.getButton() == MouseEvent.BUTTON1) {
 
 			// polozeni bodu
-			if(gotPoint){
-				gotPoint = false;
-				close = null;
+			if(gotEntity){
+
+				Log.debug("Konec presunu bodu");
+
+				hitEntity.setSelected(false);
+				gotEntity = false;
+				hitEntity = null;
 				map.repaint();
 				map.setEditButtonsEnabled(true);
 			}
@@ -280,9 +303,8 @@ public class MapController extends DefaultMapController implements
 				switch (map.getDrawMode()) {
 				case JMapPanel.MODE_POINT:
 					Log.debug("Kreslim novy bod " + clickedCoordinate);
-					map.tempAddPoint(clickedJEntity); break;
-//				case JMapPanel.MODE_CURVE:
-//				case JMapPanel.MODE_POLYGON:
+					map.addPoint(clickedJEntity); break;
+
 				default:
 					break;
 				}
@@ -294,42 +316,67 @@ public class MapController extends DefaultMapController implements
 
 			// kontextove menu
 			JPopupMenu mContext = new JPopupMenu();
-			JMenuItem miSetPosition = new JMenuItem("Nastavit jako moje pozice");
-			miSetPosition.addActionListener(new ActionListener() {
-
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					map.setMyPosition(clickedJEntity);
-				}
-			});
-			mContext.add(miSetPosition);
 
 			// posun bod
 			if(map.isEditMode()){
-				close = map.detectHit(e.getPoint());
+				map.detectHit(e.getPoint());
+				hitEntity = map.getHitEntity();
 
 				// nasel se nejaky bod
-				if(close != null){
-					map.repaint();
-					Log.debug("bod " + close);
-					mContext.add(new JSeparator());
-					JMenuItem move = new JMenuItem("Chyť bod");
+				if(hitEntity != null){
+
+					// presun geometrie
+					JMenuItem move = new JMenuItem("Chyť");
 					move.addActionListener(new ActionListener() {
 
 						@Override
 						public void actionPerformed(ActionEvent arg0) {
-							gotPoint = true;
+							gotEntity = true;
 
-							Log.debug("Bod " + close + " chycen");
 							map.setEditButtonsEnabled(false);
-							close.movePoint(clickedCoordinate.getLat(),
+
+							// nove nepridavej do update
+							if (hitEntity.getId() != 0) {
+								map.updateEntity(hitEntity);
+							}
+							hitEntity.movePoint(clickedCoordinate.getLat(),
 									clickedCoordinate.getLon());
+
+							// TODO move ostanich entit
+
+							Log.debug("Geometrie " + hitEntity + " chycena");
 							map.repaint();
 						}
 					});
 					mContext.add(move);
 
+					// mazani geometrie
+					JMenuItem delete = new JMenuItem("Smaž");
+					delete.addActionListener(new ActionListener() {
+
+						@Override
+						public void actionPerformed(ActionEvent arg0) {
+							map.deleteEntity(hitEntity);
+
+							Log.debug("Geometrie " + hitEntity + " smazana");
+						}
+					});
+					mContext.add(delete);
+
 				}
+			}
+			// pokud neni editacni mod tak jen nastavovani pozice
+			else {
+				JMenuItem miSetPosition = new JMenuItem(
+						"Nastavit jako moje pozice");
+				miSetPosition.addActionListener(new ActionListener() {
+
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						map.setMyPosition(clickedJEntity);
+					}
+				});
+				mContext.add(miSetPosition);
 			}
 
 			mContext.show(map, clickedPoint.x, clickedPoint.y);

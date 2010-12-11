@@ -1,5 +1,6 @@
 package cz.vutbr.fit.pdb03.map;
 
+import java.awt.geom.Point2D;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -16,6 +17,8 @@ public class JEntity extends JGeometry {
 
 	private final static int SRID = 8307;
 	private final static int DIMENSION = 2;
+
+	private boolean selected = false;
 
 	/**
 	 * ID entity v databazi
@@ -57,6 +60,19 @@ public class JEntity extends JGeometry {
 	public void movePoint(double lat, double lon){
 		x = lat;
 		y = lon;
+	}
+
+	/**
+	 * Najde nejblizsi bod k bodu
+	 * @param hitPoint
+	 * @param entity
+	 * @return
+	 */
+	public double diffPoint(java.awt.Point hitPoint, JMapPanel map) {
+		java.awt.Point entityPoint = map.getMapPosition(getLat(), getLon(),
+				true);
+		return Point2D.distance(hitPoint.getX(), hitPoint.getY(),
+				entityPoint.getX(), entityPoint.getY());
 	}
 
 	@Override
@@ -141,6 +157,14 @@ public class JEntity extends JGeometry {
 
 	public double getLon(){
 		return getJavaPoint().getY();
+	}
+
+	public boolean isSelected() {
+		return selected;
+	}
+
+	public void setSelected(boolean selected) {
+		this.selected = selected;
 	}
 
 }
