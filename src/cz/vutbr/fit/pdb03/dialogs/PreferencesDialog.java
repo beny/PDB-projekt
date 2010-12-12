@@ -20,6 +20,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
+import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.T2SQL;
 import cz.vutbr.fit.pdb03.map.JEntity;
 
@@ -286,6 +287,8 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 			}
 
 			if(!error){
+				Log.debug("Spatial data changed");
+				frame.getDb().releaseCacheOnSpatialChange();
 				frame.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
 				dispose();
 			}

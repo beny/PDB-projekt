@@ -19,6 +19,7 @@ import oracle.spatial.geometry.JGeometry;
 import org.openstreetmap.gui.jmapviewer.Coordinate;
 import org.openstreetmap.gui.jmapviewer.DefaultMapController;
 
+import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.map.JEntity;
@@ -145,6 +146,13 @@ public class MapController extends DefaultMapController implements
 				frame.getDb().deleteSpatialData(geometry.getId());
 			}
 			Log.debug("Smazano " + deleteData.size() + " geometrii");
+
+			// aktualizace prostorovych dat
+			Log.debug("Obnova cache");
+			Animal animal = frame.getAnimalsPanel().getSelectedAnimal();
+			animal.spatialDataChanged();
+			frame.getAnimalsPanel().getListController()
+					.setSelectedAnimal(animal);
 
 		} catch (SQLException ex) {
 			Log.error("Chyba pri ukladani geometrie do DB: " + ex.getMessage());

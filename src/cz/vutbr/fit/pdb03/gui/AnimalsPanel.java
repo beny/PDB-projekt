@@ -43,6 +43,10 @@ public class AnimalsPanel extends JScrollPane {
 		return lAnimals;
 	}
 
+	public ListController getListController() {
+		return listController;
+	}
+
 	/**
 	 * Ziskani aktualne vybraneho zvirete v seznamu
 	 * @return objekt Animal s vybranym zviretem
