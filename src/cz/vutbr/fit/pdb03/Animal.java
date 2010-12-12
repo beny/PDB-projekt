@@ -223,7 +223,7 @@ public class Animal {
 
 	/**
 	 * Zavolat po každé změně prostorových dat (změna časových údajů - vložení, modifikace a smazání entit)
-	 *
+	 * Alternativou je DataBase.releaseCacheOnSpatialChange() - pro všechna zvířata ze searchResult
 	 * @see DataBase#deleteSpatialData(int)
 	 * @see DataBase#insertAppareance(int, oracle.spatial.geometry.JGeometry)
 	 * @see DataBase#updateAppareance(int, oracle.spatial.geometry.JGeometry) 
@@ -231,6 +231,7 @@ public class Animal {
 	 * @see T2SQL#setNoTemporalRestrictions()
 	 * @see T2SQL#setValidationDate(java.util.Date)
 	 * @see T2SQL#setValidationDates(java.util.Date, java.util.Date)
+         * @see DataBase#releaseCacheOnSpatialChange()
 	 */
 	public void spatialDataChanged() {
 		freeNearestAppareance();
@@ -238,7 +239,8 @@ public class Animal {
 	}
 
 	/**
-	 * Zavolat pokaždé, kdy dojde ke změně GPS pozice uživatele
+	 * Toto volat jen z DataBase
+         * @see DataBase#releaseCacheOnNewGPS()
 	 */
 	public void positionDataChanged() {
 		freeNearestAppareance();

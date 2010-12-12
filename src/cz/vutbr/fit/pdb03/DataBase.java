@@ -27,6 +27,7 @@ import oracle.ord.im.OrdImage;
 import oracle.ord.im.OrdImageSignature;
 import oracle.spatial.geometry.JGeometry;
 import cz.vutbr.fit.pdb03.map.JEntity;
+import java.util.Iterator;
 
 /**
  * Knihovna pro práci s databází
@@ -1032,7 +1033,7 @@ public class DataBase {
 	 * @return HashMap<int move_id, JGeometry geometry>
 	 * @throws SQLException
 	 */
-	public Map<Integer, JGeometry> selectAppareance(String genus,
+	public List<JEntity> selectAppareance(String genus,
 			String genus_lat) throws SQLException {
 		String SQLquery = T2SQL.T2SQLprefix()
 				+ "SELECT move_id, geometry FROM animal_movement am, animals a "
@@ -1042,10 +1043,10 @@ public class DataBase {
 		opstmt.setString(1, genus);
 		opstmt.setString(2, genus_lat);
 		OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
-		HashMap<Integer, JGeometry> data = new HashMap<Integer, JGeometry>();
+		LinkedList<JEntity> data = new LinkedList<JEntity>();
 		while (rset.next()) {
-			data.put(rset.getInt("move_id"), JGeometry
-					.load((oracle.sql.STRUCT) rset.getSTRUCT("geometry")));
+			JEntity entity = new JEntity(JGeometry.load((oracle.sql.STRUCT) rset.getSTRUCT("geometry")), rset.getInt("move_id"));
+			data.add(entity);
 		}
 		rset.close();
 		opstmt.close();
@@ -1483,6 +1484,33 @@ public class DataBase {
 		return SQLquery;
 	}
 
+        /**
+         * Není třeba, pokud se volá releaseCacheOnSpatialChange
+         * Zavolat vždy po změně GPS souřadnic - to samé jako Animal.positionDataChanged, ale pro všechna zvířata v searchResult
+         * @see Animal#positionDataChanged()
+         * @see #searchResult
+         * @see #releaseCacheOnSpatialChange()
+         */
+        public void releaseCacheOnNewGPS(){
+            Iterator<Animal> test = searchResult.iterator();
+            while (test.hasNext()){
+                test.next().positionDataChanged();
+            }
+        }
+
+        /**
+         *  Zavolat vždy po změně prostorových dat a změně temporálního nastavení
+         * To samé jako Animal.spatialDataChanged, ale pro všechna zvířata v searchResult
+         * @see #searchResult
+         * @see Animal#spatialDataChanged()
+         */
+        public void releaseCacheOnSpatialChange(){
+            Iterator<Animal> test = searchResult.iterator();
+            while (test.hasNext()){
+                test.next().spatialDataChanged();
+            }
+        }
+
 	// Private functions
 	/**
 	 * Function for deleting objects in database - important before creating a
@@ -1629,7 +1657,6 @@ public class DataBase {
 				+ "old_move_id IN	NUMBER, "
 				+ "new_from IN	DATE, "
 				+ "new_to IN	DATE) IS "
-				+ " new_move_id NUMBER; "
 				+ " old_move MDSYS.SDO_GEOMETRY; "
 				+ " old_animal_id NUMBER; "
 				+ " old_from DATE; "
@@ -1643,14 +1670,12 @@ public class DataBase {
 				+ "      ELSIF new_from <= old_from THEN"
 				+ "        UPDATE animal_movement SET valid_from=new_from, valid_to=null, geometry=new_move WHERE move_id=old_move_id;"
 				+ "      ELSIF new_to >= old_to THEN"
-				+ "        SELECT animal_movement_seq.nextval INTO new_move_id FROM dual;"
-				+ "        INSERT INTO animal_movement (move_id,animal_id,valid_from, valid_to, geometry)"
-				+ "        VALUES (new_move_id,old_animal_id, new_from, null,new_move);"
+				+ "        INSERT INTO animal_movement (animal_id,valid_from, valid_to, geometry)"
+				+ "        VALUES (old_animal_id, new_from, null,new_move);"
 				+ "      ELSE"
 				+ "        UPDATE animal_movement SET valid_to=new_from WHERE move_id=old_move_id;"
-				+ "        SELECT animal_movement_seq.nextval INTO new_move_id FROM dual;"
-				+ "        INSERT INTO animal_movement (move_id,animal_id,valid_from, valid_to, geometry)"
-				+ "        VALUES (new_move_id,old_animal_id, new_from, null,new_move);"
+				+ "        INSERT INTO animal_movement (animal_id,valid_from, valid_to, geometry)"
+				+ "        VALUES (old_animal_id, new_from, null,new_move);"
 				+ "      END IF;"
 				+ "    ELSIF new_from<new_to THEN"
 				+ "     IF new_from<=old_from AND new_to>old_from THEN"
@@ -1658,26 +1683,22 @@ public class DataBase {
 				+ "          UPDATE animal_movement SET valid_from=new_from, valid_to=new_to, geometry=new_move WHERE move_id=old_move_id;"
 				+ "        ELSE"
 				+ "          UPDATE animal_movement SET valid_from=new_to WHERE move_id=old_move_id;"
-				+ "          SELECT animal_movement_seq.nextval INTO new_move_id FROM dual;"
-				+ "          INSERT INTO animal_movement (move_id,animal_id,valid_from, valid_to, geometry)"
-				+ "          VALUES (new_move_id,old_animal_id, new_from, new_to,new_move);"
+				+ "          INSERT INTO animal_movement (animal_id,valid_from, valid_to, geometry)"
+				+ "          VALUES (old_animal_id, new_from, new_to,new_move);"
 				+ "        END IF;"
 				+ "      ELSIF new_to>=old_to AND new_from<old_to THEN"
 				+ "        IF new_from<=old_to THEN"
 				+ "          UPDATE animal_movement SET valid_from=new_from, valid_to=new_to, geometry=new_move WHERE move_id=old_move_id;"
 				+ "        ELSE UPDATE animal_movement SET valid_to=new_from WHERE move_id=old_move_id;"
-				+ "          SELECT animal_movement_seq.nextval INTO new_move_id FROM dual;"
-				+ "          INSERT INTO animal_movement (move_id,animal_id,valid_from, valid_to, geometry)"
-				+ "          VALUES (new_move_id,old_animal_id, new_from, new_to,new_move);"
+				+ "          INSERT INTO animal_movement (animal_id,valid_from, valid_to, geometry)"
+				+ "          VALUES (old_animal_id, new_from, new_to,new_move);"
 				+ "        END IF;"
 				+ "      ELSE"
-				+ "        SELECT animal_movement_seq.nextval INTO new_move_id FROM dual;"
-				+ "        INSERT INTO animal_movement (move_id,animal_id,valid_from, valid_to, geometry)"
-				+ "        VALUES (new_move_id,old_animal_id, new_to, old_to,old_move);"
+				+ "        INSERT INTO animal_movement (animal_id,valid_from, valid_to, geometry)"
+				+ "        VALUES (old_animal_id, new_to, old_to,old_move);"
 				+ "        UPDATE animal_movement SET valid_to=new_from WHERE move_id=old_move_id;"
-				+ "        SELECT animal_movement_seq.nextval INTO new_move_id FROM dual;"
-				+ "        INSERT INTO animal_movement (move_id,animal_id,valid_from, valid_to, geometry)"
-				+ "        VALUES (new_move_id,old_animal_id, new_from, new_to,new_move);"
+				+ "        INSERT INTO animal_movement (animal_id,valid_from, valid_to, geometry)"
+				+ "        VALUES (old_animal_id, new_from, new_to,new_move);"
 				+ "      END IF;" + "    END IF; "
 				+ "END animal_movement_update;");
 		stat.close();
