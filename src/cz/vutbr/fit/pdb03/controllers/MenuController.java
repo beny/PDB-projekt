@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -11,6 +12,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JSeparator;
 
+import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.dialogs.AnimalDialog;
@@ -19,6 +21,7 @@ import cz.vutbr.fit.pdb03.dialogs.PreferencesDialog;
 import cz.vutbr.fit.pdb03.dialogs.SearchByDescriptionDialog;
 import cz.vutbr.fit.pdb03.dialogs.SearchByNameDialog;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
+import cz.vutbr.fit.pdb03.map.JEntity;
 
 public class MenuController implements ActionListener{
 
@@ -201,7 +204,7 @@ public class MenuController implements ActionListener{
 	 * @param selected
 	 */
 	public void setAnimalChosen(boolean selected) {
-		miAnimalArea.setEnabled(false); // TODO dodelat
+		miAnimalArea.setEnabled(selected); // TODO dodelat
 		miAnimalDelete.setEnabled(selected);
 		miAnimalEdit.setEnabled(selected);
 		miAnimalInsertPicture.setEnabled(selected);
@@ -364,6 +367,18 @@ public class MenuController implements ActionListener{
 			dAnimal.enableDeleteButton(true);
 			dAnimal.setMode(AnimalDialog.UPDATE);
 			dAnimal.setVisible(true);
+		}
+
+		// uzemi obyvane rodem
+		if(event.getSource() == miAnimalArea){
+			Animal animal = frame.getAnimalsPanel().getSelectedAnimal();
+			try {
+				List<JEntity> data = frame.getDb().selectAppareance(
+						animal.getGenus(), animal.getGenusLat());
+				frame.getMap().setData(data);
+			} catch(SQLException e){
+				Log.error("Chyba pri hledani spolecne plochy");
+			}
 		}
 
 		// smazani zvirete

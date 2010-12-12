@@ -1043,7 +1043,7 @@ public class DataBase {
 		opstmt.setString(1, genus);
 		opstmt.setString(2, genus_lat);
 		OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
-		LinkedList<JEntity> data = new LinkedList<JEntity>();
+		List<JEntity> data = new LinkedList<JEntity>();
 		while (rset.next()) {
 			JEntity entity = new JEntity(JGeometry.load((oracle.sql.STRUCT) rset.getSTRUCT("geometry")), rset.getInt("move_id"));
 			data.add(entity);
@@ -1292,7 +1292,6 @@ public class DataBase {
 	 */
 	public void insertAppareance(int animal_id, JGeometry j_geom)
 			throws SQLException {
-		int id = 0;
 		con.setAutoCommit(false);
 		Statement stat = con.createStatement();
 		String SQLquery = T2SQL.T2SQLprefix()

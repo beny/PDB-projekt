@@ -146,6 +146,7 @@ public class AnimalsDatabase extends JFrame  {
 			public void run() {
 
 				ArrayList<Animal> dbAnimals = new ArrayList<Animal>();
+				Animal tempAnimal = null;
 
 				map.clearMap();
 				photosPanel.clear();
@@ -171,21 +172,19 @@ public class AnimalsDatabase extends JFrame  {
 						db.searchAnimalsByAreaSize();
 						break;
 					case SEARCH_SAME_AREA:
-						int id = getAnimalsPanel().getSelectedAnimal().getId();
-						Log.debug("Hledam zvirata ktere jsou na stejnem uzemi jako "
-								+ getAnimalsPanel().getSelectedAnimal().getGenus());
+						tempAnimal = getAnimalsPanel().getSelectedAnimal();
+						int id = tempAnimal.getId();
 						db.searchAnimalsOnArea(id);
 						break;
 					case SEARCH_CLOSE:
 						JEntity myPosition = map.getMyPosition();
 						Point2D temp = new Point();
-						temp.setLocation(myPosition.getLat(), myPosition.getLon());
+						temp.setLocation(myPosition.getLat(),
+								myPosition.getLon());
 						db.searchNearestAnimals(temp);
 						break;
 					case SEARCH_EXTINCT:
 						db.searchExtinctAnimals();
-						break;
-					default:
 						break;
 					}
 
