@@ -380,6 +380,11 @@ public class MenuController implements ActionListener{
 				List<JEntity> data = frame.getDb().selectAppareance(
 						animal.getGenus(), animal.getGenusLat());
 				frame.getMap().setData(data);
+				frame.getMap().repaint();
+
+				// zrus vyber a vymaz info panel
+				frame.getAnimalsPanel().getList().clearSelection();
+				frame.getPhotosPanel().clear();
 			} catch(SQLException e){
 				Log.error("Chyba pri hledani spolecne plochy");
 			}

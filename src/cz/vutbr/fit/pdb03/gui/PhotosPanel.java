@@ -184,7 +184,7 @@ public class PhotosPanel extends JTabbedPane {
 	}
 
 	/**
-	 * Vycisteni formulare
+	 * Vycisteni info panelu
 	 */
 	public void clear() {
 		lName.setText("");
@@ -193,5 +193,8 @@ public class PhotosPanel extends JTabbedPane {
 		lDistance2.setText("");
 		lArea2.setText("");
 
+		setAnimalPhotos("");
+		setFootprintPhotos("");
+		setFecesPhotos("");
 	}
 }
