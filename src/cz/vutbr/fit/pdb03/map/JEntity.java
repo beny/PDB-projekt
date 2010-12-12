@@ -36,6 +36,11 @@ public class JEntity extends JGeometry {
 		setId(id);
 	}
 
+	public JEntity(JGeometry geometry){
+		this(geometry, 0);
+	}
+
+
 	public JEntity(double x, double y) {
 		super(x, y, SRID);
 	}
@@ -129,6 +134,24 @@ public class JEntity extends JGeometry {
 	}
 
 	/**
+	 * Prevod z pole JEntit na jednorozmerne pole double[]
+	 * @param points
+	 * @return
+	 */
+	public static double[] convertDouble(List<JEntity> points){
+		double[] array = new double[points.size()*2];
+		int i = 0;
+		for (JEntity p : points) {
+			array[i] = p.getLat();
+			i++;
+			array[i] = p.getLon();
+			i++;
+		}
+
+		return array;
+	}
+
+	/**
 	 * Prevod bodu z Object[] do pole JEntity
 	 * @param points
 	 * @return
@@ -153,6 +176,15 @@ public class JEntity extends JGeometry {
 	 */
 	public static JGeometry createMultiPoint(List<JEntity> points){
 		return JGeometry.createMultiPoint(convert(points), DIMENSION, SRID);
+	}
+
+	/**
+	 * Vytvoreni JGeometry pro Curve
+	 * @param points
+	 * @return
+	 */
+	public static JGeometry createCurve(List<JEntity> points){
+		return JGeometry.createLinearLineString(convertDouble(points), DIMENSION, SRID);
 	}
 
 	/**

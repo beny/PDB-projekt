@@ -35,6 +35,7 @@ public class MapController extends DefaultMapController implements
 	 * Detekce pohybu
 	 */
 	private boolean gotEntity = false;
+	private boolean drawStarted = false;
 
 	// hlavni frame
 	private AnimalsDatabase frame;
@@ -42,6 +43,8 @@ public class MapController extends DefaultMapController implements
 
 	// pomocne promenne
 	private JEntity hitEntity = null;
+
+
 
 	public MapController(JMapPanel map) {
 		super(map);
@@ -79,6 +82,9 @@ public class MapController extends DefaultMapController implements
 		// zrusit edit mod u mapy
 		map.setEditMode(false);
 
+		// nastav zpet menu
+		map.setDrawMode(JMapPanel.MODE_POINT);
+
 		// zrusit mod u menu
 		frame.getMenuController().setEditMode(false);
 
@@ -109,6 +115,8 @@ public class MapController extends DefaultMapController implements
 	 */
 	private void saveAction() {
 
+		map.saveTempDraw();
+
 		// ziskani nakreslenych entit
 		List<JEntity> insertData = map.getInsertData();
 		List<JEntity> updateData = map.getUpdateData();
@@ -118,6 +126,7 @@ public class MapController extends DefaultMapController implements
 		List<JGeometry> saveInsertData = checkMulti(insertData);
 		try {
 			// vlozeni geometrii
+			// FIXME nefunguje vkladani multicurve, nekde problem pri prevodu bodu
 			for (JGeometry geometry : saveInsertData) {
 				frame.getDb().insertAppareance(
 						frame.getAnimalsPanel().getSelectedAnimal().getId(),
@@ -172,7 +181,7 @@ public class MapController extends DefaultMapController implements
 		}
 
 //		Log.debug("Nalezeno " + numPoints + " bodu");
-//		Log.debug("Nalezeno " + numCurves + " krivek");
+		Log.debug("Nalezeno " + numCurves + " krivek");
 //		Log.debug("Nalezeno " + numPolygons + " polygonu");
 
 		// docasne pole
@@ -197,7 +206,7 @@ public class MapController extends DefaultMapController implements
 
 			if (geometry.getType() == JEntity.GTYPE_CURVE) {
 				if(numCurves == 1){
-					curves.add(geometry);
+					curve = geometry;
 				}
 				else if(numCurves > 1){
 					curves.add(geometry);
@@ -315,7 +324,15 @@ public class MapController extends DefaultMapController implements
 					Log.debug("Kreslim novy bod " + clickedCoords);
 					map.addPoint(clickedJEntity);
 					break;
-					// TODO ostatni entity
+				case JMapPanel.MODE_CURVE:
+					Log.debug("Kreslim bod v krivce");
+					drawStarted = true;
+					map.addPoint(clickedJEntity);
+					// TODO
+					break;
+				case JMapPanel.MODE_POLYGON:
+					// TODO
+					break;
 				default:
 					break;
 				}
@@ -327,7 +344,7 @@ public class MapController extends DefaultMapController implements
 			JPopupMenu mContext = new JPopupMenu();
 
 			// posun bod
-			if(map.isEditMode()){
+			if(map.isEditMode() && !drawStarted){
 				map.detectHit(e.getPoint());
 				hitEntity = map.getHitEntity();
 
@@ -388,6 +405,12 @@ public class MapController extends DefaultMapController implements
 
 				}
 			}
+			// ukonceni kresleni
+			else if(drawStarted){
+				Log.debug("Ukladam novou entitu");
+				map.saveTempDraw();
+				drawStarted = false;
+			}
 			// pokud neni editacni mod tak jen nastavovani pozice
 			else {
 				JMenuItem miSetPosition = new JMenuItem(
@@ -402,6 +425,7 @@ public class MapController extends DefaultMapController implements
 				mContext.add(miSetPosition);
 			}
 
+			// TODO nekresli prazdne menu
 			mContext.show(map, clickedPoint.x, clickedPoint.y);
 		}
 	}
@@ -423,10 +447,6 @@ public class MapController extends DefaultMapController implements
 
 		if (e.getActionCommand() == JMapPanel.ACTION_SAVE) {
 			saveAction();
-		}
-
-		if(e.getActionCommand() == JMapPanel.ACTION_NEXT_OBJECT){
-			Log.debug("Tady ulozim a vykreslim jeden hotovy objekt a kreslime dalsi");
 		}
 	}
 }

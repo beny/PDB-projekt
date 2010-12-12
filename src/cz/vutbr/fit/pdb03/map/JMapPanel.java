@@ -39,20 +39,21 @@ public class JMapPanel extends JMapViewer {
 	private final static double DEFAULT_LON = 17;
 	private final static int DEFAULT_ZOOM = 2;
 
-	private final static int MY_POINT_SIZE = 10;
+	private final static int MY_POINT_SIZE = 8;
 	private final static Color MY_POINT_COLOR = Color.RED;
 
-	private final static int POINT_SIZE = 10;
+	private final static int POINT_SIZE = 8;
 	private final static Color POINT_COLOR = Color.GREEN;
 
 	private final static Color POINT_SELECTED_COLOR = Color.CYAN;
+
+	private final static Color CURVE_COLOR = Color.GREEN;
 
 	// konstanty akci
 	public final static String ACTION_EDIT = "EDIT";
 	public final static String ACTION_SAVE = "SAVE";
 	public final static String ACTION_CHANGE_TYPE = "CHANGE";
 	public final static String ACTION_CANCEL = "CANCEL";
-	public final static String ACTION_NEXT_OBJECT = "NEXT";
 
 	public final static int MODE_POINT = 0;
 	public final static int MODE_CURVE = 1;
@@ -74,7 +75,7 @@ public class JMapPanel extends JMapViewer {
 	private int drawMode = MODE_POINT;
 
 	// komponenta pro mapu
-	JButton bEdit, bSave, bCancel, bNext;
+	JButton bEdit, bSave, bCancel;
 	private JComboBox comboElements;
 
 	// detekce kolize
@@ -83,9 +84,12 @@ public class JMapPanel extends JMapViewer {
 	// data
 	JEntity myPosition;	// moje poloha
 	List<JEntity> data;	// puvodni data
+
 	List<JEntity> insertData;	// nova data
 	List<JEntity> updateData;	// zmenena data
 	List<JEntity> deleteData;	// odstranene entity
+
+	List<JEntity> tempDraw;	// docasne pole pro kresleni krivek a polygonu
 
 	public JMapPanel(AnimalsDatabase frame) {
 		super(new MemoryTileCache(), 4);
@@ -151,13 +155,6 @@ public class JMapPanel extends JMapViewer {
 		comboElements.addActionListener(mapController);
 		add(comboElements);
 
-		// ulozeni konkretniho objektu pro zadavani noveho
-		bNext = new JButton("nový objekt");
-		bNext.setBounds(50 + buttonSizeX + smallSpace, smallSpace + 30, 120, buttonSizeY);
-		bNext.setActionCommand(ACTION_NEXT_OBJECT);
-		bNext.addActionListener(mapController);
-		add(bNext);
-
 		setEditMode(false);
 	}
 
@@ -169,6 +166,7 @@ public class JMapPanel extends JMapViewer {
 		insertData = new LinkedList<JEntity>();
 		updateData = new LinkedList<JEntity>();
 		deleteData = new LinkedList<JEntity>();
+		tempDraw = new LinkedList<JEntity>();
 		myPosition = new JEntity(DEFAULT_LAT, DEFAULT_LON);
 	}
 
@@ -179,6 +177,7 @@ public class JMapPanel extends JMapViewer {
 		insertData.clear();
 		updateData.clear();
 		deleteData.clear();
+		tempDraw.clear();
 	}
 
 
@@ -298,7 +297,6 @@ public class JMapPanel extends JMapViewer {
 	 */
 	public void setEditButtonsEnabled(boolean enabled){
 		bEdit.setEnabled(enabled);
-		bNext.setEnabled(enabled);
 		bSave.setEnabled(enabled);
 		comboElements.setEnabled(enabled);
 	}
@@ -313,6 +311,23 @@ public class JMapPanel extends JMapViewer {
 		repaint();
 	}
 
+	/**
+	 * Ukonci docasne kresleni a podle modu ulozi danou entitu do pole k ulozeni
+	 */
+	public void saveTempDraw() {
+		switch (drawMode) {
+		case MODE_POINT: break; // TODO nevim zda tady to musi byt ci ne
+		case MODE_CURVE:
+			JEntity curve = new JEntity(JEntity.createCurve(tempDraw));
+			insertData.add(curve);
+			tempDraw.clear();
+			repaint();
+			break;
+		case MODE_POLYGON:
+			break;
+		}
+
+	}
 
 
 	/**
@@ -320,8 +335,14 @@ public class JMapPanel extends JMapViewer {
 	 * @param point
 	 */
 	public void addPoint(JEntity point){
-		// TODO predelat na entity
-		insertData.add(point);
+		switch (drawMode) {
+		case MODE_POINT: insertData.add(point);	break;
+		case MODE_CURVE:
+		case MODE_POLYGON:
+			tempDraw.add(point);
+			break;
+		}
+
 		repaint();
 	}
 
@@ -357,7 +378,7 @@ public class JMapPanel extends JMapViewer {
 			switch (entity.getType()) {
 			case JEntity.GTYPE_POINT: paintPoint(g, entity); break;
 			case JEntity.GTYPE_MULTIPOINT: paintMultiPoint(g, entity); break;
-//			case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
+			case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
 //			case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity); break;
 //			case JEntity.GTYPE_POLYGON: paintPolygon(g, entity); break;
 //			case JEntity.GTYPE_MULTIPOLYGON: paintMultiPolygon(g, entity); break;
@@ -372,13 +393,9 @@ public class JMapPanel extends JMapViewer {
 			// nove vlozene
 			for (JEntity entity : insertData) {
 				switch (entity.getType()) {
-				case JEntity.GTYPE_POINT:
-					paintPoint(g, entity);
-					break;
-				case JEntity.GTYPE_MULTIPOINT:
-					paintMultiPoint(g, entity);
-					break;
-				// case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
+				case JEntity.GTYPE_POINT: paintPoint(g, entity); break;
+				case JEntity.GTYPE_MULTIPOINT: paintMultiPoint(g, entity);break;
+				case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
 				// case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity);
 				// break;
 				// case JEntity.GTYPE_POLYGON: paintPolygon(g, entity); break;
@@ -412,6 +429,9 @@ public class JMapPanel extends JMapViewer {
 
 		// vykresli moji polohu
 		paintMyPoint(g, myPosition);
+
+		// vykresli docasne kresleni
+		paintTemp(g);
 	}
 
 	/**
@@ -428,6 +448,37 @@ public class JMapPanel extends JMapViewer {
 		g2.fillOval(mp.x - MY_POINT_SIZE / 2, mp.y - MY_POINT_SIZE / 2,
 				MY_POINT_SIZE, MY_POINT_SIZE);
 	}
+
+	/**
+	 * Vykresleni docasne krivky
+	 * @param g
+	 */
+	protected void paintTemp(Graphics g) {
+
+		Graphics2D g2 = (Graphics2D) g;
+
+		int i = 0;
+
+		// FIXME kresleni bych asi sjednotil a vyuzi zde komponentu paintCurve
+
+		GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD,
+				tempDraw.size());
+		for (JEntity point : tempDraw) {
+			Point p = getMapPosition(point.getLat(), point.getLon(), false);
+
+			paintPoint(g, point);	// XXX tohle nevim zda tu nechat
+			if(i == 0){
+				path.moveTo(p.getX(), p.getY());
+			}
+			path.lineTo(p.getX(), p.getY());
+			i++;
+		}
+
+		g2.setColor(CURVE_COLOR);
+		g2.setStroke(stroke);
+		g2.draw(path);
+	}
+
 
 	/**
 	 * Vykresleni bodu
@@ -470,25 +521,27 @@ public class JMapPanel extends JMapViewer {
 	 * @param curve
 	 */
 	protected void paintCurve(Graphics g, JEntity curve) {
+
 		Graphics2D g2 = (Graphics2D) g;
-		// inicializace linestring
+
+		List<JEntity> points = JEntity.convert(curve.getOrdinatesArray());
+
+		int i = 0;
+
 		GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD,
-				curve.getNumPoints());
+				points.size());
+		for (JEntity point : points) {
+			Point p = getMapPosition(point.getLat(), point.getLon(), false);
 
-		// TODO ziskat bodu
-		double[] points = curve.getOrdinatesArray();
-		// zakresli prvni bod
-		Point2D first = getMapPosition(curve.getFirstPoint()[0],
-				curve.getFirstPoint()[1], false);
-		path.moveTo(first.getX(), first.getY());
-
-		for (int i = 0; i < points.length; i++) {
-			Point2D p = getMapPosition(points[i+1], points[i++], false);
-			// TODO zvyrazeni bodu
+			paintPoint(g, point);	// XXX tohle nevim zda tu nechat
+			if(i == 0){
+				path.moveTo(p.getX(), p.getY());
+			}
 			path.lineTo(p.getX(), p.getY());
+			i++;
 		}
 
-		g2.setPaint(Color.GREEN);
+		g2.setColor(CURVE_COLOR);
 		g2.setStroke(stroke);
 		g2.draw(path);
 	}
@@ -518,7 +571,7 @@ public class JMapPanel extends JMapViewer {
 
 		Log.debug("Body polygonu: " + points);
 
-		for (int i = 0; i < points.length; i++) {
+		for (int i = 1; i < points.length; i++) {
 			Point2D p = getMapPosition(points[i+1], points[i++], false);
 			// TODO zvyrazeni bodu
 			path.lineTo(p.getX(), p.getY());
@@ -645,7 +698,6 @@ public class JMapPanel extends JMapViewer {
 		bEdit.setVisible(!visible);
 		bCancel.setVisible(visible);
 		bSave.setVisible(visible);
-		bNext.setVisible(visible);
 		comboElements.setVisible(visible);
 	}
 
