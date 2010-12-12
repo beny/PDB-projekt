@@ -56,6 +56,17 @@ public class AnimalsPanel extends JScrollPane {
 	}
 
 	/**
+	 * Obnova udaju u zvirete
+	 */
+	public void updateAnimalSpatialData() {
+		Animal animal = listController.getSelectedAnimal();
+		if (animal != null) {
+			animal.spatialDataChanged();
+			listController.setSelectedAnimal(animal);
+		}
+	}
+
+	/**
 	 * Nastaveni dat pro list zvirat
 	 * @param animals
 	 */

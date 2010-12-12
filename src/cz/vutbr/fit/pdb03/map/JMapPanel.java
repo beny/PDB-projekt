@@ -634,6 +634,9 @@ public class JMapPanel extends JMapViewer {
 
 	public void setMyPosition(JEntity myPosition) {
 		this.myPosition = myPosition;
+
+		// obnova zvirete
+		frame.getAnimalsPanel().updateAnimalSpatialData();
 		repaint();
 	}
 

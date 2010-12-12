@@ -149,10 +149,7 @@ public class MapController extends DefaultMapController implements
 
 			// aktualizace prostorovych dat
 			Log.debug("Obnova cache");
-			Animal animal = frame.getAnimalsPanel().getSelectedAnimal();
-			animal.spatialDataChanged();
-			frame.getAnimalsPanel().getListController()
-					.setSelectedAnimal(animal);
+			frame.getAnimalsPanel().updateAnimalSpatialData();
 
 		} catch (SQLException ex) {
 			Log.error("Chyba pri ukladani geometrie do DB: " + ex.getMessage());

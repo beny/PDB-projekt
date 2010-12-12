@@ -215,6 +215,71 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 		pGPS.add(tLon, gbc);
 	}
 
+	/**
+	 * Metoda po zmacknuti ulozeni
+	 */
+	private void save(){
+
+		boolean error = false;
+
+		// gps
+		try {
+			frame.getMap().setMyPosition(getMyPosition());
+		} catch (NumberFormatException ex) {
+			JOptionPane.showMessageDialog(this,
+					"Souřadnice nejsou ve správném formátu (XX.XXXX)",
+					"Chyba údajů", JOptionPane.ERROR_MESSAGE);
+			error = true;
+		}
+
+		// cas
+		if (rbNow.isSelected()) {
+			T2SQL.setCurrentTime();
+		} else if (rbInterval.isSelected()) {
+			try {
+				Date from = format.parse(tFrom.getText());
+				Date to = format.parse(tTo.getText());
+
+				if (from.compareTo(to) > 0) {
+					throw new Exception();
+				}
+				T2SQL.setValidationDates(from, to);
+			} catch (ParseException ex) {
+				JOptionPane.showMessageDialog(this,
+						"Datum je ve špatném formátu (DD-MM-YYYY)",
+						"Chybné datum", JOptionPane.ERROR_MESSAGE);
+				error = true;
+			} catch (Exception ex) {
+				JOptionPane.showMessageDialog(this,
+						"Datum od není před datem do", "Chybné datum",
+						JOptionPane.ERROR_MESSAGE);
+				error = true;
+			}
+		} else if (rbAll.isSelected()) {
+			T2SQL.setNoTemporalRestrictions();
+		} else if (rbDate.isSelected()) {
+			try {
+				Date date = format.parse(tDate.getText());
+				T2SQL.setValidationDate(date);
+				dispose();
+			} catch (ParseException ex) {
+				JOptionPane.showMessageDialog(this,
+						"Datum je ve špatném formátu (DD-MM-YYYY)",
+						"Chybné datum", JOptionPane.ERROR_MESSAGE);
+				error = true;
+			}
+		}
+
+		if(!error){
+			Log.debug("Spatial data changed");
+			frame.getDb().releaseCacheOnSpatialChange();
+			frame.getAnimalsPanel().updateAnimalSpatialData();
+			frame.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
+			dispose();
+		}
+
+	}
+
 	public void setMyPosition(JEntity myPosition){
 		tLat.setText(myPosition.getLat() + "");
 		tLon.setText(myPosition.getLon() + "");
@@ -235,63 +300,7 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 
 		// zmacknuto save
 		if(e.getSource() == bSave){
-
-			boolean error = false;
-
-			// gps
-			try {
-				frame.getMap().setMyPosition(getMyPosition());
-			} catch (NumberFormatException ex) {
-				JOptionPane.showMessageDialog(this,
-						"Souřadnice nejsou ve správném formátu (XX.XXXX)", "Chyba údajů",
-						JOptionPane.ERROR_MESSAGE);
-				error = true;
-			}
-
-			// cas
-			if (rbNow.isSelected()) {
-				T2SQL.setCurrentTime();
-			} else if (rbInterval.isSelected()) {
-				try {
-					Date from = format.parse(tFrom.getText());
-					Date to = format.parse(tTo.getText());
-
-					if(from.compareTo(to) > 0){
-						throw new Exception();
-					}
-					T2SQL.setValidationDates(from, to);
-				} catch (ParseException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Datum je ve špatném formátu (DD-MM-YYYY)", "Chybné datum",
-							JOptionPane.ERROR_MESSAGE);
-					error = true;
-				} catch (Exception ex) {
-					JOptionPane.showMessageDialog(this,
-							"Datum od není před datem do", "Chybné datum",
-							JOptionPane.ERROR_MESSAGE);
-					error = true;
-				}
-			} else if (rbAll.isSelected()) {
-				T2SQL.setNoTemporalRestrictions();
-			} else if (rbDate.isSelected()) {
-				try {
-					Date date = format.parse(tDate.getText());
-					T2SQL.setValidationDate(date);
-					dispose();
-				} catch (ParseException ex) {
-					JOptionPane.showMessageDialog(this,
-							"Datum je ve špatném formátu (DD-MM-YYYY)", "Chybné datum",
-							JOptionPane.ERROR_MESSAGE);
-					error = true;
-				}
-			}
-
-			if(!error){
-				Log.debug("Spatial data changed");
-				frame.getDb().releaseCacheOnSpatialChange();
-				frame.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
-				dispose();
-			}
+			save();
 		}
 	}
 }

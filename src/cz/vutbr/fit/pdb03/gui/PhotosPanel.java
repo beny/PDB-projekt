@@ -14,8 +14,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 
-import org.openstreetmap.gui.jmapviewer.interfaces.MapMarker;
-
 import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.Log;
@@ -89,22 +87,6 @@ public class PhotosPanel extends JTabbedPane {
 		gbc.gridx = 0;
 		gbc.gridy = 2;
 
-		gbc.gridy++;
-		gbc.gridwidth = GridBagConstraints.REMAINDER;
-		lDescription = new JLabel(description);
-		lDescription.setFont(fSubTitle);
-		pInfoTab.add(lDescription, gbc);
-
-		gbc.gridx = 0;
-		gbc.gridy++;
-		lDescription2 = new JTextArea();
-		lDescription2.setWrapStyleWord(true);
-		lDescription2.setLineWrap(true);
-		lDescription2.setEditable(false);
-		lDescription2.setColumns(40);
-		lDescription2.setOpaque(false);
-		pInfoTab.add(lDescription2, gbc);
-
 		gbc.gridwidth = 1;
 		gbc.gridy++;
 		lDistance = new JLabel(distance);
@@ -124,6 +106,23 @@ public class PhotosPanel extends JTabbedPane {
 		gbc.gridx++;
 		lArea2 = new JLabel();
 		pInfoTab.add(lArea2, gbc);
+
+		gbc.gridx = 0;
+		gbc.gridy++;
+		gbc.gridwidth = GridBagConstraints.REMAINDER;
+		lDescription = new JLabel(description);
+		lDescription.setFont(fSubTitle);
+		pInfoTab.add(lDescription, gbc);
+
+		gbc.gridx = 0;
+		gbc.gridy++;
+		lDescription2 = new JTextArea();
+		lDescription2.setWrapStyleWord(true);
+		lDescription2.setLineWrap(true);
+		lDescription2.setEditable(false);
+		lDescription2.setColumns(40);
+		lDescription2.setOpaque(false);
+		pInfoTab.add(lDescription2, gbc);
 
 		// scroll
 		sInfoTab = new JScrollPane(pInfoTab);
