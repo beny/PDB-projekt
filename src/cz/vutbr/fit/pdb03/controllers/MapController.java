@@ -180,9 +180,9 @@ public class MapController extends DefaultMapController implements
 			}
 		}
 
-//		Log.debug("Nalezeno " + numPoints + " bodu");
+		Log.debug("Nalezeno " + numPoints + " bodu");
 		Log.debug("Nalezeno " + numCurves + " krivek");
-//		Log.debug("Nalezeno " + numPolygons + " polygonu");
+		Log.debug("Nalezeno " + numPolygons + " polygonu");
 
 		// docasne pole
 		JEntity point = null;
@@ -250,6 +250,7 @@ public class MapController extends DefaultMapController implements
 	 */
 	private void changeDrawTypeAction(JComboBox combo){
 
+		map.saveTempDraw();
 		int mode = combo.getSelectedIndex();
 		map.setDrawMode(mode);
 		Log.debug("Mod: " + mode);
@@ -277,26 +278,29 @@ public class MapController extends DefaultMapController implements
 			// bod v nekolika formatech
 			Point movePoint = e.getPoint();
 			Coordinate moveCoords = map.getPosition(movePoint);
-
-			switch (hitEntity.getType()) {
-			case JEntity.GTYPE_POINT:
-				hitEntity.movePoint(moveCoords.getLat(), moveCoords.getLon());
-				break;
-			case JEntity.GTYPE_MULTIPOINT:
-			case JEntity.GTYPE_CURVE:
-			case JEntity.GTYPE_POLYGON:
-				hitEntity.moveMultiPoint(moveCoords.getLat(),
-						moveCoords.getLon());
-				break;
-			case JEntity.GTYPE_MULTICURVE:
-			case JEntity.GTYPE_MULTIPOLYGON:
-				// TODO
-				break;
-			}
-
-
-
+			moveHitEntity(moveCoords);
 			map.repaint();
+		}
+	}
+
+	/**
+	 * Posun entity po mape
+	 * @param coords
+	 */
+	private void moveHitEntity(Coordinate coords){
+		switch (hitEntity.getType()) {
+		case JEntity.GTYPE_POINT:
+			hitEntity.movePoint(coords.getLat(), coords.getLon());
+			break;
+		case JEntity.GTYPE_MULTIPOINT:
+		case JEntity.GTYPE_CURVE:
+		case JEntity.GTYPE_POLYGON:
+			hitEntity.moveMultiPoint(coords.getLat(), coords.getLon());
+			break;
+		case JEntity.GTYPE_MULTICURVE:
+		case JEntity.GTYPE_MULTIPOLYGON:
+			hitEntity.moveMultiMulti(coords.getLat(), coords.getLon());
+			break;
 		}
 	}
 
@@ -351,46 +355,33 @@ public class MapController extends DefaultMapController implements
 				// nasel se nejaky bod
 				if(hitEntity != null){
 
-					// presun geometrie
-					JMenuItem move = new JMenuItem("Chyť");
-					move.addActionListener(new ActionListener() {
+					// presun pro vse krom multicurve a multipolygon (neni
+					// dodelane)
+					if (hitEntity.getType() != JEntity.GTYPE_MULTICURVE
+							&& hitEntity.getType() != JEntity.GTYPE_MULTIPOLYGON) {
+						// presun geometrie
+						JMenuItem move = new JMenuItem("Chyť");
+						move.addActionListener(new ActionListener() {
 
-						@Override
-						public void actionPerformed(ActionEvent arg0) {
-							gotEntity = true;
+							@Override
+							public void actionPerformed(ActionEvent arg0) {
+								gotEntity = true;
 
-							map.setEditButtonsEnabled(false);
+								map.setEditButtonsEnabled(false);
 
-							// nove nepridavej do update
-							if (hitEntity.getId() != 0) {
-								map.updateEntity(hitEntity);
+								// nove nepridavej do update
+								if (hitEntity.getId() != 0) {
+									map.updateEntity(hitEntity);
+								}
+
+								moveHitEntity(clickedCoords);
+
+								Log.debug("Geometrie " + hitEntity + " chycena");
+								map.repaint();
 							}
-
-							// posun podle typu
-							switch (hitEntity.getType()) {
-							case JEntity.GTYPE_POINT:
-								hitEntity.movePoint(clickedCoords.getLat(),
-										clickedCoords.getLon());
-								break;
-							case JEntity.GTYPE_MULTIPOINT:
-							case JEntity.GTYPE_CURVE:
-							case JEntity.GTYPE_POLYGON:
-								hitEntity.moveMultiPoint(
-										clickedCoords.getLat(),
-										clickedCoords.getLon());
-								break;
-							case JEntity.GTYPE_MULTICURVE:
-							case JEntity.GTYPE_MULTIPOLYGON:
-								// TODO
-								break;
-							}
-
-
-							Log.debug("Geometrie " + hitEntity + " chycena");
-							map.repaint();
-						}
-					});
-					mContext.add(move);
+						});
+						mContext.add(move);
+					}
 
 					// mazani geometrie
 					JMenuItem delete = new JMenuItem("Smaž");
@@ -404,7 +395,6 @@ public class MapController extends DefaultMapController implements
 						}
 					});
 					mContext.add(delete);
-
 				}
 			}
 			// ukonceni kresleni

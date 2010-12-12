@@ -4,6 +4,8 @@ import java.awt.geom.Point2D;
 import java.util.LinkedList;
 import java.util.List;
 
+import cz.vutbr.fit.pdb03.Log;
+
 import oracle.spatial.geometry.JGeometry;
 
 /**
@@ -73,7 +75,6 @@ public class JEntity extends JGeometry {
 	 * @param lon
 	 */
 	public void moveMultiPoint(double lat, double lon) {
-		// TODO overit pro ostatni entity
 
 		List<JEntity> points = convert(getOrdinatesArray());
 
@@ -97,6 +98,30 @@ public class JEntity extends JGeometry {
 	}
 
 	/**
+	 * Presun objekt obsahujici objekt obsahujici vice bodu
+	 * @param lat
+	 * @param lon
+	 */
+	public void moveMultiMulti(double lat, double lon) {
+		List<JEntity> entities = convertMulti(getOrdinatesOfElements(),
+				getType());
+
+		int i = 0;
+		for (JEntity e : entities) {
+			// posun prvni entity
+			if (i == 0) {
+				Log.debug("Presun prvni entity v multi");
+				e.moveMultiPoint(lat, lon);
+			}
+
+			// TODO posun prvni entitu a zjisti rozdil
+			// TODO zjistit rozdil ostatnich entit od prvni a posun
+
+			i++;
+		}
+	}
+
+	/**
 	 * Najde nejblizsi bod k bodu
 	 * @param hitPoint
 	 * @param entity
@@ -107,6 +132,50 @@ public class JEntity extends JGeometry {
 				false);
 		return Point2D.distance(hitPoint.getX(), hitPoint.getY(),
 				entityPoint.getX(), entityPoint.getY());
+	}
+
+	/**
+	 * Ziskej curves z multiobjektu
+	 * @return
+	 */
+	public List<JEntity> getCurves(){
+
+		List<JEntity> curves = new LinkedList<JEntity>();
+		if (getType() == GTYPE_MULTICURVE) {
+			Object[] elements = getOrdinatesOfElements();
+
+			for (Object object : elements) {
+				double[] p = (double[]) object;
+				List<JEntity> points = JEntity.convert(p);
+				JEntity curve = new JEntity(JEntity.createCurve(points),
+						getId());
+				curves.add(curve);
+			}
+
+		}
+		return curves;
+	}
+
+	/**
+	 * Ziskej polygons z multiobjektu
+	 * @return
+	 */
+	public List<JEntity> getPolygons(){
+
+		List<JEntity> polygons = new LinkedList<JEntity>();
+		if (getType() == GTYPE_MULTIPOLYGON) {
+			Object[] elements = getOrdinatesOfElements();
+
+			for (Object object : elements) {
+				double[] p = (double[]) object;
+				List<JEntity> points = JEntity.convert(p);
+				JEntity polygon = new JEntity(JEntity.createPolygon(points),
+						getId());
+				polygons.add(polygon);
+			}
+
+		}
+		return polygons;
 	}
 
 	@Override
@@ -134,22 +203,21 @@ public class JEntity extends JGeometry {
 	}
 
 	/**
-	 * Prevod seznamu pro curves a polygony na Object[]
-	 * @param entities
+	 * Prevod bodu z Object[] do pole JEntity
+	 * @param points
 	 * @return
 	 */
-	public static Object[] convertMulti(List<JEntity> entities){
+	public static List<JEntity> convert(double[] points){
 
-		Object[] array = new Object[entities.size()];
+		List<JEntity> data = new LinkedList<JEntity>();
 
-		int i = 0;
-		for (JEntity e : entities) {
-			List<JEntity> points = convert(e.getOrdinatesArray());
-			array[i] = convertDouble(points);
-			i++;
+		for (int i = 0; i < points.length; i++) {
+
+			double[] coords = { points[i], points[++i]};
+			data.add(new JEntity(coords[0], coords[1]));
 		}
 
-		return array;
+		return data;
 	}
 
 	/**
@@ -171,21 +239,46 @@ public class JEntity extends JGeometry {
 	}
 
 	/**
-	 * Prevod bodu z Object[] do pole JEntity
-	 * @param points
+	 * Prevod seznamu pro curves a polygony na Object[]
+	 * @param entities
 	 * @return
 	 */
-	public static List<JEntity> convert(double[] points){
+	public static Object[] convertMulti(List<JEntity> entities){
 
-		List<JEntity> data = new LinkedList<JEntity>();
+		Object[] array = new Object[entities.size()];
 
-		for (int i = 0; i < points.length; i++) {
-
-			double[] coords = { points[i], points[++i]};
-			data.add(new JEntity(coords[0], coords[1]));
+		int i = 0;
+		for (JEntity e : entities) {
+			List<JEntity> points = convert(e.getOrdinatesArray());
+			array[i] = convertDouble(points);
+			i++;
 		}
 
-		return data;
+		return array;
+	}
+
+	/**
+	 * Prevod Object[] pro curves a polygony na seznam
+	 * @param entities
+	 * @return
+	 */
+	public static List<JEntity> convertMulti(Object[] array, int type){
+
+		List<JEntity> entities = new LinkedList<JEntity>();
+
+		for (Object object : array) {
+			double[] points = (double[]) object;
+
+			if(type == JEntity.GTYPE_MULTICURVE){
+				entities.add(new JEntity(JEntity.createCurve(convert(points))));
+			}
+
+			if(type == JEntity.GTYPE_MULTIPOLYGON){
+				entities.add(new JEntity(JEntity.createPolygon(convert(points))));
+			}
+		}
+
+		return entities;
 	}
 
 	/**
@@ -230,7 +323,13 @@ public class JEntity extends JGeometry {
 	 * @return
 	 */
 	public static JGeometry createMultiPolygon(List<JEntity> points){
-		return JGeometry.createLinearPolygon(convertMulti(points), DIMENSION, SRID);
+
+		// FIX chyby v JGeometry knigovne
+		JGeometry multipolygon = JGeometry.createLinearPolygon(
+				convertMulti(points), DIMENSION, SRID);
+		multipolygon.setType(JGeometry.GTYPE_MULTIPOLYGON);
+
+		return multipolygon;
 	}
 
 	public int getId() {

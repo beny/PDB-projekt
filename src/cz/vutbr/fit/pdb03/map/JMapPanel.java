@@ -257,7 +257,6 @@ public class JMapPanel extends JMapViewer {
 	private double getMinDistance(JEntity entity, Point clickedPoint) {
 		double distance = MAX_DISTANCE;
 		double minDistance = MAX_DISTANCE;
-		List<JEntity> points = null;
 
 		// predpokladejme ze neni hit
 		entity.setSelected(false);
@@ -271,7 +270,7 @@ public class JMapPanel extends JMapViewer {
 		case JEntity.GTYPE_MULTIPOINT:
 		case JEntity.GTYPE_CURVE:
 		case JEntity.GTYPE_POLYGON:
-			points = JEntity.convert(entity.getOrdinatesArray());
+			List<JEntity> points = JEntity.convert(entity.getOrdinatesArray());
 
 			for (JEntity p : points) {
 				distance = p.diffPoint(clickedPoint, this);
@@ -282,8 +281,30 @@ public class JMapPanel extends JMapViewer {
 			distance = minDistance;
 			break;
 		case JEntity.GTYPE_MULTICURVE:
+			List<JEntity> curves = JEntity.convertMulti(entity
+					.getOrdinatesOfElements(), JEntity.GTYPE_MULTICURVE);
+			for (JEntity curve : curves) {
+				distance = getMinDistance(curve, clickedPoint);
+
+				// pokud je bliz, zvol tento
+				if (distance < minDistance) {
+					minDistance = distance;
+				}
+			}
+			distance = minDistance;
+			break;
 		case JEntity.GTYPE_MULTIPOLYGON:
-			// TODO
+			List<JEntity> polygons = JEntity.convertMulti(entity
+					.getOrdinatesOfElements(), JEntity.GTYPE_MULTIPOLYGON);
+			for (JEntity polygon : polygons) {
+				distance = getMinDistance(polygon, clickedPoint);
+
+				// pokud je bliz, zvol tento
+				if (distance < minDistance) {
+					minDistance = distance;
+				}
+			}
+			distance = minDistance;
 			break;
 		}
 
@@ -317,8 +338,8 @@ public class JMapPanel extends JMapViewer {
 
 		if (tempDraw.size() > 0) {
 			switch (drawMode) {
-			case MODE_POINT:
-				break; // FIXME nevim zda tady to musi byt ci ne
+			case MODE_POINT:	// tohle by tu ciste teoreticky nemuselo byt
+				break;
 			case MODE_CURVE:
 				JEntity curve = new JEntity(JEntity.createCurve(tempDraw));
 				insertData.add(curve);
@@ -333,9 +354,7 @@ public class JMapPanel extends JMapViewer {
 				break;
 			}
 		}
-
 	}
-
 
 	/**
 	 * Pridavani bodu pri vkladani noveho elementu
@@ -419,8 +438,6 @@ public class JMapPanel extends JMapViewer {
 		case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity); break;
 		case JEntity.GTYPE_POLYGON: paintPolygon(g, entity); break;
 		case JEntity.GTYPE_MULTIPOLYGON: paintMultiPolygon(g, entity); break;
-		default:
-			break;
 		}
 	}
 
@@ -449,14 +466,12 @@ public class JMapPanel extends JMapViewer {
 
 		int i = 0;
 
-		// FIXME kresleni bych asi sjednotil a vyuzi zde komponentu paintCurve
-
 		GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD,
 				tempDraw.size());
 		for (JEntity point : tempDraw) {
 			Point p = getMapPosition(point.getLat(), point.getLon(), false);
 
-			paintPoint(g, point);	// XXX tohle nevim zda tu nechat
+			paintPoint(g, point);
 			if(i == 0){
 				path.moveTo(p.getX(), p.getY());
 			}
@@ -546,15 +561,11 @@ public class JMapPanel extends JMapViewer {
 	 */
 	protected void paintMultiCurve(Graphics g, JEntity curves) {
 
-		Object[] elements = curves.getOrdinatesOfElements();
+		List<JEntity> cs = curves.getCurves();
 
-		for (Object object : elements) {
-			double[] p = (double[]) object;
-			List<JEntity> points = JEntity.convert(p);
-			JEntity curve = new JEntity(JEntity.createCurve(points),
-					curves.getId());
-			// TODO selected
-			paintCurve(g, curve);
+		for (JEntity c : cs) {
+			c.setSelected(curves.isSelected());
+			paintCurve(g, c);
 		}
 	}
 
@@ -564,7 +575,6 @@ public class JMapPanel extends JMapViewer {
 	 * @param map
 	 */
 	protected void paintPolygon(Graphics g, JEntity polygon) {
-
 		Graphics2D g2 = (Graphics2D) g;
 
 		List<JEntity> points = JEntity.convert(polygon.getOrdinatesArray());
@@ -606,15 +616,11 @@ public class JMapPanel extends JMapViewer {
 	 * @param polygons
 	 */
 	protected void paintMultiPolygon(Graphics g, JEntity polygons) {
-		Object[] elements = polygons.getOrdinatesOfElements();
+		List<JEntity> ps = polygons.getPolygons();
 
-		for (Object object : elements) {
-			double[] p = (double[]) object;
-			List<JEntity> points = JEntity.convert(p);
-			JEntity polygon = new JEntity(JEntity.createCurve(points),
-					polygons.getId());
-			// TODO selected
-			paintPolygon(g, polygon);
+		for (JEntity p : ps) {
+			p.setSelected(polygons.isSelected());
+			paintPolygon(g, p);
 		}
 	}
 
