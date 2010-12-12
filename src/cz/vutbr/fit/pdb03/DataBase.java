@@ -922,7 +922,7 @@ public class DataBase {
 	 * @return HashMap<Integer photo_id,OrdImage photo>
 	 * @throws SQLException
 	 */
-	public Map<Integer, OrdImage> selectPicture(int id, boolean all,
+	public List<OrdImage> selectPicture(int id, boolean all,
 			String choosen_table) throws SQLException {
 		Statement stat = con.createStatement();
 		String SQLquery;
@@ -935,16 +935,15 @@ public class DataBase {
 					+ Integer.toString(id);
 		}
 		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
-		HashMap<Integer, OrdImage> result = new HashMap<Integer, OrdImage>();
+		List<OrdImage> data = new LinkedList<OrdImage>();
 		while (rset.next()) {
-			result.put(
-					rset.getInt("photo_id"),
-					(OrdImage) rset.getORAData("photo",
-							OrdImage.getORADataFactory()));
+			// TODO rset.getInt("photo_id"),
+			data.add((OrdImage) rset.getORAData("photo",
+					OrdImage.getORADataFactory()));
 		}
 		rset.close();
 		stat.close();
-		return result;
+		return data;
 	}
 
 	/**

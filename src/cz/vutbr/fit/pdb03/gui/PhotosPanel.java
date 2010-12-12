@@ -39,6 +39,7 @@ public class PhotosPanel extends JTabbedPane {
 
 	private JLabel lDescription, lDistance, lArea;
 	private JLabel lName, lNameLat, lDistance2, lArea2;
+	private JLabel lPhotos, lFootprints, lFeces;
 	private JTextArea lDescription2;
 
 	public PhotosPanel(AnimalsDatabase frame) {
@@ -47,9 +48,13 @@ public class PhotosPanel extends JTabbedPane {
 		// inicializace
 		initInfoTab();
 
-		addTab("Fotky", new JLabel("Tady budou fotky", JLabel.LEFT));
-		addTab("Stopy", new JLabel("Tady budou stopy", JLabel.CENTER));
-		addTab("Trus", new JLabel("Tady bude velky hovno", JLabel.CENTER));
+		lPhotos = new JLabel("Tady budou fotky", JLabel.LEFT);
+		lFootprints = new JLabel("Tady budou stopy", JLabel.CENTER);
+		lFeces = new JLabel("Tady bude velky hovno", JLabel.CENTER);
+
+		addTab("Fotky", lPhotos);
+		addTab("Stopy", lFootprints);
+		addTab("Trus", lFeces);
 
 
 	}
@@ -161,6 +166,21 @@ public class PhotosPanel extends JTabbedPane {
 		} catch (SQLException ex) {
 			Log.error("Chyba pri ziskavani udaju o zvireti z DB");
 		}
+	}
+
+	public void setAnimalPhotos(String data){
+		lPhotos.setText(data);
+		// TODO
+	}
+
+	public void setFootprintPhotos(String data){
+		lFootprints.setText(data);
+		// TODO
+	}
+
+	public void setFecesPhotos(String data){
+		lFeces.setText(data);
+		// TODO
 	}
 
 	/**

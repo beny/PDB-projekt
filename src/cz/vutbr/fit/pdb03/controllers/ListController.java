@@ -9,8 +9,11 @@ import java.util.List;
 
 import javax.swing.ListModel;
 
+import oracle.ord.im.OrdImage;
+
 import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
+import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.dialogs.AnimalDialog;
 import cz.vutbr.fit.pdb03.dialogs.LoadingDialog;
@@ -63,6 +66,41 @@ public class ListController extends MouseAdapter implements KeyListener {
 
 				// info o zvireti
 				frame.getPhotosPanel().setAnimalData(getSelectedAnimal());
+
+				try {
+					// TODO fotky
+					List<OrdImage> data = frame.getDb().selectPicture(
+							getSelectedAnimal().getId(), true,
+							DataBase.ANIMAL_PHOTO);
+					String str = new String();
+					for (OrdImage img : data) {
+						str += img.getWidth() + "x" + img.getHeight()  + "\n";
+					}
+					frame.getPhotosPanel().setAnimalPhotos(str);
+
+					// TODO stopy
+					data = frame.getDb().selectPicture(
+							getSelectedAnimal().getId(), true,
+							DataBase.FEET_PHOTO);
+					str = new String();
+					for (OrdImage img : data) {
+						str += img.getWidth() + "x" + img.getHeight()  + "\n";
+					}
+					frame.getPhotosPanel().setFootprintPhotos(str);
+
+					// TODO trus
+					data = frame.getDb().selectPicture(
+							getSelectedAnimal().getId(), true,
+							DataBase.EXCREMENT_PHOTO);
+					str = new String();
+					for (OrdImage img : data) {
+						str += img.getWidth() + "x" + img.getHeight()  + "\n";
+					}
+					frame.getPhotosPanel().setFecesPhotos(str);
+				} catch (SQLException e) {
+
+				}
+
 				dLoading.dispose();
 			}
 		}).start();
