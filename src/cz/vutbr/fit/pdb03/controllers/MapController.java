@@ -103,6 +103,7 @@ public class MapController extends DefaultMapController implements
 			frame.setEnable(false); // zruseni dostupnosti prvku v hlavnim okne
 			map.setEditMode(true);	// nastaveni edit modu
 			frame.getMenuController().setEditMode(true);	// disable menu
+			map.repaint();
 		} else {
 			JOptionPane.showMessageDialog(frame, "Musíte vybrat nějaké zvíře",
 					"Vyber zvíře", JOptionPane.ERROR_MESSAGE);
@@ -126,7 +127,6 @@ public class MapController extends DefaultMapController implements
 		List<JGeometry> saveInsertData = checkMulti(insertData);
 		try {
 			// vlozeni geometrii
-			// FIXME nefunguje vkladani multicurve, nekde problem pri prevodu bodu
 			for (JGeometry geometry : saveInsertData) {
 				frame.getDb().insertAppareance(
 						frame.getAnimalsPanel().getSelectedAnimal().getId(),
@@ -283,10 +283,15 @@ public class MapController extends DefaultMapController implements
 				hitEntity.movePoint(moveCoords.getLat(), moveCoords.getLon());
 				break;
 			case JEntity.GTYPE_MULTIPOINT:
+			case JEntity.GTYPE_CURVE:
+			case JEntity.GTYPE_POLYGON:
 				hitEntity.moveMultiPoint(moveCoords.getLat(),
 						moveCoords.getLon());
 				break;
-			// TODO ostatni entity
+			case JEntity.GTYPE_MULTICURVE:
+			case JEntity.GTYPE_MULTIPOLYGON:
+				// TODO
+				break;
 			}
 
 
@@ -325,15 +330,10 @@ public class MapController extends DefaultMapController implements
 					map.addPoint(clickedJEntity);
 					break;
 				case JMapPanel.MODE_CURVE:
+				case JMapPanel.MODE_POLYGON:
 					Log.debug("Kreslim bod v krivce");
 					drawStarted = true;
 					map.addPoint(clickedJEntity);
-					// TODO
-					break;
-				case JMapPanel.MODE_POLYGON:
-					// TODO
-					break;
-				default:
 					break;
 				}
 			}
@@ -373,13 +373,15 @@ public class MapController extends DefaultMapController implements
 										clickedCoords.getLon());
 								break;
 							case JEntity.GTYPE_MULTIPOINT:
-
+							case JEntity.GTYPE_CURVE:
+							case JEntity.GTYPE_POLYGON:
 								hitEntity.moveMultiPoint(
 										clickedCoords.getLat(),
 										clickedCoords.getLon());
 								break;
-								// TODO ostatni entity
-							default:
+							case JEntity.GTYPE_MULTICURVE:
+							case JEntity.GTYPE_MULTIPOLYGON:
+								// TODO
 								break;
 							}
 
@@ -425,7 +427,7 @@ public class MapController extends DefaultMapController implements
 				mContext.add(miSetPosition);
 			}
 
-			// TODO nekresli prazdne menu
+			// FIXME nekresli prazdne menu
 			mContext.show(map, clickedPoint.x, clickedPoint.y);
 		}
 	}

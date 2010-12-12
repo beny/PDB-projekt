@@ -134,6 +134,25 @@ public class JEntity extends JGeometry {
 	}
 
 	/**
+	 * Prevod seznamu pro curves a polygony na Object[]
+	 * @param entities
+	 * @return
+	 */
+	public static Object[] convertMulti(List<JEntity> entities){
+
+		Object[] array = new Object[entities.size()];
+
+		int i = 0;
+		for (JEntity e : entities) {
+			List<JEntity> points = convert(e.getOrdinatesArray());
+			array[i] = convertDouble(points);
+			i++;
+		}
+
+		return array;
+	}
+
+	/**
 	 * Prevod z pole JEntit na jednorozmerne pole double[]
 	 * @param points
 	 * @return
@@ -188,12 +207,21 @@ public class JEntity extends JGeometry {
 	}
 
 	/**
+	 * Vytvoreni JGeometry pro Polygon
+	 * @param points
+	 * @return
+	 */
+	public static JGeometry createPolygon(List<JEntity> points){
+		return JGeometry.createLinearPolygon(convertDouble(points), DIMENSION, SRID);
+	}
+
+	/**
 	 * Vytvoreni JGeometry pro MultiCurve
 	 * @param points
 	 * @return
 	 */
 	public static JGeometry createMultiCurve(List<JEntity> points){
-		return JGeometry.createLinearMultiLineString(convert(points), DIMENSION, SRID);
+		return JGeometry.createLinearMultiLineString(convertMulti(points), DIMENSION, SRID);
 	}
 
 	/**
@@ -202,7 +230,7 @@ public class JEntity extends JGeometry {
 	 * @return
 	 */
 	public static JGeometry createMultiPolygon(List<JEntity> points){
-		return JGeometry.createLinearPolygon(convert(points), DIMENSION, SRID);
+		return JGeometry.createLinearPolygon(convertMulti(points), DIMENSION, SRID);
 	}
 
 	public int getId() {

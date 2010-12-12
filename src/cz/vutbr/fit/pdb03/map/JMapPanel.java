@@ -48,6 +48,7 @@ public class JMapPanel extends JMapViewer {
 	private final static Color POINT_SELECTED_COLOR = Color.CYAN;
 
 	private final static Color CURVE_COLOR = Color.GREEN;
+	private final static Color CURVE_SELECTED_COLOR = Color.CYAN;
 
 	// konstanty akci
 	public final static String ACTION_EDIT = "EDIT";
@@ -243,9 +244,6 @@ public class JMapPanel extends JMapViewer {
 			hitEntity = tempHit;
 			repaint();
 		}
-
-		// TODO insert data
-		// TODO update data
 	}
 
 	/**
@@ -258,6 +256,8 @@ public class JMapPanel extends JMapViewer {
 	 */
 	private double getMinDistance(JEntity entity, Point clickedPoint) {
 		double distance = MAX_DISTANCE;
+		double minDistance = MAX_DISTANCE;
+		List<JEntity> points = null;
 
 		// predpokladejme ze neni hit
 		entity.setSelected(false);
@@ -269,9 +269,10 @@ public class JMapPanel extends JMapViewer {
 			Log.debug("testuju bod " + entity + " je vzdaleny " + distance);
 			break;
 		case JEntity.GTYPE_MULTIPOINT:
-			List<JEntity> points = JEntity.convert(entity.getOrdinatesArray());
+		case JEntity.GTYPE_CURVE:
+		case JEntity.GTYPE_POLYGON:
+			points = JEntity.convert(entity.getOrdinatesArray());
 
-			double minDistance = MAX_DISTANCE;
 			for (JEntity p : points) {
 				distance = p.diffPoint(clickedPoint, this);
 				if(distance < minDistance){
@@ -280,11 +281,9 @@ public class JMapPanel extends JMapViewer {
 			}
 			distance = minDistance;
 			break;
-		// case JEntity.GTYPE_CURVE: // TODO break;
-		// case JEntity.GTYPE_MULTICURVE: // TODO break;
-		// case JEntity.GTYPE_POLYGON: // TODO break;
-		// case JEntity.GTYPE_MULTIPOLYGON: // TODO break;
-		default:
+		case JEntity.GTYPE_MULTICURVE:
+		case JEntity.GTYPE_MULTIPOLYGON:
+			// TODO
 			break;
 		}
 
@@ -315,16 +314,24 @@ public class JMapPanel extends JMapViewer {
 	 * Ukonci docasne kresleni a podle modu ulozi danou entitu do pole k ulozeni
 	 */
 	public void saveTempDraw() {
-		switch (drawMode) {
-		case MODE_POINT: break; // TODO nevim zda tady to musi byt ci ne
-		case MODE_CURVE:
-			JEntity curve = new JEntity(JEntity.createCurve(tempDraw));
-			insertData.add(curve);
-			tempDraw.clear();
-			repaint();
-			break;
-		case MODE_POLYGON:
-			break;
+
+		if (tempDraw.size() > 0) {
+			switch (drawMode) {
+			case MODE_POINT:
+				break; // FIXME nevim zda tady to musi byt ci ne
+			case MODE_CURVE:
+				JEntity curve = new JEntity(JEntity.createCurve(tempDraw));
+				insertData.add(curve);
+				tempDraw.clear();
+				repaint();
+				break;
+			case MODE_POLYGON:
+				JEntity polygon = new JEntity(JEntity.createPolygon(tempDraw));
+				insertData.add(polygon);
+				tempDraw.clear();
+				repaint();
+				break;
+			}
 		}
 
 	}
@@ -374,56 +381,21 @@ public class JMapPanel extends JMapViewer {
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
 
+		// puvodni data
 		for (JEntity entity : data) {
-			switch (entity.getType()) {
-			case JEntity.GTYPE_POINT: paintPoint(g, entity); break;
-			case JEntity.GTYPE_MULTIPOINT: paintMultiPoint(g, entity); break;
-			case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
-//			case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity); break;
-//			case JEntity.GTYPE_POLYGON: paintPolygon(g, entity); break;
-//			case JEntity.GTYPE_MULTIPOLYGON: paintMultiPolygon(g, entity); break;
-			default:
-				break;
-			}
-
+			paintEntity(g, entity);
 		}
 
 		// pokud je v editacnim modu, kresli i nove vykreslene body
 		if (isEditMode()) {
 			// nove vlozene
 			for (JEntity entity : insertData) {
-				switch (entity.getType()) {
-				case JEntity.GTYPE_POINT: paintPoint(g, entity); break;
-				case JEntity.GTYPE_MULTIPOINT: paintMultiPoint(g, entity);break;
-				case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
-				// case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity);
-				// break;
-				// case JEntity.GTYPE_POLYGON: paintPolygon(g, entity); break;
-				// case JEntity.GTYPE_MULTIPOLYGON: paintMultiPolygon(g,
-				// entity); break;
-				default:
-					break;
-				}
+				paintEntity(g, entity);
 			}
 
 			// updatovane
 			for (JEntity entity : updateData) {
-				switch (entity.getType()) {
-				case JEntity.GTYPE_POINT:
-					paintPoint(g, entity);
-					break;
-				case JEntity.GTYPE_MULTIPOINT:
-					paintMultiPoint(g, entity);
-					break;
-				// case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
-				// case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity);
-				// break;
-				// case JEntity.GTYPE_POLYGON: paintPolygon(g, entity); break;
-				// case JEntity.GTYPE_MULTIPOLYGON: paintMultiPolygon(g,
-				// entity); break;
-				default:
-					break;
-				}
+				paintEntity(g, entity);
 			}
 		}
 
@@ -432,6 +404,24 @@ public class JMapPanel extends JMapViewer {
 
 		// vykresli docasne kresleni
 		paintTemp(g);
+	}
+
+	/**
+	 * Vyber jaka entita se ma kreslit
+	 * @param g
+	 * @param entity
+	 */
+	protected void paintEntity(Graphics g, JEntity entity){
+		switch (entity.getType()) {
+		case JEntity.GTYPE_POINT: paintPoint(g, entity); break;
+		case JEntity.GTYPE_MULTIPOINT: paintMultiPoint(g, entity); break;
+		case JEntity.GTYPE_CURVE: paintCurve(g, entity); break;
+		case JEntity.GTYPE_MULTICURVE: paintMultiCurve(g, entity); break;
+		case JEntity.GTYPE_POLYGON: paintPolygon(g, entity); break;
+		case JEntity.GTYPE_MULTIPOLYGON: paintMultiPolygon(g, entity); break;
+		default:
+			break;
+		}
 	}
 
 	/**
@@ -533,7 +523,10 @@ public class JMapPanel extends JMapViewer {
 		for (JEntity point : points) {
 			Point p = getMapPosition(point.getLat(), point.getLon(), false);
 
-			paintPoint(g, point);	// XXX tohle nevim zda tu nechat
+			if(isEditMode()){
+				point.setSelected(curve.isSelected());
+				paintPoint(g, point);
+			}
 			if(i == 0){
 				path.moveTo(p.getX(), p.getY());
 			}
@@ -541,14 +534,28 @@ public class JMapPanel extends JMapViewer {
 			i++;
 		}
 
-		g2.setColor(CURVE_COLOR);
+		g2.setColor(curve.isSelected()?CURVE_SELECTED_COLOR:CURVE_COLOR);
 		g2.setStroke(stroke);
 		g2.draw(path);
 	}
 
+	/**
+	 * Vykresleni multicurve
+	 * @param g
+	 * @param curves
+	 */
 	protected void paintMultiCurve(Graphics g, JEntity curves) {
-		// TODO Auto-generated method stub
 
+		Object[] elements = curves.getOrdinatesOfElements();
+
+		for (Object object : elements) {
+			double[] p = (double[]) object;
+			List<JEntity> points = JEntity.convert(p);
+			JEntity curve = new JEntity(JEntity.createCurve(points),
+					curves.getId());
+			// TODO selected
+			paintCurve(g, curve);
+		}
 	}
 
 	/**
@@ -559,112 +566,57 @@ public class JMapPanel extends JMapViewer {
 	protected void paintPolygon(Graphics g, JEntity polygon) {
 
 		Graphics2D g2 = (Graphics2D) g;
-		// inicializace linestring
+
+		List<JEntity> points = JEntity.convert(polygon.getOrdinatesArray());
+
+		int i = 0;
+
 		GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD,
-				polygon.getNumPoints());
+				points.size());
+		for (JEntity point : points) {
+			Point p = getMapPosition(point.getLat(), point.getLon(), false);
 
-		double[] points = polygon.getOrdinatesArray();
-		// zakresli prvni bod
-		Point2D first = getMapPosition(polygon.getFirstPoint()[0],
-				polygon.getFirstPoint()[1], false);
-		path.moveTo(first.getX(), first.getY());
-
-		Log.debug("Body polygonu: " + points);
-
-		for (int i = 1; i < points.length; i++) {
-			Point2D p = getMapPosition(points[i+1], points[i++], false);
-			// TODO zvyrazeni bodu
+			if(isEditMode()){
+				point.setSelected(polygon.isSelected());
+				paintPoint(g, point);
+			}
+			if(i == 0){
+				path.moveTo(p.getX(), p.getY());
+			}
 			path.lineTo(p.getX(), p.getY());
+			i++;
 		}
 
-		// uzavreni polygonu
 		path.closePath();
 
-		g2.setPaint(Color.GREEN);
-		g2.setStroke(stroke);
+		g2.setColor(polygon.isSelected()?CURVE_SELECTED_COLOR:CURVE_COLOR);
+
 		Composite originComposite = g2.getComposite();
 		g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
 				(float) 0.5));
 		g2.fill(path);
 		g2.setComposite(originComposite);
+		g2.setStroke(stroke);
 		g2.draw(path);
 	}
 
+	/**
+	 * Vykresleni multipolygonu
+	 * @param g
+	 * @param polygons
+	 */
 	protected void paintMultiPolygon(Graphics g, JEntity polygons) {
-		// TODO Auto-generated method stub
+		Object[] elements = polygons.getOrdinatesOfElements();
 
+		for (Object object : elements) {
+			double[] p = (double[]) object;
+			List<JEntity> points = JEntity.convert(p);
+			JEntity polygon = new JEntity(JEntity.createCurve(points),
+					polygons.getId());
+			// TODO selected
+			paintPolygon(g, polygon);
+		}
 	}
-
-//	/**
-//	 * Vykresleni jedne linestring
-//	 * @param g graficky kontext
-//	 * @param linestring samotna linestring
-//	 */
-//	protected void paintLinestring(Graphics g, List<MapMarker> linestring){
-//		if(linestring != null){
-//
-//			Graphics2D g2 = (Graphics2D) g;
-//
-//			// inicializace linestring
-//			GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD, linestring.size());
-//
-//			// zakresli prvni bod
-//			MapMarker firstMarker = linestring.get(0);
-//			Point firstPoint = getMapPosition(firstMarker.getLat(), firstMarker.getLon(), false);
-//			path.moveTo(firstPoint.x, firstPoint.y);
-//			((MapPoint)firstMarker).paint(g2, firstPoint); // FIXME
-//
-//			// zbytek cary
-//			for (MapMarker mapMarker : linestring) {
-//				Point p = getMapPosition(mapMarker.getLat(), mapMarker.getLon(), false);
-//				path.lineTo(p.x, p.y);
-//				((MapPoint)mapMarker).paint(g2, p); // FIXME
-//			}
-//
-//			g2.setColor(Color.GREEN);
-//			g2.setStroke(stroke);
-//			g2.draw(path);
-//			repaint();
-//		}
-//	}
-
-//	/**
-//	 * Vykresleni jednoho polygonu
-//	 * @param g graficky kontext
-//	 * @param polygon samotny polygon
-//	 */
-//	protected void paintPolygon(Graphics g, List<MapMarker> polygon){
-//		if(polygon != null){
-//
-//			Graphics2D g2 = (Graphics2D) g;
-//
-//			// inicializace linestring
-//			GeneralPath path = new GeneralPath(GeneralPath.WIND_EVEN_ODD, polygon.size());
-//
-//			// zakresli prvni bod
-//			MapMarker firstMarker = polygon.get(0);
-//			Point firstPoint = getMapPosition(firstMarker.getLat(), firstMarker.getLon(), false);
-//			path.moveTo(firstPoint.x, firstPoint.y);
-//
-//			// zbytek cary
-//			for (MapMarker mapMarker : polygon) {
-//				Point p = getMapPosition(mapMarker.getLat(), mapMarker.getLon(), false);
-//				path.lineTo(p.x, p.y);
-//			}
-//
-//			// uzavreni polygonu
-//			path.closePath();
-//
-//			g2.setPaint(Color.GREEN);
-//			g2.setStroke(stroke);
-//			Composite originComposite = g2.getComposite();
-//			g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) 0.5));
-//			g2.fill(path);
-//			g2.setComposite(originComposite);
-//			g2.draw(path);
-//			repaint();
-//		}
-//	}
 
 	public AnimalsDatabase getFrame() {
 		return frame;
