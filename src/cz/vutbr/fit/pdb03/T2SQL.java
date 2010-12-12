@@ -178,16 +178,16 @@ public final class T2SQL {
             SQLString=T2SQLString.substring(point3+1);
             SQLString=SQLString.trim();
             if (SQLString.startsWith("SELECT")){
-                SQLString=SQLString.replace(" WHERE ", " WHERE (((valid_from <= DATE '"+dateFormat.format(day_from)+"' OR valid_from is NULL) AND (valid_to > DATE '"
-                        +dateFormat.format(day_from)+"' OR valid_to is NULL)) OR ((valid_from <= DATE '"+dateFormat.format(day_to)
-                        +"' OR valid_from is NULL) AND (valid_to > DATE '"+dateFormat.format(day_to)+"' OR valid_to is NULL))) AND ");
+                SQLString=SQLString.replace(" WHERE ", " WHERE (((valid_from <= DATE '"+dateFormat.format(day_from)+"' OR valid_from is NULL) AND (valid_to >= DATE '"
+                        +dateFormat.format(day_from)+"' OR valid_to is NULL)) OR ((valid_from < DATE '"+dateFormat.format(day_to)
+                        +"' OR valid_from is NULL) AND (valid_to > DATE '"+dateFormat.format(day_to)+"' OR valid_to is NULL)) AND (valid_from < DATE '"+dateFormat.format(day_to)+"' AND valid_to >= DATE '"+dateFormat.format(day_from)+"')) AND ");
             } else if (SQLString.startsWith("INSERT")){
                 SQLString=SQLString.replace("INSERT INTO animal_movement (", "INSERT INTO animal_movement (valid_from,valid_to,");
                 SQLString=SQLString.replace(" VALUES (", " VALUES (DATE '"+dateFormat.format(day_from)+"',DATE '"+dateFormat.format(day_to)+"',");
             } else if (SQLString.startsWith("DELETE")){
                 SQLString=SQLString.substring(SQLString.indexOf("move_id")+7);
                 SQLString=(SQLString.substring(SQLString.indexOf("=")+1)).trim();
-                SQLString="CALL(animal_movement_delete("+SQLString+",'"+dateFormat.format(day_from)+"','"+dateFormat.format(day_to)+"'))";
+                SQLString="CALL(animal_movement_delete("+SQLString+",DATE '"+dateFormat.format(day_from)+"',DATE '"+dateFormat.format(day_to)+"'))";
             } else if (SQLString.startsWith("UPDATE")){
                 int point1u=SQLString.indexOf("geometry");
                 point1u=SQLString.indexOf('=',point1u);
@@ -197,7 +197,7 @@ public final class T2SQL {
                 String move_id=(SQLString.substring(point3u+1)).trim();
                 if (move_id.indexOf(' ')>0) move_id.substring(0, move_id.indexOf(' '));
                 String geometry=(SQLString.substring(point1u+1,point2u)).trim();
-                SQLString="CALL(animal_movement_update("+geometry+", "+move_id+",'"+dateFormat.format(day_from)+"','"+dateFormat.format(day_to)+"'))";
+                SQLString="CALL(animal_movement_update("+geometry+", "+move_id+",DATE '"+dateFormat.format(day_from)+"',DATE '"+dateFormat.format(day_to)+"'))";
             }
         } else if (T2SQLString.startsWith(DATETIME+" ")){
             int point1=15;
@@ -219,7 +219,7 @@ public final class T2SQL {
             } else if (SQLString.startsWith("DELETE")){
                 SQLString=SQLString.substring(SQLString.indexOf("move_id")+7);
                 SQLString=(SQLString.substring(SQLString.indexOf("=")+1)).trim();
-                SQLString="CALL(animal_movement_delete("+SQLString+",'"+dateFormat.format(day)+"','"+dateFormat.format(day)+"'))";
+                SQLString="CALL(animal_movement_delete("+SQLString+",DATE '"+dateFormat.format(day)+"',DATE '"+dateFormat.format(day)+"'))";
             } else if (SQLString.startsWith("UPDATE")){
                 int point1u=SQLString.indexOf("geometry");
                 point1u=SQLString.indexOf('=',point1u);
@@ -229,7 +229,7 @@ public final class T2SQL {
                 String move_id=(SQLString.substring(point3u+1)).trim();
                 if (move_id.indexOf(' ')>0) move_id.substring(0, move_id.indexOf(' '));
                 String geometry=(SQLString.substring(point1u+1,point2u)).trim();
-                SQLString="CALL(animal_movement_update("+geometry+", "+move_id+",'"+dateFormat.format(day)+"','"+dateFormat.format(day)+"'))";
+                SQLString="CALL(animal_movement_update("+geometry+", "+move_id+",DATE '"+dateFormat.format(day)+"',DATE '"+dateFormat.format(day)+"'))";
             }
         } else {
             SQLString=T2SQLString.trim();
