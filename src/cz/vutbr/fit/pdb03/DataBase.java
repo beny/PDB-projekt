@@ -999,7 +999,7 @@ public class DataBase {
 	 *
 	 * @param animal_id
 	 *            id zvířete
-	 * @return HashMap<Integer,JGeometry> list of points belongs to current
+	 * @return LinkedList<JEntity> list of points belongs to current
 	 *         animal
 	 * @throws SQLException
 	 * @see T2SQL
@@ -1029,7 +1029,7 @@ public class DataBase {
 	 *            Rodové jméno zvířete
 	 * @param genus_lat
 	 *            Latinské rodové jméno
-	 * @return HashMap<int move_id, JGeometry geometry>
+	 * @return List<JEntity>
 	 * @throws SQLException
 	 */
 	public List<JEntity> selectAppareance(String genus,
@@ -1039,10 +1039,10 @@ public class DataBase {
 				+ "WHERE a.animal_id=am.animal_id AND (LOWER(a.genus) LIKE ? OR LOWER(a.genus_lat) LIKE ?)";
 		OraclePreparedStatement opstmt = (OraclePreparedStatement) con
 				.prepareStatement(T2SQL.temporal(SQLquery));
-		opstmt.setString(1, genus);
-		opstmt.setString(2, genus_lat);
+		opstmt.setString(1, genus.toLowerCase());
+		opstmt.setString(2, genus_lat.toLowerCase());
 		OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
-		List<JEntity> data = new LinkedList<JEntity>();
+		LinkedList<JEntity> data = new LinkedList<JEntity>();
 		while (rset.next()) {
 			JEntity entity = new JEntity(JGeometry.load((oracle.sql.STRUCT) rset.getSTRUCT("geometry")), rset.getInt("move_id"));
 			data.add(entity);
