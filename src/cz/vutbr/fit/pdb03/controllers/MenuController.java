@@ -76,7 +76,7 @@ public class MenuController implements ActionListener{
 		miApplicationDatabaseCreate.addActionListener(this);
 		mApplication.add(miApplicationDatabaseCreate);
 
-		miApplicationDatabaseSample = new JMenuItem("Vytvořit a naplnit databázi vzorky");
+		miApplicationDatabaseSample = new JMenuItem("Vytvořit vzorovou databázi");
 		miApplicationDatabaseSample.addActionListener(this);
 		mApplication.add(miApplicationDatabaseSample);
 
@@ -88,7 +88,7 @@ public class MenuController implements ActionListener{
 
 		mApplication.add(new JSeparator());
 
-		miApplicationExit = new JMenuItem("Ukončit");
+		miApplicationExit = new JMenuItem("Ukončit program");
 		miApplicationExit.addActionListener(this);
 		mApplication.add(miApplicationExit);
 
@@ -162,7 +162,7 @@ public class MenuController implements ActionListener{
 		miAnimalSearch.addActionListener(this);
 		mAnimal.add(miAnimalSearch);
 
-		miAnimalArea = new JMenuItem("Území obývané rodem");
+		miAnimalArea = new JMenuItem("Zobrazit území obývané rodem");
 		miAnimalArea.addActionListener(this);
 		mAnimal.add(miAnimalArea);
 
@@ -280,7 +280,7 @@ public class MenuController implements ActionListener{
 
 		// informacni dialog
 		if(event.getSource() == miApplicationInfo){
-			JOptionPane.showMessageDialog(frame, "Autoři aplikace: xizakt00, xsrnec01 a xbenes00", "O aplikaci do předmětu PDB", JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(frame, "Projekt do předmětu PDB 2010/2011\nAutoři aplikace: xizakt00, xsrnec01 a xbenes00", "O aplikaci", JOptionPane.INFORMATION_MESSAGE);
 		}
 
 		// pripojen/odpojeni k databazi
@@ -398,7 +398,7 @@ public class MenuController implements ActionListener{
 		// smazani zvirete
 		if(event.getSource() == miAnimalDelete) {
 			int result = JOptionPane.showConfirmDialog(frame,
-					"Chcete opravdu odstranit toto zvíře?",
+					"Chcete opravdu odstranit zvíře "+frame.getAnimalsPanel().getSelectedAnimal().toString()+"?",
 					"Odstranění zvířete", JOptionPane.YES_NO_OPTION,
 					JOptionPane.QUESTION_MESSAGE);
 

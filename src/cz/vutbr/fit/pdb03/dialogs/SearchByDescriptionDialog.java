@@ -52,7 +52,7 @@ public class SearchByDescriptionDialog extends DefaultDialog implements ActionLi
 		gbc.insets = new Insets(5, 5, 5, 5);
 
 		// inicializace prvku
-		lDescription = new JLabel("Genus:");
+		lDescription = new JLabel("Popis:");
 
 		taDescription = new JTextArea(5, 20);
 		taDescription.setLineWrap(true);
@@ -61,7 +61,7 @@ public class SearchByDescriptionDialog extends DefaultDialog implements ActionLi
 		bCancel = new JButton("Storno");
 		bCancel.addActionListener(this);
 
-		bSearch = new JButton("Search");
+		bSearch = new JButton("Hledat");
 		bSearch.addActionListener(this);
 
 		JPanel buttons = new JPanel();

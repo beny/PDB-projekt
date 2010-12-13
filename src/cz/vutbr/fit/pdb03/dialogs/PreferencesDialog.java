@@ -68,9 +68,9 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 		tpSections.addTab("Čas", pTime);
 
 		// tlacitka
-		bCancel = new JButton("Cancel");
+		bCancel = new JButton("Storno");
 		bCancel.addActionListener(this);
-		bSave = new JButton("Save");
+		bSave = new JButton("OK");
 		bSave.addActionListener(this);
 
 		JPanel buttons = new JPanel();
@@ -98,20 +98,20 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 	 */
 	private void initData(){
 
-		if(T2SQL.getMode() == T2SQL.NOW){
+		if(T2SQL.getMode().equals(T2SQL.NOW)){
 			rbNow.setSelected(true);
 		}
-		else if(T2SQL.getMode() == T2SQL.NO_RESTRICTIONS){
+		else if(T2SQL.getMode().equals(T2SQL.NO_RESTRICTIONS)){
 			rbAll.setSelected(true);
 		}
-		else if(T2SQL.getMode() == T2SQL.DATETIME){
+		else if(T2SQL.getMode().equals(T2SQL.DATETIME)){
 			rbDate.setSelected(true);
 
 			if(T2SQL.getValidationDateFrom() != null){
 				tDate.setText(format.format(T2SQL.getValidationDateFrom()));
 			}
 		}
-		else if(T2SQL.getMode() == T2SQL.INTERVAL){
+		else if(T2SQL.getMode().equals(T2SQL.INTERVAL)){
 			rbInterval.setSelected(true);
 
 			if(T2SQL.getValidationDateFrom() != null){
@@ -195,12 +195,12 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.gridx = gbc.gridy = 0;
 		gbc.insets = new Insets(5, 5, 5, 5);
-		lLat = new JLabel("Latitude: ");
+		lLat = new JLabel("Zeměpisná šířka: ");
 		pGPS.add(lLat, gbc);
 
 		gbc.gridy++;
 
-		lLon = new JLabel("Longtitude: ");
+		lLon = new JLabel("Zeměpisná délka: ");
 		pGPS.add(lLon, gbc);
 
 		gbc.gridy = 0;

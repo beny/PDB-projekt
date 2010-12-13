@@ -139,7 +139,7 @@ public class AnimalsDatabase extends JFrame  {
 	 * @param args argumenty z prikazove radky
 	 */
 	public static void main(String[] args) {
-		AnimalsDatabase aDb = new AnimalsDatabase("Animals database");
+		AnimalsDatabase aDb = new AnimalsDatabase("Databáze zvířat");
 		aDb.setVisible(true);
 	}
 

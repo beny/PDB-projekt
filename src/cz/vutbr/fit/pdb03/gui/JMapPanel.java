@@ -35,8 +35,8 @@ public class JMapPanel extends JMapViewer {
 
 	private final static BasicStroke stroke = new BasicStroke(1.5f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_ROUND);
 
-	private final static double DEFAULT_LAT = 49;
-	private final static double DEFAULT_LON = 17;
+	private final static double DEFAULT_LAT = 49.226776664238656;
+	private final static double DEFAULT_LON = 16.59532070159912;
 	private final static int DEFAULT_ZOOM = 2;
 
 	private final static int MY_POINT_SIZE = 8;
@@ -127,13 +127,13 @@ public class JMapPanel extends JMapViewer {
 		int smallSpace = 10;
 
 		// edit tlacitko
-		bEdit = new JButton("uprav");
+		bEdit = new JButton("Upravit");
 		bEdit.setBounds(50, smallSpace, buttonSizeX, buttonSizeY);
 		bEdit.setActionCommand(ACTION_EDIT);
 		bEdit.addActionListener(mapController);
 		add(bEdit);
 
-		bCancel = new JButton("zruš");
+		bCancel = new JButton("Zrušit");
 		bCancel.setBounds(50, smallSpace + 30, buttonSizeX, buttonSizeY);
 		bCancel.setActionCommand(ACTION_CANCEL);
 		bCancel.addActionListener(mapController);
@@ -141,7 +141,7 @@ public class JMapPanel extends JMapViewer {
 
 		// komponenty pro editaci
 		// tlacitko pro ukladani
-		bSave = new JButton("ulož");
+		bSave = new JButton("Uložit");
 		bSave.setBounds(50, smallSpace, buttonSizeX, buttonSizeY);
 		bSave.setActionCommand(ACTION_SAVE);
 		bSave.addActionListener(mapController);

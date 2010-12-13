@@ -314,7 +314,7 @@ public class DataBase {
 				"Obrázek kapra");
 		uploadImage(11, ANIMAL_PHOTO, PICTURE_FOLDER + "11-2.jpg", 0,
 				"Obrázek kapra");
-                uploadImage(11, ANIMAL_PHOTO, PICTURE_FOLDER + "12-1.jpg", 0,
+                uploadImage(12, ANIMAL_PHOTO, PICTURE_FOLDER + "12-1.jpg", 0,
 				"Ilustrace vyhynulé zebry");
 
 		uploadImage(1, FEET_PHOTO, PICTURE_FOLDER + "1-1f.jpg", 0,

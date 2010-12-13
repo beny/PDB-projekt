@@ -46,8 +46,8 @@ public class SearchByNameDialog extends DefaultDialog implements ActionListener,
 		gbc.insets = new Insets(5, 5, 5, 5);
 
 		// inicializace prvku
-		lGenus = new JLabel("Genus:");
-		lSpecies = new JLabel("Species:");
+		lGenus = new JLabel("Rodové jméno:");
+		lSpecies = new JLabel("Druhové jméno:");
 
 		tGenus = new JTextField(DataBase.MAX_STRING);
 		tGenus.addKeyListener(this);
@@ -57,7 +57,7 @@ public class SearchByNameDialog extends DefaultDialog implements ActionListener,
 		bCancel = new JButton("Storno");
 		bCancel.addActionListener(this);
 
-		bSearch = new JButton("Search");
+		bSearch = new JButton("Hledat");
 		bSearch.addActionListener(this);
 
 		JPanel buttons = new JPanel();

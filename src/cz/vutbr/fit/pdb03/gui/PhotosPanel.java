@@ -4,7 +4,6 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.sql.SQLException;
 import java.util.LinkedList;
@@ -60,9 +59,9 @@ public class PhotosPanel extends JTabbedPane {
 		pFootprints.setLayout(new BoxLayout(pFootprints, BoxLayout.PAGE_AXIS));
 		pFeces.setLayout(new BoxLayout(pFeces, BoxLayout.PAGE_AXIS));
 
-		addTab("Fotky", new JScrollPane(pAnimal));
-		addTab("Stopy", new JScrollPane(pFootprints));
-		addTab("Trus", new JScrollPane(pFeces));
+		addTab("Fotky zvířete", new JScrollPane(pAnimal));
+		addTab("Fotky stop zvířete", new JScrollPane(pFootprints));
+		addTab("Fotky trusu zvířete", new JScrollPane(pFeces));
 	}
 
 	/**
@@ -139,7 +138,7 @@ public class PhotosPanel extends JTabbedPane {
 		sInfoTab = new JScrollPane(pInfoTab);
 
 		// pridani tabu
-		addTab("Info", sInfoTab);
+		addTab("Informace", sInfoTab);
 	}
 
 	/**
@@ -182,9 +181,9 @@ public class PhotosPanel extends JTabbedPane {
 
 		JPanel tmp = null;
 
-		if(tab == DataBase.ANIMAL_PHOTO) tmp = pAnimal;
-		if(tab == DataBase.FEET_PHOTO) tmp = pFootprints;
-		if(tab == DataBase.EXCREMENT_PHOTO) tmp = pFeces;
+		if(tab.equals(DataBase.ANIMAL_PHOTO)) tmp = pAnimal;
+		if(tab.equals(DataBase.FEET_PHOTO)) tmp = pFootprints;
+		if(tab.equals(DataBase.EXCREMENT_PHOTO)) tmp = pFeces;
 
 		if(tmp != null){
 			tmp.removeAll();

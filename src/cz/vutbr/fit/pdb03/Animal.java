@@ -257,7 +257,7 @@ public class Animal {
 
 		if(species != null){
 			if(name.length() != 0){
-				name += ", ";
+				name += " ";
 			}
 			name += species;
 		}

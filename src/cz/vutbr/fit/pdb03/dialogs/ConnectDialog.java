@@ -56,11 +56,11 @@ public class ConnectDialog extends DefaultDialog implements ActionListener{
 		gbc.gridy = 0;
 		gbc.insets = new Insets(5, 5, 5, 5);
 
-		lUsername = new JLabel("Username");
+		lUsername = new JLabel("Přihlašovací jméno");
 		contentPanel.add(lUsername, gbc);
 
 		gbc.gridy = 1;
-		lPassword = new JLabel("Password");
+		lPassword = new JLabel("Heslo");
 		contentPanel.add(lPassword, gbc);
 
 		gbc.gridx = 1;
@@ -76,7 +76,7 @@ public class ConnectDialog extends DefaultDialog implements ActionListener{
 		gbc.gridy = 2;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
 
-		bLogin = new JButton("Login");
+		bLogin = new JButton("Přihlásit se");
 		getRootPane().setDefaultButton(bLogin);
 		bLogin.addActionListener(this);
 		contentPanel.add(bLogin, gbc);
