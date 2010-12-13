@@ -149,8 +149,7 @@ public class PhotosPanel extends JTabbedPane {
 	public void setInfo(Animal animal) {
 
 		JEntity m = frame.getMap().getMyPosition();
-		Point2D p = new Point();
-		p.setLocation(m.getLat(), m.getLon());
+		Point2D p = new Point2D.Double(m.getLat(), m.getLon());
 
 		lName.setText(((animal.getGenus() == null) ? "" : animal.getGenus())
 				+ " "

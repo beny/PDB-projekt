@@ -184,9 +184,7 @@ public class AnimalsDatabase extends JFrame  {
 						break;
 					case SEARCH_CLOSE:
 						JEntity myPosition = map.getMyPosition();
-						Point2D temp = new Point();
-						temp.setLocation(myPosition.getLat(),
-								myPosition.getLon());
+						Point2D temp = new Point2D.Double(myPosition.getLat(),myPosition.getLon());
 						db.searchNearestAnimals(temp);
 						break;
 					case SEARCH_EXTINCT:

@@ -811,14 +811,11 @@ public class DataBase {
 	 */
 	public void searchExtinctAnimals() throws SQLException {
 		OraclePreparedStatement opstmt = null;
-		String SQLquery = T2SQL.T2SQLprefix()
-				+ "SELECT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat, COUNT(am.move_id) "
-				+ "FROM animals a, animal_movement am "
-				+ "WHERE a.animal_id=am.animal_id(+) "
-				+ "GROUP BY a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat "
-				+ "HAVING COUNT(am.move_id)=0";
-		opstmt = (OraclePreparedStatement) con.prepareStatement(T2SQL
-				.temporal(SQLquery));
+		String SQLquery = "SELECT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat FROM animals a WHERE ("
+                        +T2SQL.temporal(T2SQL.T2SQLprefix()+"SELECT COUNT(*) FROM animal_movement am where (valid_from <= sysdate OR valid_from is NULL) AND (valid_to > sysdate OR valid_to is NULL) AND a.animal_id=am.animal_id")
+                        + ")=0";
+                Log.debug(SQLquery);
+		opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
 		OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
 		searchResult.clear();
 		while (rset.next()) {
