@@ -10,7 +10,6 @@ import java.awt.event.MouseListener;
 import java.awt.image.ImageObserver;
 import java.sql.SQLException;
 
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 

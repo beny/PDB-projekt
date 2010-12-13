@@ -41,7 +41,7 @@ public class PhotosPanel extends JTabbedPane {
 
 	private JLabel lDescription, lDistance, lArea;
 	private JLabel lName, lNameLat, lDistance2, lArea2;
-	private JLabel lPhotos, lFootprints, lFeces;
+	private JLabel lFootprints, lFeces;
 	private JTextArea lDescription2;
 	private JPanel photos;
 
@@ -54,8 +54,6 @@ public class PhotosPanel extends JTabbedPane {
 		photos = new JPanel();
 
 		photos.setLayout(new BoxLayout(photos, BoxLayout.PAGE_AXIS));
-
-		lPhotos = new JLabel("Tady budou fotky", JLabel.LEFT);
 		lFootprints = new JLabel("Tady budou stopy", JLabel.CENTER);
 		lFeces = new JLabel("Tady bude velky hovno", JLabel.CENTER);
 

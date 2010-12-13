@@ -11,7 +11,6 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JSplitPane;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 import cz.vutbr.fit.pdb03.controllers.MenuController;
 import cz.vutbr.fit.pdb03.controllers.WindowController;
@@ -79,11 +78,11 @@ public class AnimalsDatabase extends JFrame  {
 
 		// nastaveni vzhledu pro jednotlive systemy
 		System.setProperty("apple.laf.useScreenMenuBar", "true");
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
-			Log.error("Chyba pri nastaveni systemoveho vzhledu");
-		}
+//		try {
+//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//		} catch (Exception e) {
+//			Log.error("Chyba pri nastaveni systemoveho vzhledu");
+//		}
 
 		// ikona
 		setIconImage(new ImageIcon(AnimalsDatabase.class.getResource("images/icon.png")).getImage());
