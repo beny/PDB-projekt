@@ -1790,7 +1790,6 @@ public class DataBase {
 			IOException {
 		String s = new String();
 		StringBuilder sb = new StringBuilder();
-		createDatabase();
 		BufferedReader br = new BufferedReader(new InputStreamReader(
 				new FileInputStream(filename)));
 		while ((s = br.readLine()) != null) {

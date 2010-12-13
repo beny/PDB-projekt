@@ -329,8 +329,27 @@ public class JEntity extends JGeometry {
 				convertMulti(points), DIMENSION, SRID);
 		multipolygon.setType(JGeometry.GTYPE_MULTIPOLYGON);
 
-		return multipolygon;
+		return rebuildMultipolygon(multipolygon);
 	}
+
+        private static JGeometry rebuildMultipolygon(JGeometry geometry){
+            int[] elemInfo1 = geometry.getElemInfo();
+            double[] ordinatesArray = geometry.getOrdinatesArray();
+            //double[] temp;
+            for (int i=1;i<elemInfo1.length-1;i=i+3){
+                if (elemInfo1[i]!=1003){
+                    elemInfo1[i]=1003;
+                    /*int zacatek = elemInfo1[i-1];
+                    int konec = ordinatesArray.length-1;
+                    if (i+3<elemInfo1.length-1) konec=elemInfo1[i+3];
+                    for (int j=zacatek;j<konec;j=j+2){
+                        //reverse order of pairs in array
+                    }*/
+                }
+            }
+            geometry=new JGeometry(2007,8307,elemInfo1,ordinatesArray);
+            return geometry;
+        }
 
 	public int getId() {
 		return id;
