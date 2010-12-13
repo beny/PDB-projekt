@@ -64,42 +64,12 @@ public class ListController extends MouseAdapter implements KeyListener {
 				}
 
 				// info o zvireti
-				frame.getPhotosPanel().setAnimalData(getSelectedAnimal());
+				frame.getPhotosPanel().setInfo(getSelectedAnimal());
 
-				try {
-					// TODO fotky
-					List<JPicture> data = frame.getDb().selectPicture(
-							getSelectedAnimal().getId(), true,
-							DataBase.ANIMAL_PHOTO);
-					for (JPicture pic : data) {
-						// ziskat popisek
-						pic.setDescription(frame.getDb().getPhotoDescription(pic.getId(),
-								DataBase.ANIMAL_PHOTO));
-					}
-					frame.getPhotosPanel().setAnimalPhotos(data);
-
-//					// TODO stopy
-//					data = frame.getDb().selectPicture(
-//							getSelectedAnimal().getId(), true,
-//							DataBase.FEET_PHOTO);
-//					String str = new String();
-//					for (OrdImage img : data) {
-//						str += img.getWidth() + "x" + img.getHeight()  + "\n";
-//					}
-//					frame.getPhotosPanel().setFootprintPhotos(str);
-//
-//					// TODO trus
-//					data = frame.getDb().selectPicture(
-//							getSelectedAnimal().getId(), true,
-//							DataBase.EXCREMENT_PHOTO);
-//					str = new String();
-//					for (OrdImage img : data) {
-//						str += img.getWidth() + "x" + img.getHeight()  + "\n";
-//					}
-//					frame.getPhotosPanel().setFecesPhotos(str);
-				} catch (SQLException e) {
-
-				}
+				// ziskat fotky
+				getPhotos(DataBase.ANIMAL_PHOTO);
+				getPhotos(DataBase.FEET_PHOTO);
+				getPhotos(DataBase.EXCREMENT_PHOTO);
 
 				dLoading.dispose();
 			}
@@ -110,6 +80,32 @@ public class ListController extends MouseAdapter implements KeyListener {
 		dLoading.setVisible(true);
 
 		Log.debug("Aktivni zvire: " + getSelectedAnimal());
+	}
+
+	/**
+	 * Ziskani fotek z DB
+	 * @param table nazev tabulky
+	 * @param animal pro jake zvire se ma hledat
+	 */
+	private void getPhotos(String table) {
+
+		try {
+
+			// ziskat fotky
+			List<JPicture> data = frame.getDb().selectPicture(
+					getSelectedAnimal().getId(), true, table);
+
+			// ziskat popisek pro fotky
+			for (JPicture pic : data) {
+				pic.setDescription(frame.getDb().getPhotoDescription(
+						pic.getId(), table));
+			}
+
+			// nastavit fotky do panelu
+			frame.getPhotosPanel().setPhotos(table, data);
+		} catch (SQLException e) {
+			Log.error("Chyba pri ziskavani obrazku z DB");
+		}
 	}
 
 	/**

@@ -14,17 +14,19 @@ public class ImagePreviewDialog extends DefaultDialog {
 
 	private final static long serialVersionUID = 4730679266665138535L;
 
-	public ImagePreviewDialog(Image img) {
+	public ImagePreviewDialog(Image img, int w, int h) {
+		setPreferredSize(new Dimension(w, h));
+		setMinimumSize(new Dimension(w, h));
 		add(new FullImage(img));
-
-
-		setPreferredSize(new Dimension(250, 250));
-		setMinimumSize(new Dimension(250, 250));
 	}
 }
 
-
-class FullImage extends JPanel{
+/**
+ * Panel obsahujici obrazek pres celou svoji plochu
+ * @author Ondřej Beneš <ondra.benes@gmail.com>
+ *
+ */
+class FullImage extends JPanel {
 
 	private final static long serialVersionUID = -9087648115206402954L;
 	Image pic;

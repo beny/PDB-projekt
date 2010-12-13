@@ -19,6 +19,7 @@ import javax.swing.JTextArea;
 
 import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
+import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.Log;
 
 /**
@@ -41,9 +42,8 @@ public class PhotosPanel extends JTabbedPane {
 
 	private JLabel lDescription, lDistance, lArea;
 	private JLabel lName, lNameLat, lDistance2, lArea2;
-	private JLabel lFootprints, lFeces;
 	private JTextArea lDescription2;
-	private JPanel photos;
+	private JPanel pAnimal, pFootprints, pFeces;
 
 	public PhotosPanel(AnimalsDatabase frame) {
 		this.frame = frame;
@@ -51,17 +51,18 @@ public class PhotosPanel extends JTabbedPane {
 		// inicializace
 		initInfoTab();
 
-		photos = new JPanel();
+		// inicializace tabu
+		pAnimal = new JPanel();
+		pFootprints = new JPanel();
+		pFeces = new JPanel();
 
-		photos.setLayout(new BoxLayout(photos, BoxLayout.PAGE_AXIS));
-		lFootprints = new JLabel("Tady budou stopy", JLabel.CENTER);
-		lFeces = new JLabel("Tady bude velky hovno", JLabel.CENTER);
+		pAnimal.setLayout(new BoxLayout(pAnimal, BoxLayout.PAGE_AXIS));
+		pFootprints.setLayout(new BoxLayout(pFootprints, BoxLayout.PAGE_AXIS));
+		pFeces.setLayout(new BoxLayout(pFeces, BoxLayout.PAGE_AXIS));
 
-		addTab("Fotky", new JScrollPane(photos));
-		addTab("Stopy", lFootprints);
-		addTab("Trus", lFeces);
-
-
+		addTab("Fotky", new JScrollPane(pAnimal));
+		addTab("Stopy", new JScrollPane(pFootprints));
+		addTab("Trus", new JScrollPane(pFeces));
 	}
 
 	/**
@@ -145,7 +146,7 @@ public class PhotosPanel extends JTabbedPane {
 	 * Nastavi data o zvireti do vsech tabu
 	 * @param animal
 	 */
-	public void setAnimalData(Animal animal) {
+	public void setInfo(Animal animal) {
 
 		JEntity m = frame.getMap().getMyPosition();
 		Point2D p = new Point();
@@ -173,23 +174,25 @@ public class PhotosPanel extends JTabbedPane {
 		}
 	}
 
-	public void setAnimalPhotos(List<JPicture> data){
-		photos.removeAll();
-		for (JPicture pic : data) {
-			photos.add(new ImageRecord(pic));
+	/**
+	 * Nastaveni fotek do tabu
+	 * @param tab
+	 * @param data
+	 */
+	public void setPhotos(String tab, List<JPicture> data){
+
+		JPanel tmp = null;
+
+		if(tab == DataBase.ANIMAL_PHOTO) tmp = pAnimal;
+		if(tab == DataBase.FEET_PHOTO) tmp = pFootprints;
+		if(tab == DataBase.EXCREMENT_PHOTO) tmp = pFeces;
+
+		if(tmp != null){
+			tmp.removeAll();
+			for (JPicture pic : data) {
+				tmp.add(new ImageRecord(pic, frame));
+			}
 		}
-
-		photos.repaint();
-	}
-
-	public void setFootprintPhotos(String data){
-		lFootprints.setText(data);
-		// TODO
-	}
-
-	public void setFecesPhotos(String data){
-		lFeces.setText(data);
-		// TODO
 	}
 
 	/**
@@ -202,8 +205,8 @@ public class PhotosPanel extends JTabbedPane {
 		lDistance2.setText("");
 		lArea2.setText("");
 
-		setAnimalPhotos(new LinkedList<JPicture>());
-		setFootprintPhotos("");
-		setFecesPhotos("");
+		setPhotos(DataBase.ANIMAL_PHOTO, new LinkedList<JPicture>());
+		setPhotos(DataBase.EXCREMENT_PHOTO, new LinkedList<JPicture>());
+		setPhotos(DataBase.FEET_PHOTO, new LinkedList<JPicture>());
 	}
 }

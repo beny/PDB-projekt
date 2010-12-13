@@ -2,12 +2,10 @@ package cz.vutbr.fit.pdb03.controllers;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
-import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -16,11 +14,10 @@ import javax.swing.JSeparator;
 
 import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
-import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.dialogs.AnimalDialog;
 import cz.vutbr.fit.pdb03.dialogs.ConnectDialog;
-import cz.vutbr.fit.pdb03.dialogs.FileDialog;
+import cz.vutbr.fit.pdb03.dialogs.ImageSearchDialog;
 import cz.vutbr.fit.pdb03.dialogs.PreferencesDialog;
 import cz.vutbr.fit.pdb03.dialogs.SearchByDescriptionDialog;
 import cz.vutbr.fit.pdb03.dialogs.SearchByNameDialog;
@@ -404,46 +401,17 @@ public class MenuController implements ActionListener{
 
 		// vkladani obrazku ke zvireti
 		if(event.getSource() == miAnimalInsertPicture){
-			JFileChooser fc = new FileDialog();
-			int returnVal = fc.showOpenDialog(frame);
-
-            if (returnVal == JFileChooser.APPROVE_OPTION) {
-
-            	File[] files = fc.getSelectedFiles();
-            	String fileList = new String();
-            	for (File file : files) {
-            		fileList += file.getAbsolutePath() + "\n";
-				}
-
-            	Animal animal = frame.getAnimalsPanel().getSelectedAnimal();
-
-				int load = JOptionPane.showConfirmDialog(frame,
-						"Chcete k " + animal + " nahrát " + files.length + " obrázků ?",
-						"Nahrát obrázky", JOptionPane.YES_NO_OPTION,
-						JOptionPane.QUESTION_MESSAGE);
-
-				if(load == JOptionPane.YES_OPTION){
-
-					for (File file : files) {
-						try {
-							frame.getDb().uploadImage(animal.getId(),
-									DataBase.ANIMAL_PHOTO,
-									file.getAbsolutePath(), 1, "test");
-						} catch (SQLException e){
-							Log.error("Chyba pri nahravani obrazku do DB: "
-									+ e.getMessage());
-						} catch (IOException e) {
-							Log.error("Chyba pri cteni obrazku: "
-									+ e.getMessage());
-						}
-						// TODO pridat spojeni s fotkou
-						// TODO pridat vkladani popisku
-						Log.debug("Obrazek " + file.getName() + " nahran");
-					}
-				}
-
-            }
+			ImageSearchDialog dialog = new ImageSearchDialog(frame);
+			GUIManager.moveToCenter(dialog, frame);
+			dialog.setVisible(true);
 		}
-		// TODO hledani podle obrazku
+
+		if(event.getSource() == miSearchByPicture){
+			// TODO
+		}
+
+		if(event.getSource() == miSearchByPictureDescription){
+			// TODO
+		}
 	}
 }

@@ -15,6 +15,7 @@ import javax.swing.JTextArea;
 
 import oracle.ord.im.OrdImage;
 import oracle.sql.BLOB;
+import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.Log;
 
 /**
@@ -28,9 +29,10 @@ public class ImageRecord extends JPanel implements MouseListener{
 
 	private PictureThumbnail pic;
 	private Image originalPic;
+	AnimalsDatabase frame;
 
-	public ImageRecord(JPicture picture) {
-
+	public ImageRecord(JPicture picture, AnimalsDatabase frame) {
+		this.frame = frame;
 
 		JTextArea text = new JTextArea();
 		text = new JTextArea();
@@ -68,8 +70,10 @@ public class ImageRecord extends JPanel implements MouseListener{
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		if(e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1){
-			ImagePreviewDialog preview = new ImagePreviewDialog(originalPic);
+		if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
+			ImagePreviewDialog preview = new ImagePreviewDialog(originalPic,
+					(int)pic.getOriginalWidth(), (int)pic.getOriginalHeight());
+			GUIManager.moveToCenter(preview, frame);
 			preview.setVisible(true);
 		}
 
@@ -98,6 +102,8 @@ class PictureThumbnail extends JPanel{
 	private final static long serialVersionUID = 3478184348179077461L;
 	private final static int MAX_SIZE = 100;
 	Image pic;
+	private double originalWidth, originalHeight;
+	private int width, height;
 
 	public PictureThumbnail(Image pic) {
 		setPreferredSize(new Dimension(MAX_SIZE, MAX_SIZE));
@@ -105,7 +111,6 @@ class PictureThumbnail extends JPanel{
 		setBackground(Color.BLACK);
 
 		this.pic = pic;
-
 		correctSize();
 	}
 
@@ -113,8 +118,8 @@ class PictureThumbnail extends JPanel{
 	protected void paintComponent(Graphics g) {
 		double width, height;
 
-		double originalWidth = pic.getWidth(this);
-		double originalHeight = pic.getHeight(this);
+		originalWidth = pic.getWidth(this);
+		originalHeight = pic.getHeight(this);
 		if(originalWidth > originalHeight){
 			width = MAX_SIZE;
 			height = MAX_SIZE/(originalWidth/originalHeight);
@@ -128,8 +133,9 @@ class PictureThumbnail extends JPanel{
 	}
 
 	private void correctSize() {
-		int width = pic.getWidth(this);
-		int height = pic.getHeight(this);
+
+		width = pic.getWidth(this);
+		height = pic.getHeight(this);
 		if (width == -1 || height == -1)
 			return;
 		addNotify();
@@ -152,5 +158,13 @@ class PictureThumbnail extends JPanel{
 			return false;
 		}
 		return true;
+	}
+
+	public double getOriginalWidth() {
+		return width;
+	}
+
+	public double getOriginalHeight() {
+		return height;
 	}
 }
