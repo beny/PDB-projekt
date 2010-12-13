@@ -25,7 +25,7 @@ import cz.vutbr.fit.pdb03.dialogs.PreferencesDialog;
 import cz.vutbr.fit.pdb03.dialogs.SearchByDescriptionDialog;
 import cz.vutbr.fit.pdb03.dialogs.SearchByNameDialog;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
-import cz.vutbr.fit.pdb03.map.JEntity;
+import cz.vutbr.fit.pdb03.gui.JEntity;
 
 public class MenuController implements ActionListener{
 

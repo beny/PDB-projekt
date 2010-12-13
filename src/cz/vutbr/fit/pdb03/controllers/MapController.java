@@ -19,11 +19,10 @@ import oracle.spatial.geometry.JGeometry;
 import org.openstreetmap.gui.jmapviewer.Coordinate;
 import org.openstreetmap.gui.jmapviewer.DefaultMapController;
 
-import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.Log;
-import cz.vutbr.fit.pdb03.map.JEntity;
-import cz.vutbr.fit.pdb03.map.JMapPanel;
+import cz.vutbr.fit.pdb03.gui.JEntity;
+import cz.vutbr.fit.pdb03.gui.JMapPanel;
 
 /**
  * Trida zajistujici udalosti okolo mapy a to klikani mysi a tlacitek v mape
@@ -44,8 +43,6 @@ public class MapController extends DefaultMapController implements
 
 	// pomocne promenne
 	private JEntity hitEntity = null;
-
-
 
 	public MapController(JMapPanel map) {
 		super(map);

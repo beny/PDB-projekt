@@ -22,7 +22,7 @@ import javax.swing.JTextField;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.T2SQL;
-import cz.vutbr.fit.pdb03.map.JEntity;
+import cz.vutbr.fit.pdb03.gui.JEntity;
 
 /**
  * Dialog s nastavenim

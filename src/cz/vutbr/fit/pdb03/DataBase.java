@@ -16,6 +16,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -26,8 +27,8 @@ import oracle.jdbc.OracleResultSet;
 import oracle.ord.im.OrdImage;
 import oracle.ord.im.OrdImageSignature;
 import oracle.spatial.geometry.JGeometry;
-import cz.vutbr.fit.pdb03.map.JEntity;
-import java.util.Iterator;
+import cz.vutbr.fit.pdb03.gui.JEntity;
+import cz.vutbr.fit.pdb03.gui.JPicture;
 
 /**
  * Knihovna pro práci s databází
@@ -924,7 +925,7 @@ public class DataBase {
 	 * @return HashMap<Integer photo_id,OrdImage photo>
 	 * @throws SQLException
 	 */
-	public List<OrdImage> selectPicture(int id, boolean all,
+	public List<JPicture> selectPicture(int id, boolean all,
 			String choosen_table) throws SQLException {
 		Statement stat = con.createStatement();
 		String SQLquery;
@@ -937,11 +938,12 @@ public class DataBase {
 					+ Integer.toString(id);
 		}
 		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
-		List<OrdImage> data = new LinkedList<OrdImage>();
+		List<JPicture> data = new LinkedList<JPicture>();
 		while (rset.next()) {
-			// TODO rset.getInt("photo_id"),
-			data.add((OrdImage) rset.getORAData("photo",
-					OrdImage.getORADataFactory()));
+
+			JPicture pic = new JPicture((OrdImage) rset.getORAData("photo",
+					OrdImage.getORADataFactory()), rset.getInt("photo_id"));
+			data.add(pic);
 		}
 		rset.close();
 		stat.close();

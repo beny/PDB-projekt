@@ -1,4 +1,4 @@
-package cz.vutbr.fit.pdb03.map;
+package cz.vutbr.fit.pdb03.gui;
 
 import java.awt.AlphaComposite;
 import java.awt.BasicStroke;
@@ -621,6 +621,8 @@ public class JMapPanel extends JMapViewer {
 		for (JEntity p : ps) {
 			p.setSelected(polygons.isSelected());
 			paintPolygon(g, p);
+
+			// TODO linearizace polygonu za sebe
 		}
 	}
 

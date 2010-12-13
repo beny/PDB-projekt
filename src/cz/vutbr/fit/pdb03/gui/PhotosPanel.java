@@ -7,7 +7,10 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.sql.SQLException;
+import java.util.LinkedList;
+import java.util.List;
 
+import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -17,7 +20,6 @@ import javax.swing.JTextArea;
 import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.Log;
-import cz.vutbr.fit.pdb03.map.JEntity;
 
 /**
  * Trida zajistujici panel s fotkama a info
@@ -41,6 +43,7 @@ public class PhotosPanel extends JTabbedPane {
 	private JLabel lName, lNameLat, lDistance2, lArea2;
 	private JLabel lPhotos, lFootprints, lFeces;
 	private JTextArea lDescription2;
+	private JPanel photos;
 
 	public PhotosPanel(AnimalsDatabase frame) {
 		this.frame = frame;
@@ -48,11 +51,15 @@ public class PhotosPanel extends JTabbedPane {
 		// inicializace
 		initInfoTab();
 
+		photos = new JPanel();
+
+		photos.setLayout(new BoxLayout(photos, BoxLayout.PAGE_AXIS));
+
 		lPhotos = new JLabel("Tady budou fotky", JLabel.LEFT);
 		lFootprints = new JLabel("Tady budou stopy", JLabel.CENTER);
 		lFeces = new JLabel("Tady bude velky hovno", JLabel.CENTER);
 
-		addTab("Fotky", lPhotos);
+		addTab("Fotky", new JScrollPane(photos));
 		addTab("Stopy", lFootprints);
 		addTab("Trus", lFeces);
 
@@ -168,9 +175,13 @@ public class PhotosPanel extends JTabbedPane {
 		}
 	}
 
-	public void setAnimalPhotos(String data){
-		lPhotos.setText(data);
-		// TODO
+	public void setAnimalPhotos(List<JPicture> data){
+		photos.removeAll();
+		for (JPicture pic : data) {
+			photos.add(new ImageRecord(pic));
+		}
+
+		photos.repaint();
 	}
 
 	public void setFootprintPhotos(String data){
@@ -193,7 +204,7 @@ public class PhotosPanel extends JTabbedPane {
 		lDistance2.setText("");
 		lArea2.setText("");
 
-		setAnimalPhotos("");
+		setAnimalPhotos(new LinkedList<JPicture>());
 		setFootprintPhotos("");
 		setFecesPhotos("");
 	}

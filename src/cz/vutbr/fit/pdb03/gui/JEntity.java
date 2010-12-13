@@ -1,4 +1,4 @@
-package cz.vutbr.fit.pdb03.map;
+package cz.vutbr.fit.pdb03.gui;
 
 import java.awt.geom.Point2D;
 import java.util.LinkedList;

@@ -17,9 +17,9 @@ import cz.vutbr.fit.pdb03.dialogs.ConnectDialog;
 import cz.vutbr.fit.pdb03.dialogs.LoadingDialog;
 import cz.vutbr.fit.pdb03.gui.AnimalsPanel;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
+import cz.vutbr.fit.pdb03.gui.JEntity;
+import cz.vutbr.fit.pdb03.gui.JMapPanel;
 import cz.vutbr.fit.pdb03.gui.PhotosPanel;
-import cz.vutbr.fit.pdb03.map.JEntity;
-import cz.vutbr.fit.pdb03.map.JMapPanel;
 
 /**
  * Hlavni trida zajistujici vykreselni hlavniho okna, rozdeleneho do tri
