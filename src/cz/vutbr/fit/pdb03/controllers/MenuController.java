@@ -17,9 +17,10 @@ import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.dialogs.AnimalDialog;
 import cz.vutbr.fit.pdb03.dialogs.ConnectDialog;
-import cz.vutbr.fit.pdb03.dialogs.ImageSearchDialog;
+import cz.vutbr.fit.pdb03.dialogs.ImageUploadDialog;
 import cz.vutbr.fit.pdb03.dialogs.PreferencesDialog;
 import cz.vutbr.fit.pdb03.dialogs.SearchByDescriptionDialog;
+import cz.vutbr.fit.pdb03.dialogs.SearchByImageDialog;
 import cz.vutbr.fit.pdb03.dialogs.SearchByNameDialog;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
 import cz.vutbr.fit.pdb03.gui.JEntity;
@@ -356,6 +357,13 @@ public class MenuController implements ActionListener{
 			GUIManager.moveToCenter(dialog, frame);
 			dialog.setType(SearchByDescriptionDialog.TYPE_PICTURE_DESCRIPTION);
 			dialog.setVisible(true);
+			// TODO ??
+		}
+
+		if(event.getSource() == miSearchByPicture){
+			SearchByImageDialog dialog = new SearchByImageDialog(frame);
+			GUIManager.moveToCenter(dialog, frame);
+			dialog.setVisible(true);
 		}
 
 		// editace zvirete
@@ -401,17 +409,9 @@ public class MenuController implements ActionListener{
 
 		// vkladani obrazku ke zvireti
 		if(event.getSource() == miAnimalInsertPicture){
-			ImageSearchDialog dialog = new ImageSearchDialog(frame);
+			ImageUploadDialog dialog = new ImageUploadDialog(frame);
 			GUIManager.moveToCenter(dialog, frame);
 			dialog.setVisible(true);
-		}
-
-		if(event.getSource() == miSearchByPicture){
-			// TODO
-		}
-
-		if(event.getSource() == miSearchByPictureDescription){
-			// TODO
 		}
 	}
 }

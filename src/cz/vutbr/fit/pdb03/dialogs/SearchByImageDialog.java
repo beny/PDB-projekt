@@ -6,39 +6,31 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTextField;
 
-import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.DataBase;
-import cz.vutbr.fit.pdb03.Log;
 
 /**
- * Trida reprezentujici dialog pro nahravani obrazku do DB;
+ * Trida reprezentujici dialog pro hledani podle obrazku
  *
  */
-public class ImageSearchDialog extends DefaultDialog implements ActionListener {
+public class SearchByImageDialog extends DefaultDialog implements ActionListener {
 
 	private static final long serialVersionUID = -1885133417729619677L;
 
 	AnimalsDatabase frame;
-	JButton bChoose, bCancel, bSave;
+	JButton bChoose, bCancel, bSearch;
 	JComboBox cType;
-	JLabel lDesc;
-	JTextField tDesc;
 
-	private File[] files;
+	private File file;
 	private String table = DataBase.ANIMAL_PHOTO;
 
-	public ImageSearchDialog(AnimalsDatabase frame) {
+	public SearchByImageDialog(AnimalsDatabase frame) {
 		this.frame = frame;
 		setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
@@ -46,25 +38,21 @@ public class ImageSearchDialog extends DefaultDialog implements ActionListener {
 		gbc.insets = new Insets(5, 5, 5, 5);
 		gbc.gridx = gbc.gridy = 0;
 
-		bChoose = new JButton("Vyber soubory");
+		bChoose = new JButton("Vyber soubr");
 		bChoose.addActionListener(this);
 
 		String[] elements = {"Zvíře", "Stopa", "Trus"};
 		cType = new JComboBox(elements);
 		cType.addActionListener(this);
 
-		lDesc = new JLabel("Popis:");
-
-		tDesc = new JTextField(DataBase.MAX_STRING);
-
 		JPanel buttons = new JPanel();
 		bCancel = new JButton("Storno");
 		bCancel.addActionListener(this);
 		buttons.add(bCancel);
 
-		bSave = new JButton("Ulož");
-		bSave.addActionListener(this);
-		buttons.add(bSave);
+		bSearch = new JButton("Hledej");
+		bSearch.addActionListener(this);
+		buttons.add(bSearch);
 
 		// rozmisteni prvku
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
@@ -77,43 +65,26 @@ public class ImageSearchDialog extends DefaultDialog implements ActionListener {
 
 		gbc.gridwidth = 1;
 		gbc.gridy++;
-		gbc.gridx = 0;
-		add(lDesc, gbc);
-
-		gbc.gridx++;
-		add(tDesc, gbc);
-
-		gbc.gridy++;
 		add(buttons, gbc);
 
 		pack();
 	}
 
 	/**
-	 * Ulozeni obrazku do databaze
+	 * Nastaveni a vyvolani hledani
 	 */
-	private void saveImages() {
-		Animal animal = frame.getAnimalsPanel().getSelectedAnimal();
+	private void search(){
 
-		for (File file : files) {
-			try {
-				frame.getDb().uploadImage(animal.getId(),
-						getTableName(), file.getAbsolutePath(), 1,
-						tDesc.getText());
-			} catch (SQLException ex) {
-				Log.error("Chyba pri nahravani obrazku do DB: "
-						+ ex.getMessage());
-			} catch (IOException ex) {
-				Log.error("Chyba pri cteni obrazku: " + ex.getMessage());
-			}
-			Log.debug("Obrazek " + file.getName() + " nahran");
-
-			// obnoveni
-			frame.getAnimalsPanel()
-					.getListController()
-					.setSelectedAnimal(
-							frame.getAnimalsPanel().getSelectedAnimal());
+		String table = new String();
+		switch(cType.getSelectedIndex()){
+		case 0:	table = DataBase.ANIMAL_PHOTO; break;
+		case 1: table = DataBase.FEET_PHOTO; break;
+		case 2: table = DataBase.EXCREMENT_PHOTO; break;
 		}
+		frame.setSearchFilename(file.getAbsolutePath());
+		frame.setSearchTable(table);
+		frame.reloadAnimalsList(AnimalsDatabase.SEARCH_IMAGE);
+		dispose();
 	}
 
 	@Override
@@ -122,12 +93,13 @@ public class ImageSearchDialog extends DefaultDialog implements ActionListener {
 		// tlacitko vyber
 		if(e.getSource() == bChoose){
 			JFileChooser fc = new FileDialog();
+			fc.setMultiSelectionEnabled(false);
 			int returnVal = fc.showOpenDialog(this);
 
             if (returnVal == JFileChooser.APPROVE_OPTION) {
 
-            	files = fc.getSelectedFiles();
-            	bChoose.setText("Vybráno " + files.length + " souborů");
+            	file = fc.getSelectedFile();
+            	bChoose.setText("Obrázek vybrán");
             }
 		}
 
@@ -137,8 +109,8 @@ public class ImageSearchDialog extends DefaultDialog implements ActionListener {
 		}
 
 		// tlacitko save
-		if(e.getSource() == bSave){
-			saveImages();
+		if(e.getSource() == bSearch){
+			search();
 			dispose();
 		}
 	}

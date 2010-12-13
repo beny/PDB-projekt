@@ -118,5 +118,11 @@ public class SearchByDescriptionDialog extends DefaultDialog implements ActionLi
 
 	public void setType(int type) {
 		this.type = type;
+
+		if(type == AnimalsDatabase.SEARCH_BY_PICTURE_DESCRIPTION){
+			lDescription.setText("Popis:");
+		}
+
+		// TODO overit pro dalsi typy dialogu
 	}
 }

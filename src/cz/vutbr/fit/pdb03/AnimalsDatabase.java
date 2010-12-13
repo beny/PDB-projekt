@@ -2,6 +2,7 @@ package cz.vutbr.fit.pdb03;
 
 import java.awt.Point;
 import java.awt.geom.Point2D;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Vector;
@@ -10,7 +11,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JSplitPane;
-import javax.swing.UIManager;
 
 import cz.vutbr.fit.pdb03.controllers.MenuController;
 import cz.vutbr.fit.pdb03.controllers.WindowController;
@@ -43,6 +43,7 @@ public class AnimalsDatabase extends JFrame  {
 	public final static int SEARCH_BIGGEST_AREA = 6;
 	public final static int SEARCH_EXTINCT = 7;
 	public final static int SEARCH_SAME_AREA = 8;
+	public final static int SEARCH_IMAGE = 9;
 
 	// komponenty jednotlivych casti hlavniho okna
 	PhotosPanel photosPanel;
@@ -63,7 +64,8 @@ public class AnimalsDatabase extends JFrame  {
 	private Vector<Animal> vAnimals = new Vector<Animal>();
 
 	// pomocne promenne pro hledani
-	private String searchGenus, searchSpecies, searchDescription;
+	private String searchGenus, searchSpecies, searchDescription,
+			searchFilename, searchTable;
 
 	private LoadingDialog dLoading;
 
@@ -190,11 +192,17 @@ public class AnimalsDatabase extends JFrame  {
 					case SEARCH_EXTINCT:
 						db.searchExtinctAnimals();
 						break;
+					case SEARCH_IMAGE:
+						db.searchAnimalsByPicture(getSearchFilename(),
+								getSearchTable());
+						break;
 					}
 
 					dbAnimals = (ArrayList<Animal>) db.searchResult;
 				} catch(SQLException e){
 					Log.error("Chyba pri hledani zvirat: " + e.getMessage());
+				} catch(IOException e){
+					Log.error("Chyba pri cteni obrazku: " + e.getMessage());
 				}
 
 				Log.info("Nalezeno "+ dbAnimals + " zvirat");
@@ -372,5 +380,29 @@ public class AnimalsDatabase extends JFrame  {
 
 	public void setSearchDescription(String searchDescription) {
 		this.searchDescription = searchDescription;
+	}
+
+
+
+	public String getSearchFilename() {
+		return searchFilename;
+	}
+
+
+
+	public void setSearchFilename(String searchFilename) {
+		this.searchFilename = searchFilename;
+	}
+
+
+
+	public String getSearchTable() {
+		return searchTable;
+	}
+
+
+
+	public void setSearchTable(String searchTable) {
+		this.searchTable = searchTable;
 	}
 }
