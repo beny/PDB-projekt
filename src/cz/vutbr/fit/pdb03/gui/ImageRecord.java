@@ -5,9 +5,12 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.ImageObserver;
 import java.sql.SQLException;
 
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
@@ -20,13 +23,12 @@ import cz.vutbr.fit.pdb03.Log;
  * @author Ondřej Beneš <ondra.benes@gmail.com>
  *
  */
-public class ImageRecord extends JPanel {
+public class ImageRecord extends JPanel implements MouseListener{
 
 	private final static long serialVersionUID = 6570452902350045589L;
 
 	private PictureThumbnail pic;
 	private Image originalPic;
-	private Image thumbPic;
 
 	public ImageRecord(JPicture picture) {
 
@@ -49,6 +51,7 @@ public class ImageRecord extends JPanel {
 
 		add(pic);
 		add(text);
+		addMouseListener(this);
 	}
 
 	private void createThumb(OrdImage img){
@@ -63,6 +66,27 @@ public class ImageRecord extends JPanel {
 			Log.error("Chyba pri vytvareni nahledu");
 		}
 	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		if(e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1){
+			ImagePreviewDialog preview = new ImagePreviewDialog(originalPic);
+			preview.setVisible(true);
+		}
+
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {}
+
+	@Override
+	public void mouseExited(MouseEvent e) {}
+
+	@Override
+	public void mousePressed(MouseEvent e) {}
+
+	@Override
+	public void mouseReleased(MouseEvent arg0) {}
 }
 
 /**
@@ -83,28 +107,28 @@ class PictureThumbnail extends JPanel{
 
 		this.pic = pic;
 
-		rightSize();
+		correctSize();
 	}
 
 	@Override
 	protected void paintComponent(Graphics g) {
-		double w, h, r = 0;
+		double width, height;
 
-		double iw = pic.getWidth(this);
-		double ih = pic.getHeight(this);
-		if(iw > ih){
-			w = MAX_SIZE;
-			h = MAX_SIZE/(iw/ih);
+		double originalWidth = pic.getWidth(this);
+		double originalHeight = pic.getHeight(this);
+		if(originalWidth > originalHeight){
+			width = MAX_SIZE;
+			height = MAX_SIZE/(originalWidth/originalHeight);
 		}
 		else {
-			h = MAX_SIZE;
-			w = MAX_SIZE/(ih/iw);
+			height = MAX_SIZE;
+			width = MAX_SIZE/(originalHeight/originalWidth);
 		}
 
-		g.drawImage(pic, 0, 0, (int)w, (int)h, null);
+		g.drawImage(pic, 0, 0, (int)width, (int)height, null);
 	}
 
-	private void rightSize() {
+	private void correctSize() {
 		int width = pic.getWidth(this);
 		int height = pic.getHeight(this);
 		if (width == -1 || height == -1)
@@ -120,11 +144,11 @@ class PictureThumbnail extends JPanel{
 		}
 		if ((infoflags & ImageObserver.WIDTH) != 0
 				&& (infoflags & ImageObserver.HEIGHT) != 0)
-			rightSize();
+			correctSize();
 		if ((infoflags & ImageObserver.SOMEBITS) != 0)
 			repaint();
 		if ((infoflags & ImageObserver.ALLBITS) != 0) {
-			rightSize();
+			correctSize();
 			repaint();
 			return false;
 		}
