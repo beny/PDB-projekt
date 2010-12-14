@@ -168,7 +168,7 @@ public class ImageRecord extends JPanel implements MouseListener{
 					String retval = JOptionPane.showInputDialog(frame,
 							"Úprava titulku fotky",
 							originImage.getDescription());
-                                        if (retval == null || retval.equals("")) return;
+                                        if (retval == null) return;
 					if (!retval.equals(originImage.getDescription())) {
                                             setDesc(retval);
                                             editPhoto();
