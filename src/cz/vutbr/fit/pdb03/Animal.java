@@ -15,23 +15,23 @@ public class Animal {
         /**
          * Rodové jméno
          */
-	private String genus = "";
+	private String genus = new String();
         /**
          * Druhové jméno
          */
-	private String species = "";
+	private String species = new String();
         /**
          * Rodové jméno latinsky
          */
-	private String genusLat = "";
+	private String genusLat = new String();
         /**
          * Druhové jméno latinsky
          */
-	private String speciesLat = "";
+	private String speciesLat = new String();
         /**
          * Popis zvířete
          */
-	private String description = "";
+	private String description = new String();
 	private Double nearestAppareance = -1.0;
 	private Double appareanceArea = -1.0;
 
@@ -183,9 +183,7 @@ public class Animal {
 	 * @throws SQLException
 	 */
 	public String getDescription(DataBase data) throws SQLException {
-		if (description.equals(""))
-			description = data.getDescription(id);
-		return description;
+		return data.getDescription(id);
 	}
 
 	/**
@@ -226,7 +224,7 @@ public class Animal {
 	 * Alternativou je DataBase.releaseCacheOnSpatialChange() - pro všechna zvířata ze searchResult
 	 * @see DataBase#deleteSpatialData(int)
 	 * @see DataBase#insertAppareance(int, oracle.spatial.geometry.JGeometry)
-	 * @see DataBase#updateAppareance(int, oracle.spatial.geometry.JGeometry) 
+	 * @see DataBase#updateAppareance(int, oracle.spatial.geometry.JGeometry)
 	 * @see T2SQL#setCurrentTime()
 	 * @see T2SQL#setNoTemporalRestrictions()
 	 * @see T2SQL#setValidationDate(java.util.Date)

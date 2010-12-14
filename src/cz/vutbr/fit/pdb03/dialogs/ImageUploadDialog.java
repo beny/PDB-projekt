@@ -24,7 +24,7 @@ import cz.vutbr.fit.pdb03.gui.GUIManager;
 
 /**
  * Trida reprezentujici dialog pro nahravani obrazku do DB;
- *
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  */
 public class ImageUploadDialog extends DefaultDialog implements ActionListener {
 

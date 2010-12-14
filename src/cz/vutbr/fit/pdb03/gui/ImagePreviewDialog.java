@@ -10,6 +10,12 @@ import javax.swing.JPanel;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.dialogs.DefaultDialog;
 
+/**
+ * Dialog pro zobrazeni nahledu obrazku
+ * FIXME doresit proc se osekava konec obrazku
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
+ *
+ */
 public class ImagePreviewDialog extends DefaultDialog {
 
 	private final static long serialVersionUID = 4730679266665138535L;
@@ -25,7 +31,7 @@ public class ImagePreviewDialog extends DefaultDialog {
 
 /**
  * Panel obsahujici obrazek pres celou svoji plochu
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
 class FullImage extends JPanel {

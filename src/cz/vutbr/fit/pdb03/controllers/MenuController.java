@@ -26,6 +26,12 @@ import cz.vutbr.fit.pdb03.dialogs.SearchByNameDialog;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
 import cz.vutbr.fit.pdb03.gui.JEntity;
 
+/**
+ * Trida zpracovavajici udalosti okolo menu
+ *
+ * @author Pavel Srnec <xsrnec01@stud.fit.vutbr.cz>
+ *
+ */
 public class MenuController implements ActionListener{
 
 	// pomocne konstanty
@@ -225,7 +231,7 @@ public class MenuController implements ActionListener{
 				frame.getDb().disconnect();
 				Log.info("Disconnected");
 			} catch (SQLException e){
-				System.err.println("Error while disconnection from DB: " + e.getMessage());
+				Log.error("Chyba pri odpojeni od databaze");
 			}
 
 			frame.setEnable(frame.getDb().isConnected());
@@ -248,7 +254,7 @@ public class MenuController implements ActionListener{
 	private void initDatabase(){
 		if(frame.getDb().isConnected()){
 			try{
-				Log.debug("Creating empty database");
+				Log.debug("Vytvarim prazdnou databazi");
 				frame.getDb().createDatabase();
 			} catch (SQLException e){
 				Log.error("Chyba pri vytvareni DB: " + e.getMessage());
@@ -405,7 +411,6 @@ public class MenuController implements ActionListener{
 			GUIManager.moveToCenter(dAnimal, frame);
 
 			dAnimal.fill(frame.getAnimalsPanel().getSelectedAnimal());
-			dAnimal.enableDeleteButton(true);
 			dAnimal.setMode(AnimalDialog.UPDATE);
 			dAnimal.setVisible(true);
 		}

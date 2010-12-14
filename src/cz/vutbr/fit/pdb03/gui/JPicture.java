@@ -2,6 +2,11 @@ package cz.vutbr.fit.pdb03.gui;
 
 import oracle.ord.im.OrdImage;
 
+/**
+ * Reprezentace obrazku pro nase ucely
+ * @author Pavel Srnec <xsrnec01@stud.fit.vutbr.cz>
+ *
+ */
 public class JPicture extends OrdImage {
 
 	private OrdImage pic;

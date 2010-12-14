@@ -19,7 +19,7 @@ import cz.vutbr.fit.pdb03.Log;
  * Dialog pro hledani podle popisu jak pro zvirata tak pro obrazky.
  *
  * Pro typ je nutno nastavit typ.
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
 public class SearchByDescriptionDialog extends DefaultDialog implements ActionListener{
@@ -122,7 +122,5 @@ public class SearchByDescriptionDialog extends DefaultDialog implements ActionLi
 		if(type == AnimalsDatabase.SEARCH_BY_PICTURE_DESCRIPTION){
 			lDescription.setText("Popis:");
 		}
-
-		// TODO overit pro dalsi typy dialogu
 	}
 }

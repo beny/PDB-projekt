@@ -26,7 +26,7 @@ import cz.vutbr.fit.pdb03.gui.JEntity;
 
 /**
  * Dialog s nastavenim
- *
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
 public class PreferencesDialog extends DefaultDialog implements ActionListener {

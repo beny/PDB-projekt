@@ -18,7 +18,7 @@ import cz.vutbr.fit.pdb03.DataBase;
 
 /**
  * Vyhledavani podle jmena
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Pavel Srnec <xsrnec01@stud.fit.vutbr.cz>
  *
  */
 public class SearchByNameDialog extends DefaultDialog implements ActionListener, KeyListener {
@@ -88,13 +88,14 @@ public class SearchByNameDialog extends DefaultDialog implements ActionListener,
 
 	/**
 	 * Vyvolej hledani
-	 * FIXME pri prazdnych polich se nekde zasekne
 	 */
 	private void search(){
 
-		frame.setSearchGenus(tGenus.getText());
-		frame.setSearchSpecies(tSpecies.getText());
-		frame.reloadAnimalsList(AnimalsDatabase.SEARCH_BY_NAME);
+		if (tGenus.getText().length() > 0 || tSpecies.getText().length() > 0) {
+			frame.setSearchGenus(tGenus.getText());
+			frame.setSearchSpecies(tSpecies.getText());
+			frame.reloadAnimalsList(AnimalsDatabase.SEARCH_BY_NAME);
+		}
 		dispose();
 	}
 

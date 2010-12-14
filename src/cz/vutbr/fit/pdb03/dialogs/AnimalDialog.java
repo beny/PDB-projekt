@@ -22,7 +22,7 @@ import cz.vutbr.fit.pdb03.gui.GUIManager;
 
 /**
  * Dialog, pro pridavani a editaci zvirete
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
 public class AnimalDialog extends DefaultDialog implements ActionListener{
@@ -41,7 +41,7 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 	JLabel lId, lGenus, lSpecies, lGenusLat, lSpeciesLat, lDescription;
 	JTextField tGenus, tSpecies, tGenusLat, tSpeciesLat;
 	JTextArea taDescription;
-	JButton bCancel, bSave, bDelete;
+	JButton bCancel, bSave;
 
 	private int mode;
 
@@ -74,23 +74,23 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 		lId.setText("0");
 		pContent.add(lId, gbc);
 
-		lGenus = new JLabel("Genus:");
+		lGenus = new JLabel("Rodové jméno:");
 		pContent.add(lGenus, gbc);
 
 		gbc.gridy++;
-		lGenusLat = new JLabel("Genus (latin):");
+		lGenusLat = new JLabel("Rodové jméno (latinsky):");
 		pContent.add(lGenusLat, gbc);
 
 		gbc.gridy++;
-		lSpecies = new JLabel("Species:");
+		lSpecies = new JLabel("Druhové jméno:");
 		pContent.add(lSpecies, gbc);
 
 		gbc.gridy++;
-		lSpeciesLat = new JLabel("Species (latin):");
+		lSpeciesLat = new JLabel("Druhové jméno (latinsky):");
 		pContent.add(lSpeciesLat, gbc);
 
 		gbc.gridy++;
-		lDescription = new JLabel("Description:");
+		lDescription = new JLabel("Popis:");
 		pContent.add(lDescription, gbc);
 
 		// pridani text fieldu
@@ -120,19 +120,22 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 
 		pContent.add(js, gbc);
 
-		// pridani tlacitek
-		gbc.gridy++;
-		gbc.gridx = 1;
+		// tlacitka
+		JPanel buttons = new JPanel();
+
+		bCancel = new JButton("Storno");
+		bCancel.addActionListener(this);
+		buttons.add(bCancel);
 
 		bSave = new JButton(SAVE);
 		bSave.addActionListener(this);
-		pContent.add(bSave, gbc);
+		buttons.add(bSave);
 
-		gbc.gridx = 0;
-		bDelete = new JButton("Smazat");
-		bDelete.addActionListener(this);
-		bDelete.setEnabled(false);
-		pContent.add(bDelete, gbc);
+		// pridani tlacitek
+		gbc.gridy++;
+		gbc.gridx = 1;
+		gbc.anchor = GridBagConstraints.LINE_END;
+		pContent.add(buttons, gbc);
 
 		setContentPane(pContent);
 
@@ -152,16 +155,8 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 		try {
 			taDescription.setText(animal.getDescription(db));
 		} catch (SQLException e){
-			System.err.println("Chyba pri ziskavani popisu: " + e.getMessage());
+			Log.error("Chyba pri ziskavani popisu: " + e.getMessage());
 		}
-	}
-
-	/**
-	 * Metoda ktera zobrazuje/skryva do dialogu tlacitko na mazani
-	 * @param enable
-	 */
-	public void enableDeleteButton(boolean enable){
-		bDelete.setEnabled(enable);
 	}
 
 	public void setMode(int mode) {
@@ -218,9 +213,8 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 			dLoading.setVisible(true);
 		}
 
-		// smazani zaznamu
-		if(event.getSource() == bDelete){
-			frame.deleteAnimal(animal);
+		// cancel tlacitko
+		if(event.getSource() == bCancel){
 			dispose();
 		}
 	}

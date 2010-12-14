@@ -1,5 +1,7 @@
 package cz.vutbr.fit.pdb03.controllers;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
@@ -7,8 +9,10 @@ import java.awt.event.MouseEvent;
 import java.sql.SQLException;
 import java.util.List;
 
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import javax.swing.ListModel;
-import javax.swing.RepaintManager;
 
 import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
@@ -21,8 +25,9 @@ import cz.vutbr.fit.pdb03.gui.JEntity;
 import cz.vutbr.fit.pdb03.gui.JPicture;
 
 /**
- * Trida zajistujici odchyceni klikani do mapy
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * Trida ktera se stara o udalosti seznamu se zviraty
+ *
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
 public class ListController extends MouseAdapter implements KeyListener {
@@ -122,30 +127,66 @@ public class ListController extends MouseAdapter implements KeyListener {
 		GUIManager.moveToCenter(dAnimal, frame);
 
 		dAnimal.fill(getSelectedAnimal());
-		dAnimal.enableDeleteButton(true);
 		dAnimal.setMode(AnimalDialog.UPDATE);
 		dAnimal.setVisible(true);
+	}
+
+	/**
+	 * Dialog pro mazani
+	 */
+	private void showDeleteAnimalDialog(){
+		int result = JOptionPane.showConfirmDialog(frame,
+				"Chcete opravdu odstranit zvíře "+frame.getAnimalsPanel().getSelectedAnimal().toString()+"?",
+				"Odstranění zvířete", JOptionPane.YES_NO_OPTION,
+				JOptionPane.QUESTION_MESSAGE);
+
+		if (result == JOptionPane.YES_OPTION) {
+			frame.deleteAnimal(frame.getAnimalsPanel().getSelectedAnimal());
+		}
 	}
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
 
 		if (frame.getDb().isConnected()) {
-			// normalni klik
-			if (e.getButton() == MouseEvent.BUTTON1) {
-				// implicitni zakazni menu
-				frame.getMenuController().setAnimalChosen(false);
 
-				// vyber zvirete podle kliku
-				int index = frame.getList().locationToIndex(e.getPoint());
-				ListModel dlm = frame.getList().getModel();
-				Animal selectedAnimal = (Animal) dlm.getElementAt(index);
-				setSelectedAnimal(selectedAnimal);
-			}
+			// implicitni zakazni menu
+			frame.getMenuController().setAnimalChosen(false);
 
-			// pro leve tlacitko mysi dvojklik
-			if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
-				showAnimalDialog();
+			// vyber zvirete podle kliku
+			int index = frame.getList().locationToIndex(e.getPoint());
+			ListModel dlm = frame.getList().getModel();
+			Animal selectedAnimal = (Animal) dlm.getElementAt(index);
+			frame.getList().setSelectedIndex(index);
+			setSelectedAnimal(selectedAnimal);
+
+			// prave tlacitko
+			if(e.getButton() == MouseEvent.BUTTON3){
+				JPopupMenu mContext = new JPopupMenu();
+
+				JMenuItem miEdit = new JMenuItem("Uprav zvíře");
+				miEdit.addActionListener(new ActionListener() {
+
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						showAnimalDialog();
+					}
+				});
+
+				mContext.add(miEdit);
+
+				JMenuItem miDelete = new JMenuItem("Smaž zvíře");
+				miDelete.addActionListener(new ActionListener() {
+
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+						showDeleteAnimalDialog();
+					}
+				});
+
+				mContext.add(miDelete);
+
+				mContext.show(frame.getList(), e.getPoint().x, e.getPoint().y);
 			}
 		}
 	}

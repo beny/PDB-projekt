@@ -3,7 +3,7 @@ package cz.vutbr.fit.pdb03;
 
 /**
  * Trida na logovani udalosti
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
 public final class Log {

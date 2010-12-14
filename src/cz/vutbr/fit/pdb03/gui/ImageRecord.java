@@ -27,7 +27,7 @@ import cz.vutbr.fit.pdb03.dialogs.LoadingDialog;
 
 /**
  * Jeden radek ktery bude obsahovat obrazek a jeho popis
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
 public class ImageRecord extends JPanel implements MouseListener{
@@ -228,7 +228,7 @@ public class ImageRecord extends JPanel implements MouseListener{
 
 /**
  * Nahled obrazku ktery je obsazen v zazanmu
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
 class PictureThumbnail extends JPanel{

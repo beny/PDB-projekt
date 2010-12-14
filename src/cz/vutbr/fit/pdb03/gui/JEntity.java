@@ -10,7 +10,7 @@ import oracle.spatial.geometry.JGeometry;
 
 /**
  * Rozsireni JGeometry o zjednodusujici funkce a obaleni pro DB
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Pavel Srnec <xsrnec01@stud.fit.vutbr.cz>
  *
  */
 public class JEntity extends JGeometry {

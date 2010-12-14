@@ -23,7 +23,7 @@ import cz.vutbr.fit.pdb03.Log;
 
 /**
  * Trida zajistujici panel s fotkama a info
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
 public class PhotosPanel extends JTabbedPane {
@@ -160,7 +160,12 @@ public class PhotosPanel extends JTabbedPane {
 						.getSpeciesLat()));
 
 		try {
-			lDescription2.setText(animal.getDescription(frame.getDb()));
+
+			String desc = animal.getDescription(frame.getDb());
+
+			if (desc != null && desc.length() > 0) {
+				lDescription2.setText(desc);
+			}
 
 			int distance = (int) Math.round(animal.getNearestAppareance(frame.getDb(), p));
 			int area = (int) Math.round(animal.getAppareanceArea(frame.getDb()));

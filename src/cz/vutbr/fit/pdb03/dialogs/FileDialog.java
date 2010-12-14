@@ -7,7 +7,7 @@ import javax.swing.filechooser.FileFilter;
 
 /**
  * Dialog pro cteni obrazku
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
 public class FileDialog extends JFileChooser {
@@ -27,7 +27,7 @@ public class FileDialog extends JFileChooser {
 
 /**
  * Filtr pro ziskani jen obrazku
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
 class ImageFilter extends FileFilter {

@@ -17,7 +17,7 @@ import cz.vutbr.fit.pdb03.DataBase;
 
 /**
  * Trida reprezentujici dialog pro hledani podle obrazku
- *
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  */
 public class SearchByImageDialog extends DefaultDialog implements ActionListener {
 

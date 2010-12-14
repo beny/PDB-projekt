@@ -4,7 +4,7 @@ import javax.swing.JDialog;
 
 /**
  * Trida se spolecnymi vlastnostmi dialogu
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Pavel Srnec <xsrnec01@stud.fit.vutbr.cz>
  *
  */
 public class DefaultDialog extends JDialog {

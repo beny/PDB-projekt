@@ -26,6 +26,7 @@ import cz.vutbr.fit.pdb03.gui.JMapPanel;
 
 /**
  * Trida zajistujici udalosti okolo mapy a to klikani mysi a tlacitek v mape
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
 public class MapController extends DefaultMapController implements

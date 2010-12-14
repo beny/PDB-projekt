@@ -26,7 +26,7 @@ import cz.vutbr.fit.pdb03.controllers.MapController;
 
 /**
  * Trida rozsirujici moznosti zakladni mapy
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  *
  */
 public class JMapPanel extends JMapViewer {
@@ -621,8 +621,6 @@ public class JMapPanel extends JMapViewer {
 		for (JEntity p : ps) {
 			p.setSelected(polygons.isSelected());
 			paintPolygon(g, p);
-
-			// TODO linearizace polygonu za sebe
 		}
 	}
 

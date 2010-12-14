@@ -10,7 +10,7 @@ import cz.vutbr.fit.pdb03.AnimalsDatabase;
 
 /**
  * Kontroler zajistujici ovladani okenich akci
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Pavel Srnec <xsrnec01@stud.fit.vutbr.cz>
  *
  */
 public class WindowController extends WindowAdapter {

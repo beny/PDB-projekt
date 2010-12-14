@@ -8,13 +8,16 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 
+/**
+ * Dialog ktery se zobrazuje pri aktivite ktera trva dele
+ * @author Pavel Srnec <xsrnec01@stud.fit.vutbr.cz>
+ *
+ */
 public class LoadingDialog extends DefaultDialog {
 
 	private static final long serialVersionUID = -7777460264482052284L;
 
 	public LoadingDialog(String message) {
-
-//		setUndecorated(true);
 
 		JPanel pContent = new JPanel();
 		pContent.setLayout(new GridBagLayout());

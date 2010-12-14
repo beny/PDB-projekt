@@ -1,6 +1,5 @@
 package cz.vutbr.fit.pdb03.dialogs;
 
-import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -9,6 +8,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
@@ -19,10 +19,8 @@ import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.gui.GUIManager;
 
 /**
- * Dialog pro pripojeni
- * @author Ondřej Beneš <ondra.benes@gmail.com>
- *
- * @param <AnimalDatabase>
+ * Dialog pro pripojeni do DB
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
  */
 public class ConnectDialog extends DefaultDialog implements ActionListener{
 
@@ -32,7 +30,7 @@ public class ConnectDialog extends DefaultDialog implements ActionListener{
 	public final static String TOMAS = "xizakt00";
 	public final static String ONDRA = "xbenes00";
 
-	private JLabel lUsername, lPassword, lStatus;
+	private JLabel lUsername, lPassword;
 	private JTextField tUsername;
 	private JButton bLogin;
 	private JPasswordField pfPassword;
@@ -56,13 +54,15 @@ public class ConnectDialog extends DefaultDialog implements ActionListener{
 		gbc.gridy = 0;
 		gbc.insets = new Insets(5, 5, 5, 5);
 
-		lUsername = new JLabel("Přihlašovací jméno");
+		gbc.anchor = GridBagConstraints.LINE_END;
+		lUsername = new JLabel("Přihlašovací jméno:");
 		contentPanel.add(lUsername, gbc);
 
 		gbc.gridy = 1;
-		lPassword = new JLabel("Heslo");
+		lPassword = new JLabel("Heslo:");
 		contentPanel.add(lPassword, gbc);
 
+		gbc.anchor = GridBagConstraints.LINE_START;
 		gbc.gridx = 1;
 		gbc.gridy = 0;
 		tUsername = new JTextField(8);
@@ -75,22 +75,17 @@ public class ConnectDialog extends DefaultDialog implements ActionListener{
 		gbc.gridx = 0;
 		gbc.gridy = 2;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
+		gbc.anchor = GridBagConstraints.CENTER;
 
 		bLogin = new JButton("Přihlásit se");
 		getRootPane().setDefaultButton(bLogin);
 		bLogin.addActionListener(this);
 		contentPanel.add(bLogin, gbc);
 
-		gbc.gridy = 3;
-		lStatus = new JLabel();
-		lStatus.setForeground(Color.RED);
-		contentPanel.add(lStatus, gbc);
-
 		// nastaveni dialogu
 		setContentPane(contentPanel);
 		pack();
 
-		// TODO odstranit predplneni formulare
 		fillDialog(ONDRA);
 	}
 
@@ -108,8 +103,16 @@ public class ConnectDialog extends DefaultDialog implements ActionListener{
 						db.connect(tUsername.getText(),	String.copyValueOf(pfPassword.getPassword()));
 						Log.info("Connected to database");
 					} catch (Exception e) {
-						// TODO doresit nejak chybne prihlaseni
-						lStatus.setText("Problem with login, try again");
+						JOptionPane
+								.showMessageDialog(
+										ConnectDialog.this,
+										"Chybné přihlašovací přihlašovací jméno nebo heslo",
+										"Chyba při přihlašování",
+										JOptionPane.ERROR_MESSAGE);
+						if (dLoading != null && dLoading.isVisible()) {
+							dLoading.dispose();
+						}
+						return;
 					}
 
 					frame.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);

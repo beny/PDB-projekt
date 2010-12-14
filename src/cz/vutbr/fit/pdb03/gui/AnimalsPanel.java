@@ -10,6 +10,10 @@ import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.controllers.ListController;
 
+/**
+ * Panel se zviraty
+ * @author Ondřej Beneš <xbenes00@stud.fit.vutbr.cz>
+ */
 public class AnimalsPanel extends JScrollPane {
 
 	private static final long serialVersionUID = -1966207604674886330L;

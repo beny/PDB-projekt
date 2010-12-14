@@ -6,7 +6,7 @@ import java.awt.Point;
 
 /**
  * Trida pro jednotnou praci s GUI
- * @author Ondřej Beneš <ondra.benes@gmail.com>
+ * @author Pavel Srnec <xsrnec01@stud.fit.vutbr.cz>
  *
  */
 public class GUIManager {
