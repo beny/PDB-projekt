@@ -20,6 +20,7 @@ import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.DataBase;
 import cz.vutbr.fit.pdb03.Log;
+import cz.vutbr.fit.pdb03.gui.GUIManager;
 
 /**
  * Trida reprezentujici dialog pro nahravani obrazku do DB;
@@ -37,6 +38,8 @@ public class ImageUploadDialog extends DefaultDialog implements ActionListener {
 
 	private File[] files;
 	private String table = DataBase.ANIMAL_PHOTO;
+
+	private LoadingDialog dLoading = null;
 
 	public ImageUploadDialog(AnimalsDatabase frame) {
 		this.frame = frame;
@@ -93,27 +96,44 @@ public class ImageUploadDialog extends DefaultDialog implements ActionListener {
 	 * Ulozeni obrazku do databaze
 	 */
 	private void saveImages() {
-		Animal animal = frame.getAnimalsPanel().getSelectedAnimal();
 
-		for (File file : files) {
-			try {
-				frame.getDb().uploadImage(animal.getId(),
-						getTableName(), file.getAbsolutePath(), 1,
-						tDesc.getText());
-			} catch (SQLException ex) {
-				Log.error("Chyba pri nahravani obrazku do DB: "
-						+ ex.getMessage());
-			} catch (IOException ex) {
-				Log.error("Chyba pri cteni obrazku: " + ex.getMessage());
+		new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				Animal animal = frame.getAnimalsPanel().getSelectedAnimal();
+
+				for (File file : files) {
+					try {
+						frame.getDb().uploadImage(animal.getId(),
+								getTableName(), file.getAbsolutePath(), 1,
+								tDesc.getText());
+					} catch (SQLException ex) {
+						Log.error("Chyba pri nahravani obrazku do DB: "
+								+ ex.getMessage());
+					} catch (IOException ex) {
+						Log.error("Chyba pri cteni obrazku: " + ex.getMessage());
+					}
+					Log.debug("Obrazek " + file.getName() + " nahran");
+
+					// obnoveni
+					frame.getAnimalsPanel()
+							.getListController()
+							.setSelectedAnimal(
+									frame.getAnimalsPanel().getSelectedAnimal());
+
+					if (dLoading != null && dLoading.isVisible()) {
+						dLoading.dispose();
+					}
+				}
 			}
-			Log.debug("Obrazek " + file.getName() + " nahran");
+		}).start();
 
-			// obnoveni
-			frame.getAnimalsPanel()
-					.getListController()
-					.setSelectedAnimal(
-							frame.getAnimalsPanel().getSelectedAnimal());
-		}
+		dLoading  = new LoadingDialog(
+				"Probíhá nahrávání obrázků do databáze, prosím vyčkejte");
+		GUIManager.moveToCenter(dLoading, frame);
+		dLoading.setVisible(true);
+
 	}
 
 	@Override

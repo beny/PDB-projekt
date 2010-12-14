@@ -1,6 +1,5 @@
 package cz.vutbr.fit.pdb03;
 
-import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -67,7 +66,7 @@ public class AnimalsDatabase extends JFrame  {
 	private String searchGenus, searchSpecies, searchDescription,
 			searchFilename, searchTable;
 
-	private LoadingDialog dLoading;
+	private LoadingDialog dLoading = null;
 
 	// druh hledani
 
@@ -215,7 +214,9 @@ public class AnimalsDatabase extends JFrame  {
 
 				animalsPanel.setData(vAnimals);
 
-				dLoading.dispose();
+				if(dLoading != null && dLoading.isVisible()){
+					dLoading.dispose();
+				}
 			}
 		}).start();
 

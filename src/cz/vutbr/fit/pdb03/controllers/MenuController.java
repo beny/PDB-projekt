@@ -18,6 +18,7 @@ import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.dialogs.AnimalDialog;
 import cz.vutbr.fit.pdb03.dialogs.ConnectDialog;
 import cz.vutbr.fit.pdb03.dialogs.ImageUploadDialog;
+import cz.vutbr.fit.pdb03.dialogs.LoadingDialog;
 import cz.vutbr.fit.pdb03.dialogs.PreferencesDialog;
 import cz.vutbr.fit.pdb03.dialogs.SearchByDescriptionDialog;
 import cz.vutbr.fit.pdb03.dialogs.SearchByImageDialog;
@@ -45,6 +46,7 @@ public class MenuController implements ActionListener{
 
 	// dialog
 	private ConnectDialog dConnect;
+	private LoadingDialog dLoading = null;
 
 	// hlavni okno
 	AnimalsDatabase frame;
@@ -289,13 +291,44 @@ public class MenuController implements ActionListener{
 		}
 
 		// vytvoreni tabulek v DB
-		if(event.getSource() == miApplicationDatabaseCreate){
-			initDatabase();
+		if (event.getSource() == miApplicationDatabaseCreate) {
+
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					initDatabase();
+					if(dLoading != null && dLoading.isVisible()){
+						dLoading.dispose();
+					}
+				}
+			}).start();
+
+			dLoading = new LoadingDialog(
+					"Probíhá vytvoření databáze, prosím vyčkejte");
+			GUIManager.moveToCenter(dLoading, frame);
+			dLoading.setVisible(true);
 		}
 
 		// naplneni DB vzorovymi daty
-		if(event.getSource() == miApplicationDatabaseSample){
-			initAndFillDatabase();
+		if (event.getSource() == miApplicationDatabaseSample) {
+
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					initAndFillDatabase();
+					if(dLoading != null && dLoading.isVisible()){
+						dLoading.dispose();
+					}
+
+				}
+			}).start();
+
+			dLoading = new LoadingDialog(
+					"Probíhá vytvoření a naplnění databáze, prosím vyčkejte");
+			GUIManager.moveToCenter(dLoading, frame);
+			dLoading.setVisible(true);
 		}
 
 		// obrazovka s nastavenim
@@ -357,7 +390,6 @@ public class MenuController implements ActionListener{
 			GUIManager.moveToCenter(dialog, frame);
 			dialog.setType(SearchByDescriptionDialog.TYPE_PICTURE_DESCRIPTION);
 			dialog.setVisible(true);
-			// TODO ??
 		}
 
 		if(event.getSource() == miSearchByPicture){

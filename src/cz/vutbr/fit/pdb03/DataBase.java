@@ -947,7 +947,8 @@ public class DataBase {
 		while (rset.next()) {
 
 			JPicture pic = new JPicture((OrdImage) rset.getORAData("photo",
-					OrdImage.getORADataFactory()), rset.getInt("photo_id"));
+					OrdImage.getORADataFactory()), rset.getInt("photo_id"),
+					choosen_table);
 			data.add(pic);
 		}
 		rset.close();

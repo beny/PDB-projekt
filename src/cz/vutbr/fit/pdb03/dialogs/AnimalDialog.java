@@ -49,7 +49,7 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 
 	AnimalsDatabase frame;
 
-	private LoadingDialog dLoading;
+	private LoadingDialog dLoading = null;
 
 	private Animal animal;
 
@@ -207,7 +207,9 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 						break;
 					}
 
-					dLoading.dispose();
+					if(dLoading != null && dLoading.isVisible()){
+						dLoading.dispose();
+					}
 				}
 			}).start();
 

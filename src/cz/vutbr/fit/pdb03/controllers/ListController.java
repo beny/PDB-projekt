@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import javax.swing.ListModel;
+import javax.swing.RepaintManager;
 
 import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
@@ -30,7 +31,7 @@ public class ListController extends MouseAdapter implements KeyListener {
 	 * Reference na frame
 	 */
 	private AnimalsDatabase frame;
-	private LoadingDialog dLoading;
+	private LoadingDialog dLoading = null;
 	Animal selectedAnimal;
 
 	public ListController(AnimalsDatabase frame) {
@@ -71,7 +72,11 @@ public class ListController extends MouseAdapter implements KeyListener {
 				getPhotos(DataBase.FEET_PHOTO);
 				getPhotos(DataBase.EXCREMENT_PHOTO);
 
-				dLoading.dispose();
+				if(dLoading != null && dLoading.isVisible()){
+					dLoading.dispose();
+				}
+
+				frame.getPhotosPanel().repaint();
 			}
 		}).start();
 

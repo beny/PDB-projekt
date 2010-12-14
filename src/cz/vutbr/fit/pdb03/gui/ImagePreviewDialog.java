@@ -13,11 +13,13 @@ import cz.vutbr.fit.pdb03.dialogs.DefaultDialog;
 public class ImagePreviewDialog extends DefaultDialog {
 
 	private final static long serialVersionUID = 4730679266665138535L;
+	private final static int IMAGE_GAP = 20;
 
 	public ImagePreviewDialog(Image img, int w, int h) {
-		setPreferredSize(new Dimension(w, h));
-		setMinimumSize(new Dimension(w, h));
+		setPreferredSize(new Dimension(w, h + IMAGE_GAP));
+		setMinimumSize(new Dimension(w, h + IMAGE_GAP));
 		add(new FullImage(img));
+		pack();
 	}
 }
 

@@ -7,10 +7,12 @@ public class JPicture extends OrdImage {
 	private OrdImage pic;
 	private int id;
 	private String description;
+	private String table;
 
-	public JPicture(OrdImage pic, int id) {
+	public JPicture(OrdImage pic, int id, String table) {
 		this.pic = pic;
 		this.id = id;
+		this.table = table;
 	}
 
 	public OrdImage getPic() {
@@ -35,5 +37,13 @@ public class JPicture extends OrdImage {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public String getTable() {
+		return table;
+	}
+
+	public void setTable(String table) {
+		this.table = table;
 	}
 }

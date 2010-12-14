@@ -39,7 +39,7 @@ public class ConnectDialog extends DefaultDialog implements ActionListener{
 	private DataBase db;
 	private AnimalsDatabase frame;
 
-	private LoadingDialog dLoading;
+	private LoadingDialog dLoading = null;
 
 	public ConnectDialog(AnimalsDatabase parent, DataBase db) {
 		super();
@@ -114,7 +114,9 @@ public class ConnectDialog extends DefaultDialog implements ActionListener{
 
 					frame.reloadAnimalsList(AnimalsDatabase.SEARCH_ALL);
 					frame.setEnable(true);
-					dLoading.dispose();
+					if(dLoading != null && dLoading.isVisible()){
+						dLoading.dispose();
+					}
 					dispose();
 				}
 			}).start();

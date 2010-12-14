@@ -5,18 +5,25 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.ImageObserver;
 import java.sql.SQLException;
 
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JTextArea;
 
 import oracle.ord.im.OrdImage;
 import oracle.sql.BLOB;
+import cz.vutbr.fit.pdb03.Animal;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.Log;
+import cz.vutbr.fit.pdb03.dialogs.LoadingDialog;
 
 /**
  * Jeden radek ktery bude obsahovat obrazek a jeho popis
@@ -27,12 +34,17 @@ public class ImageRecord extends JPanel implements MouseListener{
 
 	private final static long serialVersionUID = 6570452902350045589L;
 
-	private PictureThumbnail pic;
-	private Image originalPic;
-	AnimalsDatabase frame;
+	private PictureThumbnail thumbnail;
+	private JPicture originImage;
+	private Image image;
+	private AnimalsDatabase frame;
+	private String desc;
 
-	public ImageRecord(JPicture picture, AnimalsDatabase frame) {
+	private LoadingDialog dLoading = null;
+
+	public ImageRecord(JPicture originImage, AnimalsDatabase frame) {
 		this.frame = frame;
+		this.originImage = originImage;
 
 		JTextArea text = new JTextArea();
 		text = new JTextArea();
@@ -42,39 +54,153 @@ public class ImageRecord extends JPanel implements MouseListener{
 		text.setColumns(30);
 		text.setOpaque(false);
 
-		createThumb(picture.getPic());
-		pic = new PictureThumbnail(originalPic);
-		// TODO nastaveni obrazku
-		picture.getPic();
+		// vytvor obrazek
+		createThumb(originImage.getPic());
+		thumbnail = new PictureThumbnail(image);
+		originImage.getPic();
 
 		// nastaveni popisuku
-		text.setText(picture.getDescription());
+		text.setText(originImage.getDescription());
 
-		add(pic);
+		add(thumbnail);
 		add(text);
 		addMouseListener(this);
 	}
 
-	private void createThumb(OrdImage img){
+	/**
+	 * Vytvoreni nahledu z OrdImage
+	 * @param origin
+	 */
+	private void createThumb(OrdImage origin){
 
 		try {
-		BLOB blob = img.getContent();
+		BLOB blob = origin.getContent();
 		int length = (int) blob.length();
 
 		byte[] mybytes= blob.getBytes(1,length);
-			originalPic = Toolkit.getDefaultToolkit().createImage(mybytes);
+			image = Toolkit.getDefaultToolkit().createImage(mybytes);
 		} catch (SQLException e){
 			Log.error("Chyba pri vytvareni nahledu");
 		}
 	}
 
+	/**
+	 * Smazani fotky z DB
+	 */
+	private void deletePhoto(){
+
+
+		new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+
+				try {
+					frame.getDb().deletePicture(originImage.getId(),
+							originImage.getTable());
+				} catch (SQLException e) {
+					Log.error("Chyba pri mazani obrazku z DB");
+				}
+
+				Animal animal = frame.getAnimalsPanel().getSelectedAnimal();
+				frame.getAnimalsPanel().getListController()
+						.setSelectedAnimal(animal);
+
+				if (dLoading != null && dLoading.isVisible()) {
+					dLoading.dispose();
+				}
+			}
+		}).start();
+
+		dLoading = new LoadingDialog("Mažu obrázek z databáze");
+		GUIManager.moveToCenter(dLoading, frame);
+		dLoading.setVisible(true);
+	}
+
+	/**
+	 * Vyvolani dialogu pro editaci popisku fotky a jeho ulozeni
+	 */
+	private void editPhoto() {
+
+		new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+
+				try {
+					frame.getDb().setPhotoDescription(originImage.getId(),
+							originImage.getTable(), getDesc());
+				} catch (SQLException e) {
+					Log.error("Chyba pri zmene popisku fotky v DB");
+				}
+
+				// obnoveni listu
+				Animal animal = frame.getAnimalsPanel().getSelectedAnimal();
+				frame.getAnimalsPanel().getListController()
+						.setSelectedAnimal(animal);
+
+				if (dLoading != null && dLoading.isVisible()) {
+					dLoading.dispose();
+				}
+			}
+		}).start();
+
+		dLoading = new LoadingDialog("Upravuju popisek fotky v databázi");
+		GUIManager.moveToCenter(dLoading, frame);
+		dLoading.setVisible(true);
+	}
+
 	@Override
 	public void mouseClicked(MouseEvent e) {
+		// levy double klik
 		if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
-			ImagePreviewDialog preview = new ImagePreviewDialog(originalPic,
-					(int)pic.getOriginalWidth(), (int)pic.getOriginalHeight());
+			ImagePreviewDialog preview = new ImagePreviewDialog(image,
+					(int)thumbnail.getOriginalWidth(), (int)thumbnail.getOriginalHeight());
 			GUIManager.moveToCenter(preview, frame);
 			preview.setVisible(true);
+		}
+
+		// pravy klik
+		if (e.getButton() == MouseEvent.BUTTON3) {
+			JPopupMenu mContext = new JPopupMenu();
+
+			JMenuItem miEdit = new JMenuItem("Upravit");
+			miEdit.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+
+					String retval = JOptionPane.showInputDialog(frame,
+							"Úprava titulku fotky",
+							originImage.getDescription());
+
+					setDesc(retval);
+
+					if (retval != originImage.getDescription()) {
+						editPhoto();
+					}
+				}
+			});
+			mContext.add(miEdit);
+
+			JMenuItem miDelete = new JMenuItem("Smazat");
+			miDelete.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					int retval = JOptionPane.showConfirmDialog(frame,
+							"Opravdu chcete smazat fotku?", "Mazání fotky",
+							JOptionPane.YES_NO_OPTION,
+							JOptionPane.QUESTION_MESSAGE);
+
+					if(retval == JOptionPane.YES_OPTION){
+						deletePhoto();
+					}
+				}
+			});
+			mContext.add(miDelete);
+
+			mContext.show(this, e.getPoint().x, e.getPoint().y);
 		}
 
 	}
@@ -90,6 +216,14 @@ public class ImageRecord extends JPanel implements MouseListener{
 
 	@Override
 	public void mouseReleased(MouseEvent arg0) {}
+
+	public String getDesc() {
+		return desc;
+	}
+
+	public void setDesc(String desc) {
+		this.desc = desc;
+	}
 }
 
 /**
