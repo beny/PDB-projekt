@@ -41,7 +41,7 @@ public class DataBase {
 	 * private string to store url of database connection
 	 */
 	private final static String connectionString = "@berta.fit.vutbr.cz:1521:stud";
-	private final static  String RESOLUTION = "250 250";
+	private final static  String RESOLUTION = "400 400";
 	private final static String EXAMPLE_FILE = "src" + File.separator + "cz"
 			+ File.separator + "vutbr" + File.separator + "fit"
 			+ File.separator + "pdb03" + File.separator + "example"
@@ -327,6 +327,8 @@ public class DataBase {
 				"Stopa žirafy");
 		uploadImage(2, FEET_PHOTO, PICTURE_FOLDER + "2-1f.jpg", 0,
 				"Stopa zebry");
+                uploadImage(2, FEET_PHOTO, PICTURE_FOLDER + "2-2f.jpg", 0,
+				"Stopa zebry v písku");
 		uploadImage(3, FEET_PHOTO, PICTURE_FOLDER + "3-1f.jpg", 0, "Stopa lva");
 		uploadImage(3, FEET_PHOTO, PICTURE_FOLDER + "3-2f.png", 0, "Stopa lva");
 		uploadImage(3, FEET_PHOTO, PICTURE_FOLDER + "3-3f.jpg", 0, "Stopa lva");
@@ -335,9 +337,9 @@ public class DataBase {
 		uploadImage(4, FEET_PHOTO, PICTURE_FOLDER + "4-2f.jpg", 0,
 				"Stopa hrocha");
 		uploadImage(5, FEET_PHOTO, PICTURE_FOLDER + "5-1f.jpg", 0,
-				"Stopa tigra");
+				"Stopa tygra");
 		uploadImage(5, FEET_PHOTO, PICTURE_FOLDER + "5-2f.jpg", 0,
-				"Stopa tigra");
+				"Stopa tygra");
 		uploadImage(8, FEET_PHOTO, PICTURE_FOLDER + "8-1f.jpg", 0,
 				"Stopa šimpanze");
 
@@ -463,7 +465,7 @@ public class DataBase {
 				+ "WHERE ROWNUM <= "
 				+ Integer.toString(MAX_SEARCH_RESULTS)
                                 + " AND ordsys.IMGSimilar(fp.photo_sig, photodb.photo_sig, ";
-                if (tablename.equals(ANIMAL_PHOTO)) SQLquery+= "'color=0.3, texture=0.3, shape=0.4',40";
+                if (tablename.equals(ANIMAL_PHOTO)) SQLquery+= "'color=0.275, texture=0.7, shape=0.025',20";
                 else if (tablename.equals(FEET_PHOTO)) SQLquery+= "'color=0.3, texture=0.3, shape=0.3, location=0.1',30";
                 else if (tablename.equals(EXCREMENT_PHOTO)) SQLquery+= "'color=0.3, texture=0.3, shape=0.3, location=0.1',30";
                 else return;

@@ -280,7 +280,7 @@ public class MenuController implements ActionListener{
 
 		// informacni dialog
 		if(event.getSource() == miApplicationInfo){
-			JOptionPane.showMessageDialog(frame, "Projekt do předmětu PDB 2010/2011\nAutoři aplikace: xizakt00, xsrnec01 a xbenes00", "O aplikaci", JOptionPane.INFORMATION_MESSAGE);
+			JOptionPane.showMessageDialog(frame, "Projekt do předmětu PDB 2010/2011\nAutoři aplikace: xizakt00, xsrnec01 a xbenes00\n\nProjekt umožňuje vkládat prostorová data (výskyt zvířete), která se temporálně\nvztahují k nastavenému času. Dále projekt umožňuje vkládat ke zvířecímu\ndruhu fotky zvířete, stop a trusu, mezi kterými lze vyhledávat mj. podle\npodobnosti jiného obrázku.", "O aplikaci", JOptionPane.INFORMATION_MESSAGE);
 		}
 
 		// pripojen/odpojeni k databazi
