@@ -6,7 +6,6 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -22,6 +21,7 @@ import javax.swing.JTextField;
 import cz.vutbr.fit.pdb03.AnimalsDatabase;
 import cz.vutbr.fit.pdb03.Log;
 import cz.vutbr.fit.pdb03.T2SQL;
+import cz.vutbr.fit.pdb03.gui.JCal;
 import cz.vutbr.fit.pdb03.gui.JEntity;
 
 /**
@@ -34,15 +34,15 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 	private final static long serialVersionUID = 2726995694418479544L;
 
 	private final static int MAX_COORDS = 12;
-	private final static int MAX_DATE = 10;
 
 	private AnimalsDatabase frame;
 
 	private JPanel pGPS, pTime;
 	private JButton bCancel, bSave;
 	private JLabel lLat, lLon, lFrom, lTo;
-	private JTextField tLat, tLon, tDate, tFrom, tTo;
+	private JTextField tLat, tLon;
 	private JRadioButton rbNow, rbDate, rbInterval, rbAll;
+	private JCal calDate, calFrom, calTo;
 
 	DateFormat format = new SimpleDateFormat("dd-MM-yyyy");
 
@@ -108,18 +108,18 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 			rbDate.setSelected(true);
 
 			if(T2SQL.getValidationDateFrom() != null){
-				tDate.setText(format.format(T2SQL.getValidationDateFrom()));
+				calDate.setDate(T2SQL.getValidationDateFrom());
 			}
 		}
 		else if(T2SQL.getMode().equals(T2SQL.INTERVAL)){
 			rbInterval.setSelected(true);
 
 			if(T2SQL.getValidationDateFrom() != null){
-				tFrom.setText(format.format(T2SQL.getValidationDateFrom()));
+				calFrom.setDate(T2SQL.getValidationDateFrom());
 			}
 
 			if(T2SQL.getValidationDateTo() != null){
-				tTo.setText(format.format(T2SQL.getValidationDateTo()));
+				calTo.setDate(T2SQL.getValidationDateTo());
 			}
 		}
 	}
@@ -141,13 +141,11 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 		lFrom = new JLabel("Od:");
 		lTo = new JLabel("Do:");
 
-		tDate = new JTextField(MAX_DATE);
-		tFrom = new JTextField(MAX_DATE);
-		tTo = new JTextField(MAX_DATE);
+		calDate = new JCal();
+		calFrom = new JCal();
+		calTo = new JCal();
 
 		// nastaveni dat
-
-
 		// seskupeni
 		ButtonGroup bg = new ButtonGroup();
 		bg.add(rbNow);
@@ -164,7 +162,7 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 		pTime.add(rbDate, gbc);
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
 		gbc.gridx = 2;
-		pTime.add(tDate, gbc);
+		pTime.add(calDate, gbc);
 
 		gbc.gridwidth = 1;
 		gbc.gridy++;
@@ -173,11 +171,11 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 		gbc.gridx = 1;
 		pTime.add(lFrom, gbc);
 		gbc.gridx = 2;
-		pTime.add(tFrom, gbc);
+		pTime.add(calFrom, gbc);
 		gbc.gridx = 3;
 		pTime.add(lTo, gbc);
 		gbc.gridx = 4;
-		pTime.add(tTo, gbc);
+		pTime.add(calTo, gbc);
 
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
 		gbc.gridy++;
@@ -237,18 +235,13 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 			T2SQL.setCurrentTime();
 		} else if (rbInterval.isSelected()) {
 			try {
-				Date from = format.parse(tFrom.getText());
-				Date to = format.parse(tTo.getText());
+				Date from = calFrom.getDate();
+				Date to = calTo.getDate();
 
 				if (from.compareTo(to) > 0) {
 					throw new Exception();
 				}
 				T2SQL.setValidationDates(from, to);
-			} catch (ParseException ex) {
-				JOptionPane.showMessageDialog(this,
-						"Datum je ve špatném formátu (DD-MM-YYYY)",
-						"Chybné datum", JOptionPane.ERROR_MESSAGE);
-				error = true;
 			} catch (Exception ex) {
 				JOptionPane.showMessageDialog(this,
 						"Datum od není před datem do", "Chybné datum",
@@ -258,16 +251,9 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 		} else if (rbAll.isSelected()) {
 			T2SQL.setNoTemporalRestrictions();
 		} else if (rbDate.isSelected()) {
-			try {
-				Date date = format.parse(tDate.getText());
-				T2SQL.setValidationDate(date);
-				dispose();
-			} catch (ParseException ex) {
-				JOptionPane.showMessageDialog(this,
-						"Datum je ve špatném formátu (DD-MM-YYYY)",
-						"Chybné datum", JOptionPane.ERROR_MESSAGE);
-				error = true;
-			}
+			Date date = calDate.getDate();
+			T2SQL.setValidationDate(date);
+			dispose();
 		}
 
 		if(!error){
