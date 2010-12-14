@@ -38,10 +38,10 @@ public class SearchByImageDialog extends DefaultDialog implements ActionListener
 		gbc.insets = new Insets(5, 5, 5, 5);
 		gbc.gridx = gbc.gridy = 0;
 
-		bChoose = new JButton("Vyber soubr");
+		bChoose = new JButton("Vyber soubor");
 		bChoose.addActionListener(this);
 
-		String[] elements = {"Zvíře", "Stopa", "Trus"};
+		String[] elements = {"Fotka zvířete", "Fotka stopy", "Fotka trusu"};
 		cType = new JComboBox(elements);
 		cType.addActionListener(this);
 

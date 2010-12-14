@@ -38,6 +38,7 @@ class ImageFilter extends FileFilter {
     public final static String tiff = "tiff";
     public final static String tif = "tif";
     public final static String png = "png";
+    public final static String bmp = "bmp";
 
     @Override
 	public boolean accept(File f) {
@@ -49,14 +50,15 @@ class ImageFilter extends FileFilter {
                 extension.equals(gif) ||
                 extension.equals(jpeg) ||
                 extension.equals(jpg) ||
-                extension.equals(png)) {
+                extension.equals(png) ||
+                extension.equals(bmp)) {
                     return true;
             } else {
                 return false;
             }
         }
 
-        return false;
+        return true;
     }
 
     @Override

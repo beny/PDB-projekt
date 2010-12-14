@@ -455,18 +455,23 @@ public class DataBase {
 			throws SQLException, IOException {
 		Statement stat = con.createStatement();
 		int nextval = uploadImage(0, SEARCH_PHOTO, filename, 0, "");
-		String SQLquery = "SELECT DISTINCT animal.animal_id,animal.genus,animal.species,animal.genus_lat,animal.species_lat FROM "
+		String SQLquery = "SELECT DISTINCT animal.animal_id,animal.genus,animal.species,animal.genus_lat,animal.species_lat,MIN(ordsys.IMGScore(123)) AS shoda FROM "
 				+ SEARCH_PHOTO
 				+ " fp, "
 				+ tablename
 				+ " photodb, animals animal "
 				+ "WHERE ROWNUM <= "
 				+ Integer.toString(MAX_SEARCH_RESULTS)
-				+ " AND ordsys.IMGSimilar(fp.photo_sig, photodb.photo_sig, 'color=0.3, texture=0.3, shape=0.3, location=0.1',100 ,123)=1 "
-				+ "AND photodb.photo_id="
-				+ Integer.toString(nextval)
-				+ " AND animal.animal_id=photodb.animal_id "
-				+ "ORDER BY ordsys.IMGScore(123) ASC;";
+                                + " AND ordsys.IMGSimilar(fp.photo_sig, photodb.photo_sig, ";
+                if (tablename.equals(ANIMAL_PHOTO)) SQLquery+= "'color=0.3, texture=0.3, shape=0.4',40";
+                else if (tablename.equals(FEET_PHOTO)) SQLquery+= "'color=0.3, texture=0.3, shape=0.3, location=0.1',30";
+                else if (tablename.equals(EXCREMENT_PHOTO)) SQLquery+= "'color=0.3, texture=0.3, shape=0.3, location=0.1',30";
+                else return;
+		SQLquery=SQLquery + " ,123)=1 AND fp.photo_id="
+                        + Integer.toString(nextval)
+                        + " AND animal.animal_id=photodb.animal_id "
+                        + "GROUP BY animal.animal_id,animal.genus,animal.species,animal.genus_lat,animal.species_lat "
+                        + "ORDER BY shoda ASC";
 		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
 		searchResult.clear();
 		while (rset.next()) {
@@ -476,6 +481,7 @@ public class DataBase {
 			temp.setSpeciesLat(rset.getString("species_lat"));
 			temp.setGenus(rset.getString("genus"));
 			temp.setGenusLat(rset.getString("genus_lat"));
+                        Log.debug(temp.getGenus()+" - "+rset.getString("shoda"));
 			searchResult.add(temp);
 		}
 		rset.close();
@@ -1529,6 +1535,10 @@ public class DataBase {
                         con.commit();
 		} catch (SQLException e) {
 		}
+                try {
+			stat.execute("DROP SEQUENCE "+SEARCH_PHOTO+"_seq");
+		} catch (SQLException e) {
+		}
 		try {
 			stat.execute("DROP SEQUENCE animals_seq");
 		} catch (SQLException e) {
@@ -1614,6 +1624,8 @@ public class DataBase {
 		stat.execute("CREATE SEQUENCE " + EXCREMENT_PHOTO
 				+ "_seq START WITH 1 INCREMENT BY 1");
 		stat.execute("CREATE SEQUENCE " + ANIMAL_PHOTO
+				+ "_seq START WITH 1 INCREMENT BY 1");
+                stat.execute("CREATE SEQUENCE " + SEARCH_PHOTO
 				+ "_seq START WITH 1 INCREMENT BY 1");
 		stat.execute("CREATE SEQUENCE animals_seq START WITH 1 INCREMENT BY 1");
 		stat.close();
