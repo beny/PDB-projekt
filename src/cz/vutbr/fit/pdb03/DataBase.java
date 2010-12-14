@@ -293,7 +293,7 @@ public class DataBase {
 		uploadImage(8, ANIMAL_PHOTO, PICTURE_FOLDER + "8-1.jpg", 0,
 				"Sedící šimpanz");
 		uploadImage(8, ANIMAL_PHOTO, PICTURE_FOLDER + "8-2.jpg", 0,
-				"Sedící šimpanze");
+				"Sedící šimpanz");
 		uploadImage(8, ANIMAL_PHOTO, PICTURE_FOLDER + "8-3.jpg", 0,
 				"Sedící šimpanz");
 		uploadImage(8, ANIMAL_PHOTO, PICTURE_FOLDER + "8-4.jpg", 0,
@@ -457,23 +457,21 @@ public class DataBase {
 			throws SQLException, IOException {
 		Statement stat = con.createStatement();
 		int nextval = uploadImage(0, SEARCH_PHOTO, filename, 0, "");
-		String SQLquery = "SELECT DISTINCT animal.animal_id,animal.genus,animal.species,animal.genus_lat,animal.species_lat,MIN(ordsys.IMGScore(123)) AS shoda FROM "
+		String SQLquery = "SELECT * FROM (SELECT DISTINCT animal.animal_id,animal.genus,animal.species,animal.genus_lat,animal.species_lat,MIN(ordsys.IMGScore(123)) AS shoda FROM "
 				+ SEARCH_PHOTO
 				+ " fp, "
 				+ tablename
 				+ " photodb, animals animal "
-				+ "WHERE ROWNUM <= "
-				+ Integer.toString(MAX_SEARCH_RESULTS)
-                                + " AND ordsys.IMGSimilar(fp.photo_sig, photodb.photo_sig, ";
+				+ "WHERE ordsys.IMGSimilar(fp.photo_sig, photodb.photo_sig, ";
                 if (tablename.equals(ANIMAL_PHOTO)) SQLquery+= "'color=0.275, texture=0.7, shape=0.025',20";
-                else if (tablename.equals(FEET_PHOTO)) SQLquery+= "'color=0.3, texture=0.3, shape=0.3, location=0.1',30";
+                else if (tablename.equals(FEET_PHOTO)) SQLquery+= "'color=0.2, texture=0.0, shape=0.8, location=0.0',10";
                 else if (tablename.equals(EXCREMENT_PHOTO)) SQLquery+= "'color=0.3, texture=0.3, shape=0.3, location=0.1',30";
                 else return;
 		SQLquery=SQLquery + " ,123)=1 AND fp.photo_id="
                         + Integer.toString(nextval)
                         + " AND animal.animal_id=photodb.animal_id "
                         + "GROUP BY animal.animal_id,animal.genus,animal.species,animal.genus_lat,animal.species_lat "
-                        + "ORDER BY shoda ASC";
+                        + "ORDER BY shoda ASC) WHERE ROWNUM <= " + Integer.toString(MAX_SEARCH_RESULTS);
 		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
 		searchResult.clear();
 		while (rset.next()) {
@@ -599,8 +597,7 @@ public class DataBase {
 		}
 		OraclePreparedStatement opstmt = null;
 		String SQLquery = "SELECT animal_id,genus,species,genus_lat,species_lat FROM animals WHERE ROWNUM <= "
-				+ Integer.toString(MAX_SEARCH_RESULTS) + " AND ";
-		SQLquery = SQLquery + "(LOWER(description) LIKE ?)";
+				+ Integer.toString(MAX_SEARCH_RESULTS) + " AND (LOWER(description) LIKE ?)";
 		opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
 		opstmt.setString(1, "%" + description.toLowerCase() + "%");
 		OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
@@ -637,13 +634,16 @@ public class DataBase {
 		}
 		searchResult.clear();
 		OraclePreparedStatement opstmt = null;
-		String SQLquery = "SELECT DISTINCT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat FROM animals a, "
-				+ ANIMAL_PHOTO
-				+ " p WHERE ROWNUM <= "
-				+ Integer.toString(MAX_SEARCH_RESULTS)
-				+ " AND a.animal_id=p.animal_id AND LOWER(p.description) LIKE ?";
+                String SQLquery = "SELECT * FROM (SELECT DISTINCT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat FROM animals a, "
+				+ ANIMAL_PHOTO + " p1, "+ FEET_PHOTO + " p2, "+ EXCREMENT_PHOTO
+                                + " p3 WHERE ((a.animal_id=p1.animal_id AND LOWER(p1.description) LIKE ?) "
+                                + "OR (a.animal_id=p2.animal_id AND LOWER(p2.description) LIKE ?) "
+                                + "OR (a.animal_id=p3.animal_id AND LOWER(p3.description) LIKE ?))) WHERE ROWNUM <="
+                                + Integer.toString(MAX_SEARCH_RESULTS);
 		opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
 		opstmt.setString(1, "%" + description.toLowerCase() + "%");
+                opstmt.setString(2, "%" + description.toLowerCase() + "%");
+                opstmt.setString(3, "%" + description.toLowerCase() + "%");
 		OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
 		while (rset.next()) {
 			Animal temp = new Animal();
@@ -653,46 +653,6 @@ public class DataBase {
 			temp.setGenus(rset.getString("genus"));
 			temp.setGenusLat(rset.getString("genus_lat"));
 			searchResult.add(temp);
-		}
-		rset.close();
-		opstmt.close();
-		SQLquery = "SELECT DISTINCT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat FROM animals a, "
-				+ EXCREMENT_PHOTO
-				+ " p WHERE ROWNUM <= "
-				+ Integer.toString(MAX_SEARCH_RESULTS)
-				+ " AND a.animal_id=p.animal_id AND LOWER(p.description) LIKE ?";
-		opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
-		opstmt.setString(1, "%" + description.toLowerCase() + "%");
-		rset = (OracleResultSet) opstmt.executeQuery();
-		while (rset.next()) {
-			Animal temp = new Animal();
-			temp.setId(rset.getInt("animal_id"));
-			temp.setSpecies(rset.getString("species"));
-			temp.setSpeciesLat(rset.getString("species_lat"));
-			temp.setGenus(rset.getString("genus"));
-			temp.setGenusLat(rset.getString("genus_lat"));
-			if (searchResult.contains(temp) == false)
-				searchResult.add(temp);
-		}
-		rset.close();
-		opstmt.close();
-		SQLquery = "SELECT DISTINCT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat FROM animals a, "
-				+ FEET_PHOTO
-				+ " p WHERE ROWNUM <= "
-				+ Integer.toString(MAX_SEARCH_RESULTS)
-				+ " AND a.animal_id=p.animal_id AND LOWER(p.description) LIKE ?";
-		opstmt = (OraclePreparedStatement) con.prepareStatement(SQLquery);
-		opstmt.setString(1, "%" + description.toLowerCase() + "%");
-		rset = (OracleResultSet) opstmt.executeQuery();
-		while (rset.next()) {
-			Animal temp = new Animal();
-			temp.setId(rset.getInt("animal_id"));
-			temp.setSpecies(rset.getString("species"));
-			temp.setSpeciesLat(rset.getString("species_lat"));
-			temp.setGenus(rset.getString("genus"));
-			temp.setGenusLat(rset.getString("genus_lat"));
-			if (searchResult.contains(temp) == false)
-				searchResult.add(temp);
 		}
 		rset.close();
 		opstmt.close();
@@ -787,13 +747,12 @@ public class DataBase {
 		String SQLquery = T2SQL.T2SQLprefix()
 				+ "SELECT a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat, SUM(SDO_GEOM.SDO_AREA(am.geometry,0.1,'unit=SQ_KM')) AS area "
 				+ "FROM animals a, animal_movement am "
-				+ "WHERE ROWNUM<="
-				+ MAX_SEARCH_RESULTS
-				+ " AND a.animal_id=am.animal_id "
+				+ "WHERE a.animal_id=am.animal_id "
 				+ "GROUP BY a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat "
 				+ "ORDER BY area DESC";
-		opstmt = (OraclePreparedStatement) con.prepareStatement(T2SQL
-				.temporal(SQLquery));
+		opstmt = (OraclePreparedStatement) con.prepareStatement("SELECT * FROM ("
+                        +T2SQL.temporal(SQLquery)+ ") WHERE ROWNUM<="
+                        + Integer.toString(MAX_SEARCH_RESULTS));
 		OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
 		searchResult.clear();
 		while (rset.next()) {
@@ -858,11 +817,11 @@ public class DataBase {
                                 + nf.format(location.getX())
 				+ ","
 				+ nf.format(location.getY())
-                                + ",NULL),NULL,NULL),1,'unit=KM')) AS distance FROM animals a, animal_movement am WHERE ROWNUM <= "
-				+ Integer.toString(MAX_SEARCH_RESULTS)
-				+ " AND a.animal_id=am.animal_id GROUP BY a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat ORDER BY distance";
-		opstmt = (OraclePreparedStatement) con.prepareStatement(T2SQL
-				.temporal(SQLquery));
+                                + ",NULL),NULL,NULL),1,'unit=KM')) AS distance FROM animals a, animal_movement am "
+                                + "WHERE a.animal_id=am.animal_id GROUP BY a.animal_id,a.genus,a.species,a.genus_lat,a.species_lat "
+                                + "ORDER BY distance";
+		opstmt = (OraclePreparedStatement) con.prepareStatement("SELECT * FROM ("
+                        +T2SQL.temporal(SQLquery)+ ") WHERE ROWNUM<=" + Integer.toString(MAX_SEARCH_RESULTS));
 		OracleResultSet rset = (OracleResultSet) opstmt.executeQuery();
 		searchResult.clear();
 		while (rset.next()) {

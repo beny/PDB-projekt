@@ -298,7 +298,9 @@ public class MenuController implements ActionListener{
 
 		// vytvoreni tabulek v DB
 		if (event.getSource() == miApplicationDatabaseCreate) {
-
+                        dLoading = new LoadingDialog(
+					"Probíhá vytvoření databáze, prosím vyčkejte");
+			GUIManager.moveToCenter(dLoading, frame);
 			new Thread(new Runnable() {
 
 				@Override
@@ -309,16 +311,14 @@ public class MenuController implements ActionListener{
 					}
 				}
 			}).start();
-
-			dLoading = new LoadingDialog(
-					"Probíhá vytvoření databáze, prosím vyčkejte");
-			GUIManager.moveToCenter(dLoading, frame);
 			dLoading.setVisible(true);
 		}
 
 		// naplneni DB vzorovymi daty
 		if (event.getSource() == miApplicationDatabaseSample) {
-
+                        dLoading = new LoadingDialog(
+					"Probíhá vytvoření a naplnění databáze, prosím vyčkejte");
+			GUIManager.moveToCenter(dLoading, frame);
 			new Thread(new Runnable() {
 
 				@Override
@@ -330,10 +330,6 @@ public class MenuController implements ActionListener{
 
 				}
 			}).start();
-
-			dLoading = new LoadingDialog(
-					"Probíhá vytvoření a naplnění databáze, prosím vyčkejte");
-			GUIManager.moveToCenter(dLoading, frame);
 			dLoading.setVisible(true);
 		}
 

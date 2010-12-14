@@ -96,7 +96,9 @@ public class ImageUploadDialog extends DefaultDialog implements ActionListener {
 	 * Ulozeni obrazku do databaze
 	 */
 	private void saveImages() {
-
+                dLoading  = new LoadingDialog(
+				"Probíhá nahrávání obrázků do databáze, prosím vyčkejte");
+		GUIManager.moveToCenter(dLoading, frame);
 		new Thread(new Runnable() {
 
 			@Override
@@ -128,10 +130,6 @@ public class ImageUploadDialog extends DefaultDialog implements ActionListener {
 				}
 			}
 		}).start();
-
-		dLoading  = new LoadingDialog(
-				"Probíhá nahrávání obrázků do databáze, prosím vyčkejte");
-		GUIManager.moveToCenter(dLoading, frame);
 		dLoading.setVisible(true);
 
 	}

@@ -94,7 +94,8 @@ public class ConnectDialog extends DefaultDialog implements ActionListener{
 
 		// zkouska loginu
 		if (event.getSource() == bLogin) {
-
+                        dLoading = new LoadingDialog("Probíhá připojování k DB, prosím vyčkejte");
+			GUIManager.moveToCenter(dLoading, this);
 			new Thread(new Runnable() {
 
 				@Override
@@ -123,9 +124,6 @@ public class ConnectDialog extends DefaultDialog implements ActionListener{
 					dispose();
 				}
 			}).start();
-
-			dLoading = new LoadingDialog("Probíhá připojování k DB, prosím vyčkejte");
-			GUIManager.moveToCenter(dLoading, this);
 			dLoading.setVisible(true);
 		}
 	}

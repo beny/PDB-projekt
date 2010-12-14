@@ -55,7 +55,8 @@ public class ListController extends MouseAdapter implements KeyListener {
 	public void setSelectedAnimal(Animal selectedAnimal) {
 		this.selectedAnimal = selectedAnimal;
 		frame.getMenuController().setAnimalChosen(true);	// nastav ze je zvire vybrano
-
+                dLoading = new LoadingDialog("Probíhá nahrávání dat z databáze, prosím vyčkejte");
+		GUIManager.moveToCenter(dLoading, frame);
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -84,9 +85,6 @@ public class ListController extends MouseAdapter implements KeyListener {
 				frame.getPhotosPanel().repaint();
 			}
 		}).start();
-
-		dLoading = new LoadingDialog("Probíhá nahrávání dat z databáze, prosím vyčkejte");
-		GUIManager.moveToCenter(dLoading, frame);
 		dLoading.setVisible(true);
 
 		Log.debug("Aktivni zvire: " + getSelectedAnimal());

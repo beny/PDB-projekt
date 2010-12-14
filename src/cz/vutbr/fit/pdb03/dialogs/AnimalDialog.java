@@ -185,7 +185,8 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 
 		// kliknuto na save
 		if(event.getSource() == bSave){
-
+                        dLoading = new LoadingDialog("Probíhá připojování k DB, prosím vyčkejte");
+			GUIManager.moveToCenter(dLoading, this);
 			new Thread(new Runnable() {
 
 				@Override
@@ -207,9 +208,6 @@ public class AnimalDialog extends DefaultDialog implements ActionListener{
 					}
 				}
 			}).start();
-
-			dLoading = new LoadingDialog("Probíhá připojování k DB, prosím vyčkejte");
-			GUIManager.moveToCenter(dLoading, this);
 			dLoading.setVisible(true);
 		}
 

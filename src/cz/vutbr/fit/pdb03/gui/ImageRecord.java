@@ -88,8 +88,8 @@ public class ImageRecord extends JPanel implements MouseListener{
 	 * Smazani fotky z DB
 	 */
 	private void deletePhoto(){
-
-
+                dLoading = new LoadingDialog("Mažu obrázek z databáze");
+		GUIManager.moveToCenter(dLoading, frame);
 		new Thread(new Runnable() {
 
 			@Override
@@ -111,9 +111,6 @@ public class ImageRecord extends JPanel implements MouseListener{
 				}
 			}
 		}).start();
-
-		dLoading = new LoadingDialog("Mažu obrázek z databáze");
-		GUIManager.moveToCenter(dLoading, frame);
 		dLoading.setVisible(true);
 	}
 
@@ -121,7 +118,8 @@ public class ImageRecord extends JPanel implements MouseListener{
 	 * Vyvolani dialogu pro editaci popisku fotky a jeho ulozeni
 	 */
 	private void editPhoto() {
-
+                dLoading = new LoadingDialog("Upravuju popisek fotky v databázi");
+		GUIManager.moveToCenter(dLoading, frame);
 		new Thread(new Runnable() {
 
 			@Override
@@ -144,9 +142,6 @@ public class ImageRecord extends JPanel implements MouseListener{
 				}
 			}
 		}).start();
-
-		dLoading = new LoadingDialog("Upravuju popisek fotky v databázi");
-		GUIManager.moveToCenter(dLoading, frame);
 		dLoading.setVisible(true);
 	}
 
@@ -173,11 +168,10 @@ public class ImageRecord extends JPanel implements MouseListener{
 					String retval = JOptionPane.showInputDialog(frame,
 							"Úprava titulku fotky",
 							originImage.getDescription());
-
-					setDesc(retval);
-
-					if (retval != originImage.getDescription()) {
-						editPhoto();
+                                        if (retval == null || retval.equals("")) return;
+					if (!retval.equals(originImage.getDescription())) {
+                                            setDesc(retval);
+                                            editPhoto();
 					}
 				}
 			});

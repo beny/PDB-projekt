@@ -146,7 +146,8 @@ public class AnimalsDatabase extends JFrame  {
 	 * Obnoveni seznamu zvirat
 	 */
 	public void reloadAnimalsList(final int searchType){
-
+                dLoading = new LoadingDialog("Probíhá hledání v DB, prosím vyčkejte");
+		GUIManager.moveToCenter(dLoading, this);
 		new Thread(new Runnable() {
 
 			@Override
@@ -219,9 +220,6 @@ public class AnimalsDatabase extends JFrame  {
 				}
 			}
 		}).start();
-
-		dLoading = new LoadingDialog("Probíhá hledání v DB, prosím vyčkejte");
-		GUIManager.moveToCenter(dLoading, this);
 		dLoading.setVisible(true);
 
 	}
