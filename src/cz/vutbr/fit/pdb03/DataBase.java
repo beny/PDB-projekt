@@ -1080,6 +1080,50 @@ public class DataBase {
 		stat.close();
 	}
 
+        /**
+         * Funkce pro otočení obrázku
+         * @param photo_id
+         *          ID fotky
+         * @param choosen_table
+         *          zvolená tabulka s fotkami
+         * @param angle
+         *          úhel o kerý obrázek otočit - kladné hodnoty po směru hodinových ručiček, záporné proti směru hodinových ručiček
+         * @throws SQLException
+         * @see #ANIMAL_PHOTO
+         * @see #EXCREMENT_PHOTO
+         * @see #FEET_PHOTO
+         */
+        public void rotatePicture(int photo_id, String choosen_table, double angle) throws SQLException{
+            	Statement stat = con.createStatement();
+                String SQLquery = "SELECT photo, photo_sig FROM " + choosen_table
+				+ " WHERE photo_id = " + Integer.toString(photo_id)
+				+ " FOR UPDATE";
+		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
+		rset.next();
+		OrdImage imageProxy = (OrdImage) rset.getORAData("photo",
+				OrdImage.getORADataFactory());
+		OrdImageSignature signatureProxy = (OrdImageSignature) rset
+				.getCustomDatum("photo_sig", OrdImageSignature.getFactory());
+		rset.close();
+		imageProxy.process("rotate=" + Double.toString(angle));
+		imageProxy.setProperties();
+		signatureProxy.generateSignature(imageProxy);
+		SQLquery = "UPDATE " + choosen_table
+				+ " SET photo=?, photo_sig=? WHERE photo_id=?";
+		OraclePreparedStatement opstmt = (OraclePreparedStatement) con
+				.prepareStatement(SQLquery);
+		opstmt.setCustomDatum(1, imageProxy);
+		opstmt.setCustomDatum(2, signatureProxy);
+		opstmt.setInt(3, photo_id);
+		opstmt.execute();
+		opstmt.close();
+
+		con.commit();
+		con.setAutoCommit(true);
+		stat.close();
+            return;
+        }
+
 	/**
 	 * Funkce pro úpravu zvířete
 	 *

@@ -4,7 +4,7 @@ import java.util.Date;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-// TODO overit delete a ze to vsechno dela co ma
+
 /**
  * Třída pro práci s jazykem T2SQL
  * Definuje nový jazyk T2SQL (TimeToSQL). Něco jako jednoduchý TSQL2 nebo TimeDB
