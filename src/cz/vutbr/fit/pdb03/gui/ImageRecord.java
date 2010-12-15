@@ -16,6 +16,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 
 import oracle.ord.im.OrdImage;
@@ -33,6 +34,8 @@ import cz.vutbr.fit.pdb03.dialogs.LoadingDialog;
 public class ImageRecord extends JPanel implements MouseListener{
 
 	private final static long serialVersionUID = 6570452902350045589L;
+	private static final int ROTATE_LEFT = 0;
+	private static final int ROTATE_RIGHT = 1;
 
 	private PictureThumbnail thumbnail;
 	private JPicture originImage;
@@ -118,7 +121,7 @@ public class ImageRecord extends JPanel implements MouseListener{
 	 * Vyvolani dialogu pro editaci popisku fotky a jeho ulozeni
 	 */
 	private void editPhoto() {
-                dLoading = new LoadingDialog("Upravuju popisek fotky v databázi");
+		dLoading = new LoadingDialog("Upravuju popisek fotky v databázi");
 		GUIManager.moveToCenter(dLoading, frame);
 		new Thread(new Runnable() {
 
@@ -130,6 +133,41 @@ public class ImageRecord extends JPanel implements MouseListener{
 							originImage.getTable(), getDesc());
 				} catch (SQLException e) {
 					Log.error("Chyba pri zmene popisku fotky v DB");
+				}
+
+				// obnoveni listu
+				Animal animal = frame.getAnimalsPanel().getSelectedAnimal();
+				frame.getAnimalsPanel().getListController()
+						.setSelectedAnimal(animal);
+
+				if (dLoading != null && dLoading.isVisible()) {
+					dLoading.dispose();
+				}
+			}
+		}).start();
+		dLoading.setVisible(true);
+	}
+
+	/**
+	 * Rotace fotek
+	 * @param direction
+	 */
+	private void rotatePhoto(final int direction){
+
+		dLoading = new LoadingDialog("Upravuju popisek fotky v databázi");
+		GUIManager.moveToCenter(dLoading, frame);
+		new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+
+				try {
+					frame.getDb().rotatePicture(originImage.getId(),
+							originImage.getTable(),
+							(direction == ROTATE_LEFT) ? -90 : 90);
+				} catch (SQLException e) {
+					Log.error("Chyba pri zmene rotace fotky v DB: "
+							+ e.getMessage());
 				}
 
 				// obnoveni listu
@@ -193,6 +231,29 @@ public class ImageRecord extends JPanel implements MouseListener{
 				}
 			});
 			mContext.add(miDelete);
+
+			JMenuItem miRotateLeft = new JMenuItem("Otoč doleva");
+			miRotateLeft.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					rotatePhoto(ROTATE_LEFT);
+
+				}
+			});
+			mContext.add(new JSeparator());
+			mContext.add(miRotateLeft);
+
+			JMenuItem miRotateRight = new JMenuItem("Otoč doprava");
+			miRotateRight.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					rotatePhoto(ROTATE_RIGHT);
+
+				}
+			});
+			mContext.add(miRotateRight);
 
 			mContext.show(this, e.getPoint().x, e.getPoint().y);
 		}
