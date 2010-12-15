@@ -29,6 +29,7 @@ import oracle.ord.im.OrdImageSignature;
 import oracle.spatial.geometry.JGeometry;
 import cz.vutbr.fit.pdb03.gui.JEntity;
 import cz.vutbr.fit.pdb03.gui.JPicture;
+import oracle.jdbc.OracleCallableStatement;
 
 /**
  * Knihovna pro práci s databází
@@ -1094,33 +1095,23 @@ public class DataBase {
          * @see #FEET_PHOTO
          */
         public void rotatePicture(int photo_id, String choosen_table, double angle) throws SQLException{
-            	Statement stat = con.createStatement();
-                String SQLquery = "SELECT photo, photo_sig FROM " + choosen_table
-				+ " WHERE photo_id = " + Integer.toString(photo_id)
-				+ " FOR UPDATE";
-		OracleResultSet rset = (OracleResultSet) stat.executeQuery(SQLquery);
-		rset.next();
-		OrdImage imageProxy = (OrdImage) rset.getORAData("photo",
-				OrdImage.getORADataFactory());
-		OrdImageSignature signatureProxy = (OrdImageSignature) rset
-				.getCustomDatum("photo_sig", OrdImageSignature.getFactory());
-		rset.close();
-		imageProxy.process("rotate=" + Double.toString(angle));
-		imageProxy.setProperties();
-		signatureProxy.generateSignature(imageProxy);
-		SQLquery = "UPDATE " + choosen_table
-				+ " SET photo=?, photo_sig=? WHERE photo_id=?";
-		OraclePreparedStatement opstmt = (OraclePreparedStatement) con
-				.prepareStatement(SQLquery);
-		opstmt.setCustomDatum(1, imageProxy);
-		opstmt.setCustomDatum(2, signatureProxy);
-		opstmt.setInt(3, photo_id);
-		opstmt.execute();
-		opstmt.close();
-
-		con.commit();
-		con.setAutoCommit(true);
-		stat.close();
+                Statement stat = con.createStatement();
+                String SQLquery = "DECLARE "
+                        + "image_data ORDSYS.ORDImage; "
+                        + "signature_data ORDSYS.ORDImageSignature; "
+                        + "BEGIN"
+                        + "   SELECT photo_sig, photo INTO signature_data, image_data FROM "+choosen_table
+                        + "     WHERE photo_id = "+Integer.toString(photo_id)+" FOR UPDATE;"
+                        + "   ORDSYS.ORDImage.process(image_data, 'rotate="+Double.toString(angle)+"');"
+                        + "   signature_data.generateSignature(image_data);"
+                        + "   UPDATE "+choosen_table+" SET photo=image_data, photo_sig=signature_data WHERE photo_id = "+Integer.toString(photo_id)+";"
+                        + "   COMMIT; "
+                        + "EXCEPTION"
+                        + "   WHEN OTHERS THEN"
+                        + "   RAISE; "
+                        + "END;";
+		stat.execute(SQLquery);
+                stat.close();
             return;
         }
 
