@@ -78,7 +78,7 @@ public class DataBase {
 	 * @see #deleteIndex(java.lang.String)
          * @see #uploadImage(int, java.lang.String, java.lang.String, int, java.lang.String)
 	 * @see #createIndex(java.lang.String)
-	 * @see #searchAnimal(java.lang.String, java.lang.String)
+	 * @see #searchAnimals(java.lang.String, java.lang.String)
 	 * @see #EXCREMENT_PHOTO
 	 * @see #FEET_PHOTO
 	 * @see #SEARCH_PHOTO
@@ -118,7 +118,7 @@ public class DataBase {
 	 * @see #deleteIndex(java.lang.String)
 	 * @see #uploadImage(int, java.lang.String, java.lang.String, int, java.lang.String)
 	 * @see #createIndex(java.lang.String)
-	 * @see #searchAnimal(java.lang.String, java.lang.String)
+	 * @see #searchAnimals(java.lang.String, java.lang.String)
 	 * @see #EXCREMENT_PHOTO
 	 * @see #FEET_PHOTO
 	 * @see #ANIMAL_PHOTO
@@ -1663,17 +1663,17 @@ public class DataBase {
                         + "        DELETE FROM animal_movement WHERE move_id=old_move_id;"
                         + "      ELSIF new_from <= old_from THEN"
                         + "        DELETE FROM animal_movement WHERE move_id=old_move_id;"
-                        + "      ELSIF new_to < old_to THEN"
+                        + "      ELSIF new_to < old_to OR old_to IS NULL THEN"
                         + "        UPDATE animal_movement SET valid_to=new_from-1 WHERE move_id=old_move_id;"
                         + "      END IF;"
                         + "    ELSIF new_from<new_to THEN"
                         + "      IF new_from<=old_from AND new_to>old_from THEN"
-                        + "        IF new_to>=old_to THEN"
+                        + "        IF (new_to>=old_to AND old_to IS NOT NULL) THEN"
                         + "          DELETE FROM animal_movement WHERE move_id=old_move_id;"
                         + "        ELSE"
                         + "          UPDATE animal_movement SET valid_from=new_to WHERE move_id=old_move_id;"
                         + "        END IF;"
-                        + "      ELSIF new_to>=old_to AND new_from<old_to THEN"
+                        + "      ELSIF ((new_to>=old_to AND old_to IS NOT NULL) OR new_to IS NULL) AND (new_from<old_to OR old_to IS NULL) THEN"
                         + "        IF new_from<=old_from THEN"
                         + "          DELETE FROM animal_movement WHERE move_id=old_move_id;"
                         + "        ELSE"

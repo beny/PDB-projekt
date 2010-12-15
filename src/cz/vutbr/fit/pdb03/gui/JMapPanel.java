@@ -122,18 +122,20 @@ public class JMapPanel extends JMapViewer {
 	 */
 	private void initEditButtons(){
 
-		int buttonSizeX = 70;
+		int buttonSizeX = 80;
 		int buttonSizeY = 20;
 		int smallSpace = 10;
 
 		// edit tlacitko
 		bEdit = new JButton("Upravit");
+                bEdit.setToolTipText("Po kliknutí lze upravovat a mazat geometrické entity s ohledem na vaše nastavení času");
 		bEdit.setBounds(50, smallSpace, buttonSizeX, buttonSizeY);
 		bEdit.setActionCommand(ACTION_EDIT);
 		bEdit.addActionListener(mapController);
 		add(bEdit);
 
 		bCancel = new JButton("Zrušit");
+                bCancel.setToolTipText("Provedené změny nebudou uloženy");
 		bCancel.setBounds(50, smallSpace + 30, buttonSizeX, buttonSizeY);
 		bCancel.setActionCommand(ACTION_CANCEL);
 		bCancel.addActionListener(mapController);
@@ -142,6 +144,7 @@ public class JMapPanel extends JMapViewer {
 		// komponenty pro editaci
 		// tlacitko pro ukladani
 		bSave = new JButton("Uložit");
+                bSave.setToolTipText("Provedené změny budou uloženy s ohledem na vaše časové nastavení");
 		bSave.setBounds(50, smallSpace, buttonSizeX, buttonSizeY);
 		bSave.setActionCommand(ACTION_SAVE);
 		bSave.addActionListener(mapController);
@@ -150,6 +153,7 @@ public class JMapPanel extends JMapViewer {
 		// kombo pro vyber elementu
 		String[] elements = {"Výskyt", "Trasa", "Území"};
 		comboElements = new JComboBox(elements);
+                comboElements.setToolTipText("<html>Zvolte požadovanou geometrickou entitu - výskyt (bod), trasa (čára) a území (polygon).<br>Bod entity vložíte do mapy kliknutím levého tlačítka myši.<br>Pro vložení další entity stejného druhu stiskněte pravé tlačítko myši.<html>");
 		comboElements.setBounds(50 + buttonSizeX + smallSpace, smallSpace, 120, buttonSizeY);
 		comboElements.setActionCommand(ACTION_CHANGE_TYPE);
 		setDrawMode(MODE_POINT);

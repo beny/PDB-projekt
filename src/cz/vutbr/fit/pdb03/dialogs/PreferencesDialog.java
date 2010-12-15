@@ -126,7 +126,7 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 
 	private void initTimeTab() {
 		pTime = new JPanel();
-
+                pTime.setToolTipText("Temporální nastavení systému - omezuje výskyt zvěře na určité časové období.");
 		pTime.setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
 
@@ -134,9 +134,13 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 		gbc.gridx = gbc.gridy = 0;
 
 		rbNow = new JRadioButton("Nyní");
+                rbNow.setToolTipText("<html>Zobrazí právě platný výskyt zvířecího druhu.<br>Upravený výskyt platí od nynějška dále.<br>Smazaný výskyt je smazán od nynějška dále.</html>");
 		rbDate = new JRadioButton("Konkrétní datum");
+                rbDate.setToolTipText("<html>Zobrazí platný výskyt druhu zvěře k zadanému datu.<br>Upravený výskyt platí od zadaného data dále.<br>Smazaný výskyt platí od zadaného data dále.</html>");
 		rbInterval = new JRadioButton("V intervalu");
+                rbInterval.setToolTipText("<html>Zobrazí, kde se druh zvěře vyskytoval někdy v zadaném časovém intervalu.<br>Upravený výskyt má platnost pouze pro tento interval.<br>Smazaný výsket je smazán pouze pro tento interval.</html>");
 		rbAll = new JRadioButton("Bez omezení");
+                rbAll.setToolTipText("<html>Zobrazí všechny výskyty druhu zvěře zadané v systému.<br>Upravený výskyt má platnost po celou dobu.<br>Smazaný výskyt je úplně vymazán.</html>");
 
 		lFrom = new JLabel("Od:");
 		lTo = new JLabel("Do:");
@@ -188,7 +192,7 @@ public class PreferencesDialog extends DefaultDialog implements ActionListener {
 
 	private void initGPSTab(){
 		pGPS = new JPanel();
-
+                pGPS.setToolTipText("<html>GPS souřadnice uživatele - lze zadat zde, nebo kliknutím do mapy v needitovatelném stavu.<br>V mapě je pozice uživatele zobrazena jako červený bod.</html>");
 		pGPS.setLayout(new GridBagLayout());
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.gridx = gbc.gridy = 0;

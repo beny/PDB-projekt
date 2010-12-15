@@ -37,7 +37,7 @@ public class PhotosPanel extends JTabbedPane {
 	// popisek jednotlivych info labelu
 	private final static String description = "Popis: ";
 	private final static String distance = "Vzdálenost k nejbližšímu zvířeti: ";
-	private final static String area = "Plocha obývající zvířetem: ";
+	private final static String area = "Tento druh obývá plochu: ";
 
 	private JLabel lDescription, lDistance, lArea;
 	private JLabel lName, lNameLat, lDistance2, lArea2;
@@ -99,7 +99,7 @@ public class PhotosPanel extends JTabbedPane {
 
 		gbc.gridwidth = 1;
 		gbc.gridy++;
-		lDistance = new JLabel(distance);
+		lDistance = new JLabel("");
 		lDistance.setFont(fSubTitle);
 		pInfoTab.add(lDistance, gbc);
 
@@ -109,7 +109,7 @@ public class PhotosPanel extends JTabbedPane {
 
 		gbc.gridx = 0;
 		gbc.gridy++;
-		lArea = new JLabel(area);
+		lArea = new JLabel("");
 		lArea.setFont(fSubTitle);
 		pInfoTab.add(lArea, gbc);
 
@@ -120,7 +120,7 @@ public class PhotosPanel extends JTabbedPane {
 		gbc.gridx = 0;
 		gbc.gridy++;
 		gbc.gridwidth = GridBagConstraints.REMAINDER;
-		lDescription = new JLabel(description);
+		lDescription = new JLabel("");
 		lDescription.setFont(fSubTitle);
 		pInfoTab.add(lDescription, gbc);
 
@@ -149,7 +149,9 @@ public class PhotosPanel extends JTabbedPane {
 
 		JEntity m = frame.getMap().getMyPosition();
 		Point2D p = new Point2D.Double(m.getLat(), m.getLon());
-
+                lDescription.setText(description);
+                lArea.setText(area);
+                lDistance.setText(distance);
 		lName.setText(((animal.getGenus() == null) ? "" : animal.getGenus())
 				+ " "
 				+ ((animal.getSpecies() == null) ? "" : animal.getSpecies()));
@@ -171,7 +173,7 @@ public class PhotosPanel extends JTabbedPane {
 			int area = (int) Math.round(animal.getAppareanceArea(frame.getDb()));
 
 			lDistance2.setText(((distance == -1)?" - ":distance + " km"));
-			lArea2.setText(((area == -1)?" - ":area + " km2"));
+			lArea2.setText(((area == -1)?" - ":"<html>"+ area + " km<small><sup>2</sup></small></html>"));
 		} catch (SQLException ex) {
 			Log.error("Chyba pri ziskavani udaju o zvireti z DB");
 		}
@@ -207,6 +209,9 @@ public class PhotosPanel extends JTabbedPane {
 		lDescription2.setText("");
 		lDistance2.setText("");
 		lArea2.setText("");
+                lDescription.setText("");
+                lArea.setText("");
+                lDistance.setText("");
 
 		setPhotos(DataBase.ANIMAL_PHOTO, new LinkedList<JPicture>());
 		setPhotos(DataBase.EXCREMENT_PHOTO, new LinkedList<JPicture>());
