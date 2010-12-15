@@ -36,6 +36,7 @@ public class ImageRecord extends JPanel implements MouseListener{
 	private final static long serialVersionUID = 6570452902350045589L;
 	private static final int ROTATE_LEFT = 0;
 	private static final int ROTATE_RIGHT = 1;
+	private static final int ROTATE_180 = 2;
 
 	private PictureThumbnail thumbnail;
 	private JPicture originImage;
@@ -162,9 +163,21 @@ public class ImageRecord extends JPanel implements MouseListener{
 			public void run() {
 
 				try {
-					frame.getDb().rotatePicture(originImage.getId(),
-							originImage.getTable(),
-							(direction == ROTATE_LEFT) ? -90 : 90);
+					switch (direction) {
+					case ROTATE_180:
+						frame.getDb().rotatePicture(originImage.getId(),
+								originImage.getTable(), 180);
+						break;
+					case ROTATE_RIGHT:
+						frame.getDb().rotatePicture(originImage.getId(),
+								originImage.getTable(), 90);
+						break;
+					case ROTATE_LEFT:
+						frame.getDb().rotatePicture(originImage.getId(),
+								originImage.getTable(), -90);
+						break;
+					}
+
 				} catch (SQLException e) {
 					Log.error("Chyba pri zmene rotace fotky v DB: "
 							+ e.getMessage());
@@ -254,6 +267,17 @@ public class ImageRecord extends JPanel implements MouseListener{
 				}
 			});
 			mContext.add(miRotateRight);
+
+			JMenuItem miRotate = new JMenuItem("Otoč o 180°");
+			miRotate.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					rotatePhoto(ROTATE_180);
+
+				}
+			});
+			mContext.add(miRotate);
 
 			mContext.show(this, e.getPoint().x, e.getPoint().y);
 		}
