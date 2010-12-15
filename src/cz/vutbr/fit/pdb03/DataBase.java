@@ -317,6 +317,38 @@ public class DataBase {
 				"Obrázek kapra");
                 uploadImage(12, ANIMAL_PHOTO, PICTURE_FOLDER + "12-1.jpg", 0,
 				"Ilustrace vyhynulé zebry");
+        uploadImage(13, ANIMAL_PHOTO, PICTURE_FOLDER + "13-1.jpg", 0,
+				 "");
+        uploadImage(13, ANIMAL_PHOTO, PICTURE_FOLDER + "13-2.jpg", 0,
+		"");
+        uploadImage(13, ANIMAL_PHOTO, PICTURE_FOLDER + "13-3.jpg", 0,
+		"");
+        uploadImage(13, ANIMAL_PHOTO, PICTURE_FOLDER + "13-4.jpg", 0,
+		"");
+
+        uploadImage(14, ANIMAL_PHOTO, PICTURE_FOLDER + "14-1.jpg", 0,
+		"");
+
+        uploadImage(15, ANIMAL_PHOTO, PICTURE_FOLDER + "15-1.jpg", 0,
+		"");
+        uploadImage(16, ANIMAL_PHOTO, PICTURE_FOLDER + "16-1.jpg", 0,
+		"");
+        uploadImage(16, ANIMAL_PHOTO, PICTURE_FOLDER + "16-2.jpg", 0,
+		"");
+        uploadImage(17, ANIMAL_PHOTO, PICTURE_FOLDER + "17-1.jpg", 0,
+		"");
+        uploadImage(18, ANIMAL_PHOTO, PICTURE_FOLDER + "18-1.jpg", 0,
+		"");
+        uploadImage(18, ANIMAL_PHOTO, PICTURE_FOLDER + "18-2.jpg", 0,
+		"");
+        uploadImage(18, ANIMAL_PHOTO, PICTURE_FOLDER + "18-3.jpg", 0,
+		"");
+
+        uploadImage(19, ANIMAL_PHOTO, PICTURE_FOLDER + "19-1.jpg", 0,
+		"");
+        uploadImage(19, ANIMAL_PHOTO, PICTURE_FOLDER + "19-2.jpg", 0,
+		"");
+
 
 		uploadImage(1, FEET_PHOTO, PICTURE_FOLDER + "1-1f.jpg", 0,
 				"Stopa žirafy");
@@ -346,6 +378,51 @@ public class DataBase {
 
 		uploadImage(1, EXCREMENT_PHOTO, PICTURE_FOLDER + "1-1e.jpg", 0,
 				"Trus žirafy");
+		uploadImage(5, EXCREMENT_PHOTO, PICTURE_FOLDER + "tygr01.jpg", 0,
+		"Jejich trus ma tmavou barvu protože jsou masožravci, silně zapáchá");
+		uploadImage(5, EXCREMENT_PHOTO, PICTURE_FOLDER + "tygr02.jpg", 0,
+		"Je tvarovaný do válečků, které jsou často spojené");
+		uploadImage(13, EXCREMENT_PHOTO, PICTURE_FOLDER + "tucnak01.jpg", 0,
+		"Trus vylučují společně s močí v podobě řídkých stříkanců, délka trusu" +
+		" na fotografii je přibližně 15cm");
+		uploadImage(13, EXCREMENT_PHOTO, PICTURE_FOLDER + "tucnak02.jpg", 0,
+		"Země kde tučnáci hnízdí je hustě pokrytá těmito bílými cákanci");
+		uploadImage(14, EXCREMENT_PHOTO, PICTURE_FOLDER + "slon01.jpg", 0,
+		"Trávící ustrojí slona dokáže využít pouhých 40% zkonzumované potravy," +
+		"zbytek vyjde z těla ven v podobě velkých \"koblížků\"");
+		uploadImage(14, EXCREMENT_PHOTO, PICTURE_FOLDER + "slon03.jpg", 0,
+		"Slon vyprodukuje denně 140-180kg trusu");
+		uploadImage(14, EXCREMENT_PHOTO, PICTURE_FOLDER + "slon02.jpg", 0,
+		"Délka trusu na fotografii je 24cm");
+		uploadImage(15, EXCREMENT_PHOTO, PICTURE_FOLDER + "los01.jpg", 0,
+		"Mají odlišnou skladbu stravy než Los žijící v ZOO, proto má jiný " +
+		"tvar i barvu");
+		uploadImage(15, EXCREMENT_PHOTO, PICTURE_FOLDER + "los02.jpeg", 0,
+		"V přírodě má trus samců tvar dokonalého válečku a barvu světle" +
+		"hnědou");
+		uploadImage(16, EXCREMENT_PHOTO, PICTURE_FOLDER + "bizon01.jpeg", 0,
+		"Trus přežvýkavců velkých turů obsahuje méně zbytků rostliných" +
+		"vláken, než trus lichokopytníků. Délka trusu je 8cm");
+		uploadImage(16, EXCREMENT_PHOTO, PICTURE_FOLDER + "bizon02.jpeg", 0,
+		"Suchý trus dobře hoří, čehož využívají indiáni.");
+		uploadImage(17, EXCREMENT_PHOTO, PICTURE_FOLDER + "zelva02.jpeg", 0,
+		"Trávení želvy obrovské je stejně nedokonalé jako u ostatních " +
+		"býložravců. I tady je v trusu velké množství nestrávené potravy");
+		uploadImage(17, EXCREMENT_PHOTO, PICTURE_FOLDER + "zelva01.jpeg", 0,
+		"Délka trusu na fotografii je 12cm");
+		uploadImage(18, EXCREMENT_PHOTO, PICTURE_FOLDER + "lemur01.jpeg", 0,
+		"Lemuři se liší i v potravě, například Lemur kata žije na zemi a žíví " +
+		"se zde. Proto trus obsahuje kousky trávy. Délka přibližně 8,5cm");
+		uploadImage(18, EXCREMENT_PHOTO, PICTURE_FOLDER + "lemur02.jpeg", 0,
+		"Lemuři dávající přednost stromům mají v trusu více plodů. Délka " +
+		"přibližně 5cm");
+		uploadImage(19, EXCREMENT_PHOTO, PICTURE_FOLDER + "orangutan01.jpeg", 0,
+		"Nejen strava ale i psychika tvaruje trus orangutanů. Někdy jsou " +
+		"hromádky pevné, slepené z jednotlivých částí, jindy je to trus řídký a" +
+		"beztvarý");
+		uploadImage(19, EXCREMENT_PHOTO, PICTURE_FOLDER + "orangutan02.jpeg", 0,
+		"Trávení orangutanů je poměrně dokonalé, přesto lze v trusu nalézt" +
+		"zbytky rostliné potravy. Délka trusu 10cm");
 		Log.debug("Example images uploaded.");
 
 	}
