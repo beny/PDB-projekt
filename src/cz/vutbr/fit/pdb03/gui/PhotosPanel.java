@@ -35,9 +35,9 @@ public class PhotosPanel extends JTabbedPane {
 	private JScrollPane sInfoTab;
 
 	// popisek jednotlivych info labelu
-	private final static String description = "Popis: ";
-	private final static String distance = "Vzdálenost k nejbližšímu zvířeti: ";
-	private final static String area = "Tento druh obývá plochu: ";
+	private final static String description = "Popis";
+	private final static String distance = "Nejbližší zvíře je vzdáleno";
+	private final static String area = "Tento druh obývá plochu";
 
 	private JLabel lDescription, lDistance, lArea;
 	private JLabel lName, lNameLat, lDistance2, lArea2;

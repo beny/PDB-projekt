@@ -1684,6 +1684,8 @@ public class DataBase {
                         + "        VALUES (old_animal_id, new_to, old_to,old_move);"
                         + "        UPDATE animal_movement SET valid_to=new_from-1 WHERE move_id=old_move_id;"
                         + "      END IF;"
+                        + "    ELSIF (new_from IS NULL AND new_to IS NULL) THEN"
+                        + "      DELETE FROM animal_movement WHERE move_id=old_move_id;"
                         + "    END IF; "
                         + "END animal_movement_delete;");
 		stat.execute("CREATE OR REPLACE PROCEDURE animal_movement_update("
@@ -1735,6 +1737,8 @@ public class DataBase {
                         + "        INSERT INTO animal_movement (animal_id,valid_from, valid_to, geometry)"
                         + "        VALUES (old_animal_id, new_from, new_to-1,new_move);"
                         + "      END IF;"
+                        + "    ELSIF (new_from IS NULL AND new_to IS NULL) THEN"
+                        + "	 UPDATE animal_movement SET valid_from=NULL, valid_to=NULL, geometry=new_move WHERE move_id=old_move_id;"
                         + "    END IF; "
                         + "END animal_movement_update;");
 		stat.close();
