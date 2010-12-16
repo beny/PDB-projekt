@@ -85,8 +85,6 @@ public class ConnectDialog extends DefaultDialog implements ActionListener{
 		// nastaveni dialogu
 		setContentPane(contentPanel);
 		pack();
-
-		fillDialog(ONDRA);
 	}
 
 	@Override
@@ -127,15 +125,5 @@ public class ConnectDialog extends DefaultDialog implements ActionListener{
 			dLoading.setVisible(true);
 		}
 	}
-
-	/**
-	 * Metoda ktera predvyplni formular pro rychlejsi testovani
-	 * @param user
-	 */
-	public void fillDialog(String user){
-		tUsername.setText(user);
-		pfPassword.setText(user);
-	}
-
 }
 

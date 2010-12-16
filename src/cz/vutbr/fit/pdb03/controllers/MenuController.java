@@ -239,7 +239,6 @@ public class MenuController implements ActionListener{
 		else {
 			// dialog pro pripojeni
 			dConnect = new ConnectDialog(frame, frame.getDb());
-			dConnect.fillDialog(ConnectDialog.ONDRA); // FIXME remove
 
 			GUIManager.moveToCenter(dConnect, frame);
 			dConnect.setVisible(true);

@@ -172,7 +172,7 @@ public class AnimalsDatabase extends JFrame  {
 						db.searchAnimals(getSearchDescription());
 						break;
 					case SEARCH_BY_PICTURE:
-						break; // TODO
+						break;
 					case SEARCH_BY_PICTURE_DESCRIPTION:
 						db.searchAnimalsByPicture(getSearchDescription());
 						break;

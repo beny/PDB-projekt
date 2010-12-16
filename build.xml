@@ -29,7 +29,7 @@
 		</target>
 	<target depends="clean,build-project,doc" name="build" />
 	<target name="doc">
-		<javadoc access="private" author="true" classpath="jmapviewer.jar:runtime12.jar:ordim.jar:ojdbc6.jar:jcalendar-1.3.3.jar:sdoapi.jar" destdir="javadoc" doctitle="PDB projekt - AnimalsDatabase" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="cz.vutbr.fit.pdb03.controllers,cz.vutbr.fit.pdb03.dialogs,cz.vutbr.fit.pdb03.gui,cz.vutbr.fit.pdb03" source="1.6" sourcepath="src" splitindex="true" use="true" version="true" />
+		<javadoc encoding="utf-8" access="private" author="true" classpath="jmapviewer.jar:runtime12.jar:ordim.jar:ojdbc6.jar:jcalendar-1.3.3.jar:sdoapi.jar" destdir="javadoc" doctitle="PDB projekt - AnimalsDatabase" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="cz.vutbr.fit.pdb03.controllers,cz.vutbr.fit.pdb03.dialogs,cz.vutbr.fit.pdb03.gui,cz.vutbr.fit.pdb03" source="1.6" sourcepath="src" splitindex="true" use="true" version="true" />
 	</target>
 	<target depends="init" name="build-project">
 		<echo message="${ant.project.name}: ${ant.file}"/>
