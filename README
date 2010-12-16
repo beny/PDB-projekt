@@ -1,0 +1,22 @@
+Kratka dokumentace k projektu PDB03
+-----------------------------------
+
+Jak sestavit a spustit projekt?
+-------------------------------
+	- v korenovem adresari pdb03/ staci spustit prikaz
+
+ant
+
+	- a aplikace se prelozi. Pro spusteni aplikace staci zadat
+
+ant run
+
+	- dalsi podporovane prikazy jsou 'ant clean', 'ant doc' ci 'ant build'
+
+
+Struktura souboru v projektu
+----------------------------
+	lib/ - obsahuje knihovny .jar
+	src/ - obsahuje zdrojove kody a vzorova data
+	doc/ - obsahuje dokumentaci k projektu
+	javadoc/ - po prelozeni aplikace nebo po spusteni 'ant doc' zde k nalezeni programova dokumentace  

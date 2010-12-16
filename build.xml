@@ -6,12 +6,12 @@
 	<property name="source" value="1.6"/>
 	<path id="pdb-projekt.classpath">
 		<pathelement location="bin"/>
-		<pathelement location="jcalendar-1.3.3.jar"/>
-		<pathelement location="jmapviewer.jar"/>
-		<pathelement location="ojdbc6.jar"/>
-		<pathelement location="ordim.jar"/>
-		<pathelement location="sdoapi.jar"/>
-		<pathelement location="runtime12.jar"/>
+		<pathelement location="lib/jcalendar-1.3.3.jar"/>
+		<pathelement location="lib/jmapviewer.jar"/>
+		<pathelement location="lib/ojdbc6.jar"/>
+		<pathelement location="lib/ordim.jar"/>
+		<pathelement location="lib/sdoapi.jar"/>
+		<pathelement location="lib/runtime12.jar"/>
 	</path>
 	<target name="init">
 		<mkdir dir="bin"/>
@@ -24,12 +24,12 @@
 	</target>
 	<target name="clean">
 			<delete dir="bin" />
-			<delete dir="doc" />
-			<delete dir="test" /> 
+			<delete dir="test" />
+			<delete dir="javadoc" /> 
 		</target>
 	<target depends="clean,build-project,doc" name="build" />
 	<target name="doc">
-		<javadoc access="private" author="true" classpath="jmapviewer.jar:runtime12.jar:ordim.jar:ojdbc6.jar:jcalendar-1.3.3.jar:sdoapi.jar" destdir="doc" doctitle="PDB projekt - AnimalsDatabase" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="cz.vutbr.fit.pdb03.controllers,cz.vutbr.fit.pdb03.dialogs,cz.vutbr.fit.pdb03.gui,cz.vutbr.fit.pdb03" source="1.6" sourcepath="src" splitindex="true" use="true" version="true" />
+		<javadoc access="private" author="true" classpath="jmapviewer.jar:runtime12.jar:ordim.jar:ojdbc6.jar:jcalendar-1.3.3.jar:sdoapi.jar" destdir="javadoc" doctitle="PDB projekt - AnimalsDatabase" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="cz.vutbr.fit.pdb03.controllers,cz.vutbr.fit.pdb03.dialogs,cz.vutbr.fit.pdb03.gui,cz.vutbr.fit.pdb03" source="1.6" sourcepath="src" splitindex="true" use="true" version="true" />
 	</target>
 	<target depends="init" name="build-project">
 		<echo message="${ant.project.name}: ${ant.file}"/>

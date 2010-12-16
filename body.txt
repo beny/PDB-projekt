@@ -1,0 +1,6 @@
+xbenes00	120%
+xsrnec01	70%
+xizakt00	110%
+Ondřej Beneš (xbenes00) pracoval na GUI aplikace.
+Tomáš Ižák (xizakt00) pracoval na komunikaci s databází.
+Pavel Srnec (xsrnec01) prováděl návrh projektu, vytvořil uživatelskou dokumentaci, drobné opravy a úpravy kódu.
