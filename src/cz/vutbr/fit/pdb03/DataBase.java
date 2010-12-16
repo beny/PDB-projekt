@@ -501,7 +501,7 @@ public class DataBase {
 	 */
 	public Double getAppareanceArea(int animal_id) throws SQLException {
 		Statement stat = con.createStatement();
-		String SQLquery = "SELECT SUM(SDO_GEOM.SDO_AREA(geometry,0.1,'unit=SQ_KM')) AS area FROM animal_movement WHERE animal_id="
+		String SQLquery = "SELECT SUM(SDO_GEOM.SDO_AREA(geometry,0.005,'unit=SQ_KM')) AS area FROM animal_movement WHERE animal_id="
 				+ Integer.toString(animal_id);
 		OracleResultSet rset = null;
 		rset = (OracleResultSet) stat.executeQuery(T2SQL.temporal(T2SQL
@@ -1180,6 +1180,7 @@ public class DataBase {
                         + "   SELECT photo_sig, photo INTO signature_data, image_data FROM "+choosen_table
                         + "     WHERE photo_id = "+Integer.toString(photo_id)+" FOR UPDATE;"
                         + "   ORDSYS.ORDImage.process(image_data, 'rotate="+Double.toString(angle)+"');"
+                        + "   image_data.setProperties;"
                         + "   signature_data.generateSignature(image_data);"
                         + "   UPDATE "+choosen_table+" SET photo=image_data, photo_sig=signature_data WHERE photo_id = "+Integer.toString(photo_id)+";"
                         + "   COMMIT; "
@@ -1900,7 +1901,7 @@ public class DataBase {
          */
         private Double getIntersectionsArea(int animal_id) throws SQLException{
             Statement stat = con.createStatement();
-            String SQLquery = "SELECT SUM(SDO_GEOM.SDO_AREA(SDO_GEOM.SDO_INTERSECTION(a.geometry,b.geometry,0.1),0.1,'unit=SQ_KM')) AS area "
+            String SQLquery = "SELECT SUM(SDO_GEOM.SDO_AREA(SDO_GEOM.SDO_INTERSECTION(a.geometry,b.geometry,0.005),0.005,'unit=SQ_KM')) AS area "
                     + "FROM animal_movement a, animal_movement b WHERE a.animal_id=" + Integer.toString(animal_id)
                     + " AND b.animal_id=" + Integer.toString(animal_id) + " AND a.move_id<b.move_id";
             if (T2SQL.getMode().equals(T2SQL.NOW)){
