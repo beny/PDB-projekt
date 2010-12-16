@@ -24,7 +24,8 @@
 	</target>
 	<target name="clean">
 			<delete dir="bin" />
-			<delete dir="doc" /> 
+			<delete dir="doc" />
+			<delete dir="test" /> 
 		</target>
 	<target depends="clean,build-project,doc" name="build" />
 	<target name="doc">
