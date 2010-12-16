@@ -199,7 +199,6 @@ public class JMapPanel extends JMapViewer {
 	/**
 	 * Detekce nejblizsiho bodu/entity
 	 * @param clickedPoint
-	 * @return
 	 */
 	public void detectHit(Point clickedPoint) {
 
@@ -574,10 +573,10 @@ public class JMapPanel extends JMapViewer {
 	}
 
 	/**
-	 * Vykresleni polygonu
-	 * @param g
-	 * @param map
-	 */
+         * Vykresleni polygonu
+         * @param g
+         * @param polygon
+         */
 	protected void paintPolygon(Graphics g, JEntity polygon) {
 		Graphics2D g2 = (Graphics2D) g;
 

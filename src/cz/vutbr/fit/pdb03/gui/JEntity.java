@@ -122,11 +122,11 @@ public class JEntity extends JGeometry {
 	}
 
 	/**
-	 * Najde nejblizsi bod k bodu
-	 * @param hitPoint
-	 * @param entity
-	 * @return
-	 */
+         * Najde nejblizsi bod k jinemu bodu
+         * @param hitPoint
+         * @param map
+         * @return vzdálenost dvou bodů
+         */
 	public double diffPoint(java.awt.Point hitPoint, JMapPanel map) {
 		java.awt.Point entityPoint = map.getMapPosition(getLat(), getLon(),
 				false);
@@ -136,7 +136,7 @@ public class JEntity extends JGeometry {
 
 	/**
 	 * Ziskej curves z multiobjektu
-	 * @return
+	 * @return List<JEntity> krivek
 	 */
 	public List<JEntity> getCurves(){
 
@@ -157,8 +157,8 @@ public class JEntity extends JGeometry {
 	}
 
 	/**
-	 * Ziskej polygons z multiobjektu
-	 * @return
+	 * Ziskej polygony z multiobjektu
+	 * @return List<JEntity> polygonů
 	 */
 	public List<JEntity> getPolygons(){
 
@@ -187,7 +187,7 @@ public class JEntity extends JGeometry {
 	/**
 	 * Prevod pole JEntity na pole Object[] kde polozky jsou body double[]
 	 * @param points
-	 * @return
+	 * @return Object[]
 	 */
 	public static Object[] convert(List<JEntity> points){
 
@@ -205,7 +205,7 @@ public class JEntity extends JGeometry {
 	/**
 	 * Prevod bodu z Object[] do pole JEntity
 	 * @param points
-	 * @return
+	 * @return List<JEntity>
 	 */
 	public static List<JEntity> convert(double[] points){
 
@@ -223,7 +223,7 @@ public class JEntity extends JGeometry {
 	/**
 	 * Prevod z pole JEntit na jednorozmerne pole double[]
 	 * @param points
-	 * @return
+	 * @return double[]
 	 */
 	public static double[] convertDouble(List<JEntity> points){
 		double[] array = new double[points.size()*2];
@@ -241,7 +241,7 @@ public class JEntity extends JGeometry {
 	/**
 	 * Prevod seznamu pro curves a polygony na Object[]
 	 * @param entities
-	 * @return
+	 * @return Object[]
 	 */
 	public static Object[] convertMulti(List<JEntity> entities){
 
@@ -258,10 +258,11 @@ public class JEntity extends JGeometry {
 	}
 
 	/**
-	 * Prevod Object[] pro curves a polygony na seznam
-	 * @param entities
-	 * @return
-	 */
+         * Prevod Object[] pro curves a polygony na seznam
+         * @param array
+         * @param type
+         * @return List<JEntity> multi geometrií
+         */
 	public static List<JEntity> convertMulti(Object[] array, int type){
 
 		List<JEntity> entities = new LinkedList<JEntity>();
@@ -284,7 +285,7 @@ public class JEntity extends JGeometry {
 	/**
 	 * Vytvoreni JGeometry pro MultiPoint
 	 * @param points
-	 * @return
+	 * @return multibod
 	 */
 	public static JGeometry createMultiPoint(List<JEntity> points){
 		return JGeometry.createMultiPoint(convert(points), DIMENSION, SRID);
@@ -293,7 +294,7 @@ public class JEntity extends JGeometry {
 	/**
 	 * Vytvoreni JGeometry pro Curve
 	 * @param points
-	 * @return
+	 * @return křivka
 	 */
 	public static JGeometry createCurve(List<JEntity> points){
 		return JGeometry.createLinearLineString(convertDouble(points), DIMENSION, SRID);
@@ -302,7 +303,7 @@ public class JEntity extends JGeometry {
 	/**
 	 * Vytvoreni JGeometry pro Polygon
 	 * @param points
-	 * @return
+	 * @return polygon
 	 */
 	public static JGeometry createPolygon(List<JEntity> points){
 		return JGeometry.createLinearPolygon(convertDouble(points), DIMENSION, SRID);
@@ -311,7 +312,7 @@ public class JEntity extends JGeometry {
 	/**
 	 * Vytvoreni JGeometry pro MultiCurve
 	 * @param points
-	 * @return
+	 * @return multi křivka
 	 */
 	public static JGeometry createMultiCurve(List<JEntity> points){
 		return JGeometry.createLinearMultiLineString(convertMulti(points), DIMENSION, SRID);
@@ -320,7 +321,7 @@ public class JEntity extends JGeometry {
 	/**
 	 * Vytvoreni JGeometry pro MultiPolygon
 	 * @param points
-	 * @return
+	 * @return multipolygon
 	 */
 	public static JGeometry createMultiPolygon(List<JEntity> points){
 

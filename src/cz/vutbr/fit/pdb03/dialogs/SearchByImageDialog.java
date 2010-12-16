@@ -117,7 +117,7 @@ public class SearchByImageDialog extends DefaultDialog implements ActionListener
 
 	/**
 	 * Ziskani jmena tabulky podle vybraneho combo
-	 * @return
+	 * @return jméno tabulky
 	 */
 	public String getTableName(){
 		if(cType.getSelectedIndex() == 0) return DataBase.ANIMAL_PHOTO;

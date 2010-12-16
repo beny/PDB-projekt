@@ -268,7 +268,7 @@ public class AnimalsDatabase extends JFrame  {
 
 	/**
 	 * Metoda upravujici zvire v DB
-	 * @param old
+	 * @param animal
 	 */
 	public void editAnimal(Animal animal){
 
