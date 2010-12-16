@@ -1879,7 +1879,7 @@ public class DataBase {
 		String s = new String();
 		StringBuilder sb = new StringBuilder();
 		BufferedReader br = new BufferedReader(new InputStreamReader(
-				new FileInputStream(filename)));
+				new FileInputStream(filename),"UTF8"));
 		while ((s = br.readLine()) != null) {
 			sb.append(s);
 		}
