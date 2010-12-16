@@ -543,7 +543,7 @@ public class DataBase {
 				+ "WHERE ordsys.IMGSimilar(fp.photo_sig, photodb.photo_sig, ";
                 if (tablename.equals(ANIMAL_PHOTO)) SQLquery+= "'color=0.275, texture=0.7, shape=0.025',20";
                 else if (tablename.equals(FEET_PHOTO)) SQLquery+= "'color=0.2, texture=0.0, shape=0.8, location=0.0',10";
-                else if (tablename.equals(EXCREMENT_PHOTO)) SQLquery+= "'color=0.3, texture=0.3, shape=0.3, location=0.1',30";
+                else if (tablename.equals(EXCREMENT_PHOTO)) SQLquery+= "'color=0.3, texture=0.2, shape=0.5',10";
                 else return;
 		SQLquery=SQLquery + " ,123)=1 AND fp.photo_id="
                         + Integer.toString(nextval)
